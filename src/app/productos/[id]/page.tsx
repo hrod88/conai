@@ -2,6 +2,54 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
 import type { Product } from "@/types";
+import type { Metadata } from "next";
+
+const categoryLabels: Record<string, string> = {
+  salud: "Salud & Wearables",
+  belleza: "Belleza Tech",
+  hogar: "Hogar Inteligente",
+  wearables: "Wearables",
+  mascotas: "Mascotas Tech",
+  gadgets: "Gadgets",
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, description, price, category, icon")
+    .eq("id", id)
+    .single();
+
+  if (!product) return { title: "Producto no encontrado — conAI" };
+
+  const catLabel = categoryLabels[product.category] ?? product.category;
+  const priceFormatted = Number(product.price).toLocaleString("es-CL");
+  const title = `${product.name} — conAI`;
+  const description = `${product.description ?? product.name}. Categoría: ${catLabel}. Precio: $${priceFormatted} CLP. Envío a todo Chile.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      locale: "es_CL",
+      siteName: "conAI",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  };
+}
 
 export type ReviewRow = {
   id: string;
@@ -48,7 +96,7 @@ export default async function ProductoDetallePage({
   // guardado en user_metadata o mostramos la primera letra del user_id como avatar
   const reviews: ReviewRow[] = (reviewsRaw ?? []).map((r) => ({
     ...r,
-    user_email: r.user_id === user?.id ? (user.email ?? "Tú") : "Usuario",
+    user_email: (user && r.user_id === user.id) ? (user.email ?? "Tú") : "Usuario",
   }));
 
   const userHasReviewed = user
