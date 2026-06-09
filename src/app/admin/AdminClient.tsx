@@ -3,6 +3,13 @@
 import { useState } from "react";
 import type { Product } from "@/types";
 
+type CJProduct = {
+  pid: string;
+  productNameEn: string;
+  sellPrice: number;
+  productImage: string;
+};
+
 type Order = {
   id: string;
   user_id: string | null;
@@ -51,6 +58,45 @@ export default function AdminClient({
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [saving, setSaving] = useState<string | null>(null);
+
+  // CJ Dropshipping
+  const [cjSearch, setCjSearch] = useState("");
+  const [cjResults, setCjResults] = useState<CJProduct[]>([]);
+  const [cjLoading, setCjLoading] = useState(false);
+  const [linkingProduct, setLinkingProduct] = useState<string | null>(null);
+  const [fulfillMsg, setFulfillMsg] = useState<Record<string, string>>({});
+
+  async function searchCJ() {
+    if (!cjSearch.trim()) return;
+    setCjLoading(true);
+    const res = await fetch(`/api/cj/search?q=${encodeURIComponent(cjSearch)}`);
+    const json = await res.json();
+    setCjResults(json.data?.list ?? []);
+    setCjLoading(false);
+  }
+
+  async function linkCJ(productId: string, cjPid: string) {
+    setSaving(productId);
+    await fetch(`/api/admin/products/${productId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cj_pid: cjPid }),
+    });
+    setProducts((prev) => prev.map((p) => p.id === productId ? { ...p, cj_pid: cjPid } as Product & { cj_pid: string } : p));
+    setLinkingProduct(null);
+    setCjResults([]);
+    setCjSearch("");
+    setSaving(null);
+  }
+
+  async function fulfillWithCJ(orderId: string) {
+    setSaving(orderId);
+    const res = await fetch(`/api/admin/orders/${orderId}/fulfill`, { method: "POST" });
+    const json = await res.json();
+    setFulfillMsg((prev) => ({ ...prev, [orderId]: json.ok ? "✅ Enviado a CJ" : `❌ ${json.error}` }));
+    if (json.ok) setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "shipped" } : o));
+    setSaving(null);
+  }
 
   const totalRevenue = orders
     .filter((o) => o.status !== "pending")
@@ -130,10 +176,68 @@ export default function AdminClient({
       {/* Tabla Productos */}
       {tab === "productos" && (
         <div className="rounded-xl border overflow-hidden" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-          <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+          <div className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ borderColor: "var(--border)" }}>
             <h2 className="font-black text-[var(--text)] text-sm">{products.length} productos</h2>
-            <p className="text-xs text-[var(--text-muted)]">Edita stock, precio o tag directamente</p>
+            <div className="flex items-center gap-2">
+              <input
+                value={cjSearch}
+                onChange={(e) => setCjSearch(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && searchCJ()}
+                placeholder="Buscar en CJ Dropshipping..."
+                className="text-xs px-3 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+              />
+              <button
+                onClick={searchCJ}
+                disabled={cjLoading}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
+              >
+                {cjLoading ? "..." : "Buscar CJ"}
+              </button>
+            </div>
           </div>
+
+          {/* Resultados CJ */}
+          {cjResults.length > 0 && (
+            <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+              <p className="text-xs font-bold text-[var(--text-muted)] mb-2">{cjResults.length} resultados — haz clic en &quot;Vincular&quot; al lado del producto conAI que corresponda</p>
+              <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
+                {cjResults.map((cj) => (
+                  <div key={cj.pid} className="flex items-center justify-between gap-3 text-xs py-1 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {cj.productImage && <img src={cj.productImage} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />}
+                      <div className="min-w-0">
+                        <p className="font-semibold truncate text-[var(--text)]">{cj.productNameEn}</p>
+                        <p className="text-[var(--text-muted)]">PID: {cj.pid} · USD {cj.sellPrice}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setLinkingProduct(linkingProduct === cj.pid ? null : cj.pid)}
+                      className="flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
+                    >
+                      {linkingProduct === cj.pid ? "Cancelar" : "Vincular →"}
+                    </button>
+                    {linkingProduct === cj.pid && (
+                      <div className="flex flex-col gap-1 text-[10px] text-[var(--text-muted)] flex-shrink-0">
+                        <p className="font-bold">¿A cuál producto conAI?</p>
+                        <div className="max-h-32 overflow-y-auto flex flex-col gap-0.5">
+                          {products.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => linkCJ(p.id, cj.pid)}
+                              className="text-left px-2 py-0.5 rounded hover:bg-indigo-100 text-[var(--text)] transition-colors"
+                            >
+                              {p.icon} {p.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -236,6 +340,7 @@ export default function AdminClient({
                     <th className="text-left px-5 py-3">Destinatario</th>
                     <th className="text-right px-5 py-3">Total</th>
                     <th className="text-left px-5 py-3">Fecha</th>
+                    <th className="text-left px-5 py-3">CJ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -274,6 +379,21 @@ export default function AdminClient({
                       </td>
                       <td className="px-5 py-3 text-[var(--text-muted)] text-xs">
                         {new Date(o.created_at).toLocaleDateString("es-CL")}
+                      </td>
+                      <td className="px-5 py-3">
+                        {fulfillMsg[o.id] ? (
+                          <span className="text-[10px] font-bold">{fulfillMsg[o.id]}</span>
+                        ) : o.status === "paid" ? (
+                          <button
+                            onClick={() => fulfillWithCJ(o.id)}
+                            disabled={saving === o.id}
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors whitespace-nowrap"
+                          >
+                            Enviar a CJ
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-[var(--text-muted)]">—</span>
+                        )}
                       </td>
                     </tr>
                   ))}
