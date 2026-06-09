@@ -4,6 +4,8 @@ import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 const categories = [
   { value: "salud", label: "Salud & Wearables", icon: "❤️", desc: "Smartwatches, anillos y sensores", count: 30, from: "#3b82f6", to: "#6366f1" },
   { value: "belleza", label: "Belleza Tech", icon: "✨", desc: "Dispositivos faciales con IA", count: 24, from: "#a855f7", to: "#ec4899" },
