@@ -382,9 +382,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               <div
                 className="absolute inset-0 flex items-center overflow-x-auto"
                 style={{
-                  transition: "opacity 150ms ease, transform 150ms ease",
                   opacity: drillCategory ? 0 : 1,
-                  transform: drillCategory ? "translateX(-12px)" : "translateX(0)",
                   pointerEvents: drillCategory ? "none" : "auto",
                 }}
               >
@@ -412,9 +410,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               <div
                 className="absolute inset-0 flex items-center overflow-x-auto"
                 style={{
-                  transition: "opacity 150ms ease, transform 150ms ease",
                   opacity: drillCategory ? 1 : 0,
-                  transform: drillCategory ? "translateX(0)" : "translateX(12px)",
                   pointerEvents: drillCategory ? "auto" : "none",
                 }}
               >
