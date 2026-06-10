@@ -169,9 +169,9 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "large" && (
         <div className="flex flex-col gap-2 p-4 flex-1">
-          <span className="text-5xl select-none leading-none">{product.icon}</span>
+          <span className="text-3xl select-none leading-none">{product.icon}</span>
           <div className="flex-1 flex flex-col gap-0.5 min-h-0">
-            <p className="font-bold text-[13px] text-gray-800 leading-snug line-clamp-2">
+            <p className="font-black text-sm text-gray-800 leading-snug line-clamp-2">
               {product.name}
             </p>
             <p
@@ -205,7 +205,7 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "medium" && (
         <div className="flex flex-col gap-1.5 p-3 flex-1">
-          <span className="text-3xl select-none leading-none">{product.icon}</span>
+          <span className="text-2xl select-none leading-none">{product.icon}</span>
           <p className="font-bold text-[11px] text-gray-800 leading-snug line-clamp-2 flex-1">
             {product.name}
           </p>
