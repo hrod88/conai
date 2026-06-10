@@ -1,14 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import type { Product } from "@/types";
+import type { Product, Category } from "@/types";
 
 type CJProduct = {
   pid: string;
   productNameEn: string;
+  productNameCn?: string;
   sellPrice: number;
   productImage: string;
+  description?: string;
 };
+
+type ImportForm = {
+  category: Category;
+  price: string;
+  tag: string;
+  status: "idle" | "loading" | "done" | "error";
+  error?: string;
+};
+
+const CAT_ICONS: Record<Category, string> = {
+  salud: "❤️", belleza: "✨", hogar: "🏠", wearables: "⌚",
+  mascotas: "🐾", gadgets: "🤖", audio: "🎧", oficina: "💼",
+  juguetes: "🧸", deportes: "⚽", electronica: "🔌", telefonos: "📱",
+};
+
+const ALL_CATEGORIES: Category[] = [
+  "salud","belleza","hogar","wearables","mascotas","gadgets",
+  "audio","oficina","juguetes","deportes","electronica","telefonos",
+];
 
 type Order = {
   id: string;
@@ -24,7 +45,7 @@ type Order = {
   shipping_cost: number | null;
 };
 
-type Tab = "productos" | "pedidos";
+type Tab = "productos" | "pedidos" | "importar";
 
 const statusStyles: Record<string, string> = {
   pending:   "bg-amber-50 text-amber-700 border-amber-200",
@@ -59,12 +80,63 @@ export default function AdminClient({
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [saving, setSaving] = useState<string | null>(null);
 
-  // CJ Dropshipping
+  // CJ — vincular
   const [cjSearch, setCjSearch] = useState("");
   const [cjResults, setCjResults] = useState<CJProduct[]>([]);
   const [cjLoading, setCjLoading] = useState(false);
   const [linkingProduct, setLinkingProduct] = useState<string | null>(null);
   const [fulfillMsg, setFulfillMsg] = useState<Record<string, string>>({});
+
+  // CJ — importar
+  const [importSearch, setImportSearch] = useState("");
+  const [importResults, setImportResults] = useState<CJProduct[]>([]);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importForms, setImportForms] = useState<Record<string, ImportForm>>({});
+
+  async function searchImport() {
+    if (!importSearch.trim()) return;
+    setImportLoading(true);
+    const res = await fetch(`/api/cj/search?q=${encodeURIComponent(importSearch)}`);
+    const json = await res.json();
+    const results: CJProduct[] = json.data?.list ?? [];
+    setImportResults(results);
+    const forms: Record<string, ImportForm> = {};
+    results.forEach((p) => {
+      forms[p.pid] = { category: "gadgets", price: String(Math.round(p.sellPrice * 1000)), tag: "", status: "idle" };
+    });
+    setImportForms(forms);
+    setImportLoading(false);
+  }
+
+  function patchForm(pid: string, patch: Partial<ImportForm>) {
+    setImportForms((prev) => ({ ...prev, [pid]: { ...prev[pid], ...patch } }));
+  }
+
+  async function importProduct(cj: CJProduct) {
+    const form = importForms[cj.pid];
+    if (!form || !form.price) return;
+    patchForm(cj.pid, { status: "loading" });
+    const res = await fetch("/api/admin/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name:        cj.productNameEn,
+        description: cj.description ?? cj.productNameEn,
+        price:       Number(form.price),
+        category:    form.category,
+        tag:         form.tag || null,
+        image:       cj.productImage,
+        icon:        CAT_ICONS[form.category],
+        cj_pid:      cj.pid,
+      }),
+    });
+    const json = await res.json();
+    if (json.ok) {
+      patchForm(cj.pid, { status: "done" });
+    } else {
+      patchForm(cj.pid, { status: "error", error: json.error });
+    }
+  }
 
   async function searchCJ() {
     if (!cjSearch.trim()) return;
@@ -159,7 +231,7 @@ export default function AdminClient({
 
       {/* Tabs */}
       <div className="flex rounded-xl p-1 w-fit" style={{ background: "var(--surface-alt)" }}>
-        {(["productos", "pedidos"] as Tab[]).map((t) => (
+        {(["productos", "pedidos", "importar"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -168,7 +240,7 @@ export default function AdminClient({
             }`}
             style={tab === t ? { background: "var(--surface)" } : {}}
           >
-            {t}
+            {t === "importar" ? "📥 Importar CJ" : t}
           </button>
         ))}
       </div>
@@ -316,6 +388,131 @@ export default function AdminClient({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ── Tab Importar CJ ──────────────────────────────────── */}
+      {tab === "importar" && (
+        <div className="flex flex-col gap-4">
+          {/* Buscador */}
+          <div className="rounded-xl border p-4 flex gap-2" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <input
+              value={importSearch}
+              onChange={(e) => setImportSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchImport()}
+              placeholder="Buscar producto en CJ Dropshipping (ej: smart watch, yoga mat...)"
+              className="flex-1 text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+            <button
+              onClick={searchImport}
+              disabled={importLoading}
+              className="px-5 py-2 text-sm font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {importLoading ? "Buscando..." : "🔍 Buscar"}
+            </button>
+          </div>
+
+          {/* Resultados */}
+          {importResults.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {importResults.map((cj) => {
+                const form = importForms[cj.pid];
+                if (!form) return null;
+                return (
+                  <div
+                    key={cj.pid}
+                    className="rounded-xl border p-4 flex flex-col gap-3"
+                    style={{
+                      background: "var(--surface)",
+                      borderColor: form.status === "done" ? "#10b981" : form.status === "error" ? "#ef4444" : "var(--border)",
+                    }}
+                  >
+                    {/* Producto CJ */}
+                    <div className="flex gap-3">
+                      {cj.productImage && (
+                        <img src={cj.productImage} alt="" className="w-16 h-16 rounded-lg object-contain bg-gray-50 flex-shrink-0 p-1" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm text-[var(--text)] leading-snug line-clamp-2">{cj.productNameEn}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">PID: {cj.pid}</p>
+                        <p className="text-xs font-semibold text-orange-500 mt-0.5">Costo CJ: USD ${cj.sellPrice}</p>
+                      </div>
+                    </div>
+
+                    {/* Formulario */}
+                    {form.status !== "done" && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Categoría</label>
+                          <select
+                            value={form.category}
+                            onChange={(e) => patchForm(cj.pid, { category: e.target.value as Category })}
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          >
+                            {ALL_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Precio CLP</label>
+                          <input
+                            type="number"
+                            value={form.price}
+                            onChange={(e) => patchForm(cj.pid, { price: e.target.value })}
+                            placeholder="ej: 29990"
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Tag</label>
+                          <select
+                            value={form.tag}
+                            onChange={(e) => patchForm(cj.pid, { tag: e.target.value })}
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          >
+                            <option value="">Sin tag</option>
+                            <option value="nuevo">🆕 Nuevo</option>
+                            <option value="bestseller">⭐ Bestseller</option>
+                            <option value="descuento">🔥 Descuento</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Acción */}
+                    {form.status === "done" ? (
+                      <p className="text-sm font-bold text-emerald-600">✅ Importado correctamente</p>
+                    ) : form.status === "error" ? (
+                      <p className="text-xs font-bold text-red-500">❌ {form.error}</p>
+                    ) : (
+                      <button
+                        onClick={() => importProduct(cj)}
+                        disabled={form.status === "loading" || !form.price}
+                        className="w-full py-2 text-sm font-black rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                      >
+                        {form.status === "loading" ? "Importando..." : "📥 Importar a conAI"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {importResults.length === 0 && !importLoading && (
+            <div className="rounded-xl border py-16 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+              <span className="text-4xl block mb-3">🔍</span>
+              <p className="text-sm font-semibold text-[var(--text-muted)]">Busca un producto en CJ para importarlo</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Se guardará en tu tienda con imagen, precio y categoría</p>
+            </div>
+          )}
         </div>
       )}
 
