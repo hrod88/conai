@@ -364,7 +364,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
       className="relative overflow-hidden flex flex-col"
       style={{ height: "calc(100vh - 64px)", background: "var(--bg)" }}
     >
-      <div className="flex-1 max-w-6xl mx-auto w-full px-6 grid md:grid-cols-[55%_45%] gap-8 items-center min-h-0">
+      <div className="flex-1 max-w-6xl mx-auto w-full px-6 grid md:grid-cols-[50%_50%] gap-8 items-center min-h-0">
 
         {/* ── Columna izquierda ─────────────────────────────── */}
         <div
