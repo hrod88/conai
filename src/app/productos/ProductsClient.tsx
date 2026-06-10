@@ -378,10 +378,15 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             {/* Contenedor animado */}
             <div className="relative overflow-hidden flex-1 h-8">
 
-              {/* Capa 1 — Categorías (sale por la izquierda al hacer drill) */}
+              {/* Capa 1 — Categorías */}
               <div
-                className="absolute inset-0 flex items-center overflow-x-auto transition-transform duration-300 ease-in-out"
-                style={{ transform: drillCategory ? "translateX(-100%)" : "translateX(0)" }}
+                className="absolute inset-0 flex items-center overflow-x-auto"
+                style={{
+                  transition: "opacity 150ms ease, transform 150ms ease",
+                  opacity: drillCategory ? 0 : 1,
+                  transform: drillCategory ? "translateX(-12px)" : "translateX(0)",
+                  pointerEvents: drillCategory ? "none" : "auto",
+                }}
               >
                 <div className="flex items-center justify-center gap-6 min-w-full w-max mx-auto">
                   {categories.map((c) => {
@@ -403,10 +408,15 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                 </div>
               </div>
 
-              {/* Capa 2 — Subcategorías (entra desde la derecha al hacer drill) */}
+              {/* Capa 2 — Subcategorías */}
               <div
-                className="absolute inset-0 flex items-center overflow-x-auto transition-transform duration-300 ease-in-out"
-                style={{ transform: drillCategory ? "translateX(0)" : "translateX(100%)" }}
+                className="absolute inset-0 flex items-center overflow-x-auto"
+                style={{
+                  transition: "opacity 150ms ease, transform 150ms ease",
+                  opacity: drillCategory ? 1 : 0,
+                  transform: drillCategory ? "translateX(0)" : "translateX(12px)",
+                  pointerEvents: drillCategory ? "auto" : "none",
+                }}
               >
                 <div className="flex items-center gap-5 w-max px-1">
                   <button
