@@ -13,7 +13,7 @@ import FirstVisitPopup from "@/components/ui/FirstVisitPopup";
 export const metadata: Metadata = {
   title: "conAI — Tecnología con Inteligencia Artificial",
   description:
-    "Los mejores productos con IA: salud, belleza, hogar, wearables, mascotas y gadgets. Envío a todo Chile.",
+    "Los mejores productos con IA: salud, belleza, hogar, wearables, mascotas, gadgets, audio y oficina. Envío a todo Chile.",
 };
 
 export default function RootLayout({

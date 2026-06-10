@@ -4,7 +4,9 @@ export type Category =
   | "hogar"
   | "wearables"
   | "mascotas"
-  | "gadgets";
+  | "gadgets"
+  | "audio"
+  | "oficina";
 
 export type ProductTag = "bestseller" | "nuevo" | "descuento" | null;
 

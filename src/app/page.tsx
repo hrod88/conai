@@ -13,6 +13,8 @@ const categories = [
   { value: "wearables", label: "Wearables", icon: "⌚", desc: "Relojes, gafas y accesorios IA", count: 18, from: "#f59e0b", to: "#ef4444" },
   { value: "mascotas", label: "Mascotas Tech", icon: "🐾", desc: "GPS, cámaras y alimentadores", count: 15, from: "#10b981", to: "#0ea5e9" },
   { value: "gadgets", label: "Gadgets", icon: "🤖", desc: "Drones, impresoras 3D y más", count: 40, from: "#10b981", to: "#0ea5e9" },
+  { value: "audio", label: "Audio Inteligente", icon: "🎧", desc: "Auriculares, parlantes y altavoces IA", count: 0, from: "#f97316", to: "#eab308" },
+  { value: "oficina", label: "Oficina Tech", icon: "💼", desc: "Teclados, monitores y accesorios IA", count: 0, from: "#8b5cf6", to: "#06b6d4" },
 ];
 
 const benefits = [
@@ -28,15 +30,6 @@ const testimonials = [
   { name: "Daniela F.", city: "Concepción", rating: 5, text: "La máscara LED llegó perfectamente embalada. Ya noto resultados después de 2 semanas de uso consistente.", avatar: "D" },
 ];
 
-const trending = [
-  { name: "Oura Ring Gen 3", category: "Salud", price: "$299.990", icon: "💍", tag: "bestseller", bg: "#f0f9ff", color: "#3b82f6" },
-  { name: "LED Face Mask Pro", category: "Belleza", price: "$199.990", icon: "✨", tag: "descuento", bg: "#fdf4ff", color: "#a855f7" },
-  { name: "Robot Aspirador", category: "Hogar", price: "$299.990", icon: "🤖", tag: "bestseller", bg: "#eff6ff", color: "#3b82f6" },
-  { name: "Apple Watch S9", category: "Wearables", price: "$499.990", icon: "⌚", tag: "nuevo", bg: "#faf5ff", color: "#6366f1" },
-  { name: "GPS Mascotas Pro", category: "Mascotas", price: "$89.990", icon: "🐾", tag: "bestseller", bg: "#f0fdf4", color: "#10b981" },
-  { name: "Drone 4K Pro", category: "Gadgets", price: "$499.990", icon: "🚁", tag: "nuevo", bg: "#ecfdf5", color: "#10b981" },
-];
-
 const tagStyles: Record<string, { label: string; color: string; bg: string }> = {
   bestseller: { label: "⭐ Bestseller", color: "#92400e", bg: "#fef3c7" },
   nuevo: { label: "🆕 Nuevo", color: "#065f46", bg: "#d1fae5" },
@@ -50,6 +43,8 @@ const catMeta: Record<string, { color: string; bg: string; label: string }> = {
   wearables: { color: "#6366f1", bg: "#eef2ff", label: "Wearables" },
   mascotas:  { color: "#0ea5e9", bg: "#f0f9ff", label: "Mascotas" },
   gadgets:   { color: "#10b981", bg: "#ecfdf5", label: "Gadgets" },
+  audio:     { color: "#f97316", bg: "#fff7ed", label: "Audio" },
+  oficina:   { color: "#8b5cf6", bg: "#f5f3ff", label: "Oficina" },
 };
 
 export default async function HomePage() {
@@ -67,7 +62,7 @@ export default async function HomePage() {
     featured[cat] = (data ?? []) as Pick<Product, "id" | "name" | "price" | "icon" | "tag">[];
   }
 
-  const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets"] as const;
+  const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina"] as const;
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag" | "category">;
   const trendingProducts: TrendingProduct[] = [];
   for (const cat of allCats) {

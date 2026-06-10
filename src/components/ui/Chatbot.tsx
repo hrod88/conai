@@ -38,6 +38,10 @@ function getResponse(text: string): string {
     return "🤖 En **Gadgets** encontrarás drones con cámara 4K, impresoras 3D para el hogar, proyectores portátiles y altavoces inteligentes. ¡Tecnología de otro nivel! → /productos?cat=gadgets";
   if (/wearable|reloj|anillo|gafa|gafas|auricular|auriculares/.test(t))
     return "⌚ Los **Wearables** incluyen smartwatches de última generación, anillos inteligentes, gafas AR y auriculares con cancelación de ruido activa con IA. → /productos?cat=wearables";
+  if (/audio|parlante|altavoz|auricular|audífono|audifonos|bluetooth|sonido|música|musica/.test(t))
+    return "🎧 En **Audio Inteligente** encontrarás auriculares con IA, parlantes Bluetooth premium, altavoces inteligentes compatibles con Alexa y Google, y más. → /productos?cat=audio";
+  if (/oficina|teclado|monitor|escritorio|silla|ergon|trabajo|productividad/.test(t))
+    return "💼 En **Oficina Tech** tenemos teclados mecánicos, monitores ergonómicos, accesorios de productividad con IA y todo para hacer tu espacio de trabajo más inteligente. → /productos?cat=oficina";
   if (/mejor|recomienda|recomendación|popularito|popular|bestseller/.test(t))
     return "⭐ Nuestros productos más populares esta semana son el **Monitor de Salud Pro X** (Salud), el **Robot Aspirador Láser** (Hogar) y el **Dron 4K Plegable** (Gadgets). ¿Te interesa alguno?";
   if (/gracias|thank|perfecto|excelente|genial/.test(t))
@@ -47,7 +51,7 @@ function getResponse(text: string): string {
   const fallbacks = [
     "Entiendo tu consulta. Te recomiendo explorar nuestro catálogo o escribirnos a contacto@conai.cl 📧 para atención personalizada.",
     "Mmm, déjame pensar... 🤔 Para esa consulta específica, te sugiero contactar a nuestro equipo en contacto@conai.cl, te responderán en menos de 24 horas.",
-    "¡Buena pregunta! Puedo ayudarte mejor si me dices: ¿buscas un producto de salud, belleza, hogar, mascotas, gadgets o wearables?",
+    "¡Buena pregunta! Puedo ayudarte mejor si me dices: ¿buscas un producto de salud, belleza, hogar, mascotas, gadgets, wearables, audio o oficina?",
   ];
   return fallbacks[Math.floor(Math.random() * fallbacks.length)];
 }

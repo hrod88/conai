@@ -11,6 +11,8 @@ const categoryLabels: Record<string, string> = {
   wearables: "Wearables",
   mascotas: "Mascotas Tech",
   gadgets: "Gadgets",
+  audio: "Audio Inteligente",
+  oficina: "Oficina Tech",
 };
 
 export async function generateMetadata({
