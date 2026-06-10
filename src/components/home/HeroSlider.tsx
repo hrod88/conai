@@ -18,24 +18,24 @@ const slides = [
     accentTo: "#6366f1",
     desc: "Smartwatches, anillos y sensores que monitorean tu cuerpo 24/7 con inteligencia artificial.",
     stats: [
-      { n: "300+", label: "Productos" },
-      { n: "6", label: "Categorías" },
-      { n: "30", label: "Días Garantía" },
+      { n: "600+", label: "Productos" },
+      { n: "12",   label: "Categorías" },
+      { n: "30",   label: "Días Garantía" },
     ],
     badges: [
-      { text: "🚚 Envío gratis", color: "#065f46", bg: "#d1fae5" },
-      { text: "★ 4.8 · 2,400+ clientes", color: "#4338ca", bg: "#e0e7ff" },
-      { text: "Desde $89.990", color: "#92400e", bg: "#fef3c7" },
+      { text: "🚚 Envío gratis",           color: "#065f46", bg: "#d1fae5" },
+      { text: "★ 4.8 · 2,400+ clientes",   color: "#4338ca", bg: "#e0e7ff" },
+      { text: "Desde $89.990",             color: "#92400e", bg: "#fef3c7" },
     ],
     ctaLabel: "Ver Salud",
     ctaFrom: "#3b82f6",
     ctaTo: "#6366f1",
     hubIcon: "❤️",
     products: [
-      { name: "Oura Ring Gen 3", price: "$299.990", icon: "💍", discount: null, bg: "#f0f9ff" },
-      { name: "Apple Watch Ultra", price: "$799.990", icon: "⌚", discount: "-15%", bg: "#faf5ff" },
-      { name: "Withings ScanWatch", price: "$349.990", icon: "❤️", discount: null, bg: "#fff1f2" },
-      { name: "Dexcom G7", price: "$89.990", icon: "🩺", discount: null, bg: "#f0fdf4" },
+      { name: "Oura Ring Gen 3",    price: "$299.990", icon: "💍", discount: null,   bg: "#f0f9ff" },
+      { name: "Apple Watch Ultra",  price: "$799.990", icon: "⌚", discount: "-15%", bg: "#faf5ff" },
+      { name: "Withings ScanWatch", price: "$349.990", icon: "❤️", discount: null,   bg: "#fff1f2" },
+      { name: "Dexcom G7",          price: "$89.990",  icon: "🩺", discount: null,   bg: "#f0fdf4" },
     ],
   },
   {
@@ -50,23 +50,23 @@ const slides = [
     desc: "Dispositivos con IA que transforman tu rutina de belleza en una experiencia de lujo.",
     stats: [
       { n: "50", label: "Productos" },
-      { n: "6", label: "Marcas" },
+      { n: "6",  label: "Marcas" },
       { n: "30", label: "Días Garantía" },
     ],
     badges: [
-      { text: "🚚 Envío gratis", color: "#065f46", bg: "#d1fae5" },
-      { text: "★ 4.7 · 1,800+ clientas", color: "#6d28d9", bg: "#ede9fe" },
-      { text: "Desde $79.990", color: "#92400e", bg: "#fef3c7" },
+      { text: "🚚 Envío gratis",           color: "#065f46", bg: "#d1fae5" },
+      { text: "★ 4.7 · 1,800+ clientas",   color: "#6d28d9", bg: "#ede9fe" },
+      { text: "Desde $79.990",             color: "#92400e", bg: "#fef3c7" },
     ],
     ctaLabel: "Ver Belleza",
     ctaFrom: "#a855f7",
     ctaTo: "#ec4899",
     hubIcon: "✨",
     products: [
-      { name: "LED Face Mask", price: "$199.990", icon: "✨", discount: "-10%", bg: "#fdf4ff" },
-      { name: "HiMirror Mini X", price: "$399.990", icon: "🪞", discount: null, bg: "#fdf2f8" },
-      { name: "Foreo Luna 4", price: "$149.990", icon: "💆", discount: null, bg: "#fff0fb" },
-      { name: "NuFace Mini", price: "$249.990", icon: "💅", discount: "-20%", bg: "#fce7f3" },
+      { name: "LED Face Mask",  price: "$199.990", icon: "✨", discount: "-10%", bg: "#fdf4ff" },
+      { name: "HiMirror Mini X",price: "$399.990", icon: "🪞", discount: null,   bg: "#fdf2f8" },
+      { name: "Foreo Luna 4",   price: "$149.990", icon: "💆", discount: null,   bg: "#fff0fb" },
+      { name: "NuFace Mini",    price: "$249.990", icon: "💅", discount: "-20%", bg: "#fce7f3" },
     ],
   },
   {
@@ -81,23 +81,23 @@ const slides = [
     desc: "Robots, cámaras y termostatos con IA que automatizan tu hogar completamente.",
     stats: [
       { n: "50", label: "Productos" },
-      { n: "8", label: "Marcas" },
+      { n: "8",  label: "Marcas" },
       { n: "30", label: "Días Garantía" },
     ],
     badges: [
-      { text: "🚚 Envío gratis", color: "#065f46", bg: "#d1fae5" },
-      { text: "★ 4.9 · 3,100+ clientes", color: "#1d4ed8", bg: "#dbeafe" },
-      { text: "Desde $39.990", color: "#92400e", bg: "#fef3c7" },
+      { text: "🚚 Envío gratis",           color: "#065f46", bg: "#d1fae5" },
+      { text: "★ 4.9 · 3,100+ clientes",   color: "#1d4ed8", bg: "#dbeafe" },
+      { text: "Desde $39.990",             color: "#92400e", bg: "#fef3c7" },
     ],
     ctaLabel: "Ver Hogar",
     ctaFrom: "#3b82f6",
     ctaTo: "#10b981",
     hubIcon: "🏠",
     products: [
-      { name: "Robot Aspirador", price: "$299.990", icon: "🤖", discount: "-25%", bg: "#eff6ff" },
-      { name: "Cámara 4K IA", price: "$79.990", icon: "📹", discount: null, bg: "#f0fdf4" },
-      { name: "Termostato Smart", price: "$249.990", icon: "🌡️", discount: null, bg: "#fff7ed" },
-      { name: "Smart Hub", price: "$49.990", icon: "🔌", discount: null, bg: "#f5f3ff" },
+      { name: "Robot Aspirador",  price: "$299.990", icon: "🤖", discount: "-25%", bg: "#eff6ff" },
+      { name: "Cámara 4K IA",     price: "$79.990",  icon: "📹", discount: null,   bg: "#f0fdf4" },
+      { name: "Termostato Smart", price: "$249.990", icon: "🌡️", discount: null,   bg: "#fff7ed" },
+      { name: "Smart Hub",        price: "$49.990",  icon: "🔌", discount: null,   bg: "#f5f3ff" },
     ],
   },
   {
@@ -116,19 +116,19 @@ const slides = [
       { n: "30", label: "Días Garantía" },
     ],
     badges: [
-      { text: "🚚 Envío gratis", color: "#065f46", bg: "#d1fae5" },
-      { text: "★ 4.8 · 5,200+ clientes", color: "#0369a1", bg: "#e0f2fe" },
-      { text: "Desde $49.990", color: "#92400e", bg: "#fef3c7" },
+      { text: "🚚 Envío gratis",           color: "#065f46", bg: "#d1fae5" },
+      { text: "★ 4.8 · 5,200+ clientes",   color: "#0369a1", bg: "#e0f2fe" },
+      { text: "Desde $49.990",             color: "#92400e", bg: "#fef3c7" },
     ],
     ctaLabel: "Ver Gadgets",
     ctaFrom: "#10b981",
     ctaTo: "#0ea5e9",
     hubIcon: "🤖",
     products: [
-      { name: "Drone 4K Pro", price: "$499.990", icon: "🚁", discount: null, bg: "#ecfdf5" },
-      { name: "Impresora 3D", price: "$399.990", icon: "🖨️", discount: "-10%", bg: "#f0f9ff" },
-      { name: "Proyector Smart", price: "$299.990", icon: "📽️", discount: null, bg: "#fefce8" },
-      { name: "Audífonos IA", price: "$199.990", icon: "🎧", discount: null, bg: "#fff1f2" },
+      { name: "Drone 4K Pro",    price: "$499.990", icon: "🚁", discount: null,   bg: "#ecfdf5" },
+      { name: "Impresora 3D",    price: "$399.990", icon: "🖨️", discount: "-10%", bg: "#f0f9ff" },
+      { name: "Proyector Smart", price: "$299.990", icon: "📽️", discount: null,   bg: "#fefce8" },
+      { name: "Audífonos IA",    price: "$199.990", icon: "🎧", discount: null,   bg: "#fff1f2" },
     ],
   },
 ];
@@ -146,65 +146,80 @@ type Slide = Omit<typeof slides[0], "products"> & { products: SlideProduct[] };
 
 const INTERVAL = 5000;
 
-/* ── Salud: Orbit 3D ─────────────────────────────────── */
-function OrbitScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => void }) {
+/* ── Salud: Parallax Float ───────────────────────────── */
+function ParallaxFloat({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => void }) {
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const configs = [
+    { left: "8%",  top: "12%", depth: 1.4, duration: 7,  delay: "0s",   rotate: -6 },
+    { left: "57%", top: "7%",  depth: 0.7, duration: 9,  delay: "1.3s", rotate:  4 },
+    { left: "54%", top: "56%", depth: 1.6, duration: 8,  delay: "0.7s", rotate: -3 },
+    { left: "4%",  top: "57%", depth: 1.0, duration: 10, delay: "2.1s", rotate:  6 },
+  ];
 
   return (
     <div
-      className="relative w-full h-full flex items-center justify-center"
-      style={{ perspective: "600px" }}
+      ref={ref}
+      className="relative w-full h-full"
+      onMouseMove={(e) => {
+        const r = ref.current?.getBoundingClientRect();
+        if (!r) return;
+        setMouse({ x: (e.clientX - r.left) / r.width - 0.5, y: (e.clientY - r.top) / r.height - 0.5 });
+      }}
+      onMouseLeave={() => setMouse({ x: 0, y: 0 })}
     >
-      {/* Hub central */}
-      <div className="relative z-10 flex flex-col items-center gap-1 pointer-events-none">
-        <span className="text-7xl animate-float-slow">{slide.hubIcon}</span>
-        <span className="text-[10px] font-black tracking-widest uppercase opacity-50"
-          style={{ color: slide.catColor }}>conAI</span>
-      </div>
-
-      {/* Tarjetas orbitando */}
-      <div className="absolute inset-0 flex items-center justify-center"
-        style={{ transformStyle: "preserve-3d" }}>
-        {slide.products.map((p, i) => (
+      {slide.products.map((p, i) => {
+        const cfg = configs[i];
+        const tx = mouse.x * cfg.depth * 44;
+        const ty = mouse.y * cfg.depth * 34;
+        const isHovered = hoveredIdx === i;
+        return (
           <div
             key={p.name}
             className="absolute"
             style={{
-              transformStyle: "preserve-3d",
-              animation: `orbit 10s linear infinite`,
-              animationDelay: `${i * -2.5}s`,
-              animationPlayState: hoveredIdx === i ? "paused" : "running",
+              left: cfg.left,
+              top: cfg.top,
+              transform: `translate(${tx}px, ${ty}px)`,
+              transition: "transform 0.4s cubic-bezier(0.23,1,0.32,1)",
             }}
           >
-            <Link
-              href={p.id ? `/productos/${p.id}` : `/productos?cat=${slide.cat}`}
-              className="block rounded-2xl shadow-xl p-3 w-28 -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-              style={{
-                background: p.bg,
-                transform: `translate(-50%, -50%) scale(${hoveredIdx === i ? 1.12 : 1})`,
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                boxShadow: hoveredIdx === i ? "0 12px 32px rgba(0,0,0,0.18)" : undefined,
-              }}
-              onMouseEnter={() => { setHoveredIdx(i); onHover(true); }}
-              onMouseLeave={() => { setHoveredIdx(null); onHover(false); }}
-            >
-              <span className="text-3xl block mb-1">{p.icon}</span>
-              <p className="text-[11px] font-bold text-gray-700 truncate">{p.name}</p>
-              <p className="text-[12px] font-black mt-0.5" style={{ color: slide.accentFrom }}>{p.price}</p>
-              {p.discount && (
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500 text-white mt-1 inline-block">
-                  {p.discount}
-                </span>
-              )}
-            </Link>
+            <div style={{ animation: `floatSlow ${cfg.duration}s ${cfg.delay} ease-in-out infinite` }}>
+              <Link
+                href={p.id ? `/productos/${p.id}` : `/productos?cat=${slide.cat}`}
+                className="block rounded-2xl p-3 w-32 cursor-pointer"
+                style={{
+                  background: p.bg,
+                  border: `1.5px solid ${slide.accentFrom}22`,
+                  transform: `rotate(${cfg.rotate}deg) scale(${isHovered ? 1.1 : 1})`,
+                  transition: "transform 0.22s ease, box-shadow 0.22s ease",
+                  boxShadow: isHovered
+                    ? `0 14px 36px ${slide.accentFrom}44`
+                    : "0 4px 16px rgba(0,0,0,0.09)",
+                }}
+                onMouseEnter={() => { setHoveredIdx(i); onHover(true); }}
+                onMouseLeave={() => { setHoveredIdx(null); onHover(false); }}
+              >
+                <span className="text-3xl block mb-1.5 select-none">{p.icon}</span>
+                <p className="text-[11px] font-bold text-gray-700 leading-snug truncate">{p.name}</p>
+                <p className="text-[12px] font-black mt-0.5" style={{ color: slide.accentFrom }}>{p.price}</p>
+                {p.discount && (
+                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500 text-white mt-1 inline-block">
+                    {p.discount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
 
-/* ── Belleza: Tilt interactivo ───────────────────────── */
+/* ── Belleza: Tilt interactivo (sin cambios) ─────────── */
 function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => void }) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [hoveredMain, setHoveredMain] = useState(false);
@@ -234,7 +249,6 @@ function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => 
         onMouseEnter={() => { setHoveredMain(true); onHover(true); }}
         onMouseLeave={() => { setTilt({ x: 0, y: 0 }); setHoveredMain(false); onHover(false); }}
       >
-        {/* Producto principal */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
           style={{ transform: "translateZ(30px)" }}>
           <span className="text-8xl select-none">{slide.products[0].icon}</span>
@@ -252,8 +266,6 @@ function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => 
             </span>
           )}
         </div>
-
-        {/* Íconos flotantes en las esquinas */}
         {slide.products.slice(1).map((p, i) => (
           <span
             key={p.name}
@@ -270,8 +282,6 @@ function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => 
             {p.icon}
           </span>
         ))}
-
-        {/* Reflejo de luz con el tilt */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -281,7 +291,6 @@ function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => 
         />
       </Link>
 
-      {/* Grid pequeño de los otros 3 productos al lado */}
       <div className="hidden xl:flex flex-col gap-2 ml-4">
         {slide.products.slice(1).map((p, i) => (
           <Link
@@ -309,7 +318,7 @@ function TiltScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => 
   );
 }
 
-/* ── Hogar: Stack 3D ─────────────────────────────────── */
+/* ── Hogar: Stack 3D mejorado ────────────────────────── */
 function StackScene({ slide, visible, onHover }: { slide: Slide; visible: boolean; onHover: (h: boolean) => void }) {
   const [ready, setReady] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -324,89 +333,127 @@ function StackScene({ slide, visible, onHover }: { slide: Slide; visible: boolea
     <div className="w-full h-full flex items-center justify-center"
       style={{ perspective: "1000px" }}>
       <div className="relative w-56 h-60" style={{ transformStyle: "preserve-3d" }}>
-        {slide.products.map((p, i) => (
-          <Link
-            key={p.name}
-            href={p.id ? `/productos/${p.id}` : `/productos?cat=${slide.cat}`}
-            className="absolute inset-0 rounded-2xl shadow-xl flex flex-col items-center justify-center gap-2 cursor-pointer"
-            style={{
-              background: p.bg,
-              zIndex: hoveredIdx === i ? 10 : slide.products.length - i,
-              transform: ready
-                ? hoveredIdx === i
-                  ? `translateZ(${-i * 16}px) translateY(${i * 10}px) scale(${1 - i * 0.045 + 0.08})`
-                  : `translateZ(${-i * 16}px) translateY(${i * 10}px) scale(${1 - i * 0.045})`
-                : `translateZ(-100px) translateY(30px) scale(0.85)`,
-              opacity: ready ? 1 : 0,
-              transition: `transform 0.25s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease ${i * 0.13}s, box-shadow 0.2s ease`,
-              boxShadow: hoveredIdx === i ? "0 16px 40px rgba(0,0,0,0.18)" : undefined,
-            }}
-            onMouseEnter={() => { setHoveredIdx(i); onHover(true); }}
-            onMouseLeave={() => { setHoveredIdx(null); onHover(false); }}
-          >
-            <span className="text-5xl select-none">{p.icon}</span>
-            <p className="font-bold text-sm text-center px-4 text-gray-700">{p.name}</p>
-            <p className="font-black text-lg" style={{ color: slide.accentFrom }}>{p.price}</p>
-            {p.discount && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500 text-white">
-                {p.discount}
-              </span>
-            )}
-          </Link>
-        ))}
+        {slide.products.map((p, i) => {
+          const isHov = hoveredIdx === i;
+          const anyHov = hoveredIdx !== null;
+          const baseScale = 1 - i * 0.045;
+          const scale = ready
+            ? isHov
+              ? baseScale + 0.14
+              : anyHov
+                ? baseScale - 0.025
+                : baseScale
+            : 0.85;
+          const tz = ready ? (isHov ? 40 - i * 16 : -i * 16) : -100;
+          const ty = ready ? (isHov ? i * 5 : i * 10) : 30;
+
+          return (
+            <Link
+              key={p.name}
+              href={p.id ? `/productos/${p.id}` : `/productos?cat=${slide.cat}`}
+              className="absolute inset-0 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer"
+              style={{
+                background: p.bg,
+                zIndex: isHov ? 10 : slide.products.length - i,
+                opacity: ready ? 1 : 0,
+                transform: `translateZ(${tz}px) translateY(${ty}px) scale(${scale})`,
+                transition: `transform 0.28s cubic-bezier(0.16,1,0.3,1), opacity 0.5s ease ${i * 0.13}s, box-shadow 0.25s ease`,
+                boxShadow: isHov
+                  ? `0 24px 60px ${slide.accentFrom}55`
+                  : "0 6px 20px rgba(0,0,0,0.08)",
+              }}
+              onMouseEnter={() => { setHoveredIdx(i); onHover(true); }}
+              onMouseLeave={() => { setHoveredIdx(null); onHover(false); }}
+            >
+              <span className="text-5xl select-none">{p.icon}</span>
+              <p className="font-bold text-sm text-center px-4 text-gray-700">{p.name}</p>
+              <p className="font-black text-lg" style={{ color: slide.accentFrom }}>{p.price}</p>
+              {p.discount && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500 text-white">
+                  {p.discount}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/* ── Gadgets: Ticker vertical + blob ─────────────────── */
-function TickerScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => void }) {
-  const [tickerPaused, setTickerPaused] = useState(false);
+/* ── Gadgets: Zero Gravity Float ─────────────────────── */
+function ZeroGravityScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) => void }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const items = [...slide.products, ...slide.products, ...slide.products];
+
+  const configs = [
+    { left: "7%",  top: "10%", anim: "driftA", duration: 11, delay: "0s"   },
+    { left: "55%", top: "5%",  anim: "driftB", duration: 13, delay: "2.5s" },
+    { left: "58%", top: "55%", anim: "driftC", duration: 12, delay: "1.2s" },
+    { left: "2%",  top: "56%", anim: "driftD", duration: 14, delay: "3.5s" },
+  ];
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-      {/* Morphing blob de fondo */}
-      <div
-        className="absolute w-72 h-72 opacity-20 blur-3xl pointer-events-none"
-        style={{
-          background: `radial-gradient(circle, ${slide.accentFrom}, ${slide.accentTo})`,
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Blob principal */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div style={{
+          width: "300px", height: "300px",
+          background: `radial-gradient(circle, ${slide.accentFrom}50, ${slide.accentTo}28, transparent 68%)`,
           animation: "morphBlob 8s ease-in-out infinite",
-        }}
-      />
+          filter: "blur(28px)",
+        }} />
+      </div>
+      {/* Blob secundario */}
+      <div className="absolute pointer-events-none" style={{ top: "10%", right: "5%" }}>
+        <div style={{
+          width: "160px", height: "160px",
+          background: `radial-gradient(circle, ${slide.accentTo}40, transparent 68%)`,
+          animation: "morphBlob 11s 3s ease-in-out infinite",
+          filter: "blur(20px)",
+        }} />
+      </div>
 
-      {/* Ticker */}
-      <div className="relative z-10 w-52 overflow-hidden h-[360px]" style={{ maskImage: "linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)" }}>
-        <div style={{ animation: "tickerV 14s linear infinite", animationPlayState: tickerPaused ? "paused" : "running" }}>
-          {items.map((p, i) => (
+      {slide.products.map((p, i) => {
+        const cfg = configs[i];
+        const isHovered = hoveredIdx === i;
+        return (
+          <div
+            key={p.name}
+            className="absolute"
+            style={{
+              left: cfg.left,
+              top: cfg.top,
+              animation: `${cfg.anim} ${cfg.duration}s ${cfg.delay} ease-in-out infinite`,
+              animationPlayState: isHovered ? "paused" : "running",
+            }}
+          >
             <Link
-              key={i}
               href={p.id ? `/productos/${p.id}` : `/productos?cat=${slide.cat}`}
-              className="mb-3 rounded-xl shadow-md flex items-center gap-3 p-3 cursor-pointer block"
+              className="block rounded-2xl p-3 w-32 cursor-pointer"
               style={{
                 background: p.bg,
-                transform: `scale(${hoveredIdx === i ? 1.07 : 1})`,
-                transition: "transform 0.18s ease, box-shadow 0.18s ease",
-                boxShadow: hoveredIdx === i ? "0 6px 20px rgba(0,0,0,0.13)" : undefined,
+                border: `1.5px solid ${slide.accentFrom}25`,
+                transform: isHovered ? "scale(1.1)" : "scale(1)",
+                transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                boxShadow: isHovered
+                  ? `0 16px 40px ${slide.accentFrom}44`
+                  : "0 4px 20px rgba(0,0,0,0.10)",
               }}
-              onMouseEnter={() => { setTickerPaused(true); setHoveredIdx(i); onHover(true); }}
-              onMouseLeave={() => { setTickerPaused(false); setHoveredIdx(null); onHover(false); }}
+              onMouseEnter={() => { setHoveredIdx(i); onHover(true); }}
+              onMouseLeave={() => { setHoveredIdx(null); onHover(false); }}
             >
-              <span className="text-3xl flex-shrink-0 select-none">{p.icon}</span>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-sm truncate text-gray-700">{p.name}</p>
-                <p className="font-black text-base" style={{ color: slide.accentFrom }}>{p.price}</p>
-              </div>
+              <span className="text-3xl block mb-1.5 select-none">{p.icon}</span>
+              <p className="text-[11px] font-bold text-gray-700 leading-snug truncate">{p.name}</p>
+              <p className="text-[12px] font-black mt-0.5" style={{ color: slide.accentFrom }}>{p.price}</p>
               {p.discount && (
-                <span className="flex-shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500 text-white">
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500 text-white mt-1 inline-block">
                   {p.discount}
                 </span>
               )}
             </Link>
-          ))}
-        </div>
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -415,10 +462,10 @@ function TickerScene({ slide, onHover }: { slide: Slide; onHover: (h: boolean) =
 function SlideVisual({ slide, current, index, onHover }: { slide: Slide; current: number; index: number; onHover: (h: boolean) => void }) {
   const visible = current === index;
   switch (slide.cat) {
-    case "salud":   return <OrbitScene slide={slide} onHover={onHover} />;
+    case "salud":   return <ParallaxFloat slide={slide} onHover={onHover} />;
     case "belleza": return <TiltScene slide={slide} onHover={onHover} />;
     case "hogar":   return <StackScene slide={slide} visible={visible} onHover={onHover} />;
-    case "gadgets": return <TickerScene slide={slide} onHover={onHover} />;
+    case "gadgets": return <ZeroGravityScene slide={slide} onHover={onHover} />;
     default:        return null;
   }
 }
@@ -477,7 +524,6 @@ export default function HeroSlider({ featured = {} }: { featured?: Record<string
       className="relative overflow-hidden flex flex-col"
       style={{ height: "calc(100vh - 64px)", background: "var(--bg)" }}
     >
-      {/* Contenido principal */}
       <div className="flex-1 max-w-6xl mx-auto w-full px-6 grid md:grid-cols-[55%_45%] gap-8 items-center">
 
         {/* Columna izquierda */}
@@ -557,7 +603,7 @@ export default function HeroSlider({ featured = {} }: { featured?: Record<string
           </div>
         </div>
 
-        {/* Columna derecha — animación por slide */}
+        {/* Columna derecha */}
         <div
           className="hidden md:flex h-[420px] items-center justify-center"
           style={{
