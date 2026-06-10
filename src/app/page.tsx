@@ -57,18 +57,31 @@ const catMeta: Record<string, { color: string; bg: string; label: string }> = {
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const heroCats = ["salud", "belleza", "hogar", "gadgets"] as const;
-  const featured: Record<string, Pick<Product, "id" | "name" | "price" | "icon" | "tag">[]> = {};
 
-  for (const cat of heroCats) {
-    const { data } = await supabase
-      .from("products")
-      .select("id, name, price, icon, tag")
-      .eq("category", cat)
-      .order("rating", { ascending: false })
-      .limit(4);
-    featured[cat] = (data ?? []) as Pick<Product, "id" | "name" | "price" | "icon" | "tag">[];
-  }
+  type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag"> & { category: string };
+
+  const [
+    { data: bestsellersRaw },
+    { data: discountsRaw },
+    { data: newRaw },
+    { data: featuredRaw },
+  ] = await Promise.all([
+    supabase.from("products").select("id, name, price, icon, tag, category")
+      .eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
+    supabase.from("products").select("id, name, price, icon, tag, category")
+      .eq("tag", "descuento").order("rating", { ascending: false }).limit(4),
+    supabase.from("products").select("id, name, price, icon, tag, category")
+      .eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
+    supabase.from("products").select("id, name, price, icon, tag, category")
+      .order("rating", { ascending: false }).limit(4),
+  ]);
+
+  const heroData = {
+    bestsellers: (bestsellersRaw ?? []) as HeroProduct[],
+    discounts:   (discountsRaw   ?? []) as HeroProduct[],
+    newProducts: (newRaw         ?? []) as HeroProduct[],
+    featured:    (featuredRaw    ?? []) as HeroProduct[],
+  };
 
   const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag" | "category">;
@@ -86,7 +99,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSlider featured={featured} />
+      <HeroSlider heroData={heroData} />
 
       {/* ── Categorías ──────────────────────────── */}
       <section className="py-16 px-6 max-w-6xl mx-auto">
