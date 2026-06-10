@@ -47,18 +47,6 @@ type Order = {
 
 type Tab = "productos" | "pedidos" | "importar";
 
-type AIProduct = {
-  pid: string;
-  productNameEn: string;
-  nameEs: string;
-  sellPrice: number;
-  priceCLP: number;
-  productImage: string;
-  tag: string | null;
-  category: Category;
-  icon: string;
-};
-
 const statusStyles: Record<string, string> = {
   pending:   "bg-amber-50 text-amber-700 border-amber-200",
   paid:      "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -104,52 +92,6 @@ export default function AdminClient({
   const [importResults, setImportResults] = useState<CJProduct[]>([]);
   const [importLoading, setImportLoading] = useState(false);
   const [importForms, setImportForms] = useState<Record<string, ImportForm>>({});
-
-  // IA import
-  const [aiTopic, setAiTopic] = useState("");
-  const [aiCategory, setAiCategory] = useState<Category>("salud");
-  const [aiResults, setAiResults] = useState<AIProduct[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiQueries, setAiQueries] = useState<string[]>([]);
-  const [aiImportStatus, setAiImportStatus] = useState<Record<string, "idle" | "loading" | "done" | "error">>({});
-  const [importMode, setImportMode] = useState<"manual" | "ai">("ai");
-
-  async function searchWithAI() {
-    if (!aiTopic.trim()) return;
-    setAiLoading(true);
-    setAiResults([]);
-    setAiQueries([]);
-    setAiImportStatus({});
-    const res = await fetch("/api/admin/ai-import", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic: aiTopic, category: aiCategory }),
-    });
-    const json = await res.json();
-    setAiResults(json.products ?? []);
-    setAiQueries(json.queries ?? []);
-    setAiLoading(false);
-  }
-
-  async function importAIProduct(p: AIProduct) {
-    setAiImportStatus(prev => ({ ...prev, [p.pid]: "loading" }));
-    const res = await fetch("/api/admin/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name:        p.nameEs,
-        description: p.productNameEn,
-        price:       p.priceCLP,
-        category:    p.category,
-        tag:         p.tag,
-        image:       p.productImage,
-        icon:        p.icon,
-        cj_pid:      p.pid,
-      }),
-    });
-    const json = await res.json();
-    setAiImportStatus(prev => ({ ...prev, [p.pid]: json.ok ? "done" : "error" }));
-  }
 
   async function searchImport() {
     if (!importSearch.trim()) return;
@@ -452,241 +394,124 @@ export default function AdminClient({
       {/* ── Tab Importar CJ ──────────────────────────────────── */}
       {tab === "importar" && (
         <div className="flex flex-col gap-4">
-
-          {/* Toggle modo */}
-          <div className="flex rounded-xl p-1 w-fit" style={{ background: "var(--surface-alt)" }}>
-            {(["ai", "manual"] as const).map((m) => (
-              <button
-                key={m}
-                onClick={() => setImportMode(m)}
-                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${importMode === m ? "text-[var(--text)] shadow-sm" : "text-[var(--text-muted)]"}`}
-                style={importMode === m ? { background: "var(--surface)" } : {}}
-              >
-                {m === "ai" ? "🤖 Buscar con IA" : "🔍 Búsqueda manual"}
-              </button>
-            ))}
+          {/* Buscador */}
+          <div className="rounded-xl border p-4 flex gap-2" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <input
+              value={importSearch}
+              onChange={(e) => setImportSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && searchImport()}
+              placeholder="Buscar producto en CJ Dropshipping (ej: smart watch, yoga mat...)"
+              className="flex-1 text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+            <button
+              onClick={searchImport}
+              disabled={importLoading}
+              className="px-5 py-2 text-sm font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors whitespace-nowrap"
+            >
+              {importLoading ? "Buscando..." : "🔍 Buscar"}
+            </button>
           </div>
 
-          {/* ── MODO IA ── */}
-          {importMode === "ai" && (
-            <>
-              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-                <div className="flex gap-2">
-                  <select
-                    value={aiCategory}
-                    onChange={(e) => setAiCategory(e.target.value as Category)}
-                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
-                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+          {/* Resultados */}
+          {importResults.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {importResults.map((cj) => {
+                const form = importForms[cj.pid];
+                if (!form) return null;
+                return (
+                  <div
+                    key={cj.pid}
+                    className="rounded-xl border p-4 flex flex-col gap-3"
+                    style={{
+                      background: "var(--surface)",
+                      borderColor: form.status === "done" ? "#10b981" : form.status === "error" ? "#ef4444" : "var(--border)",
+                    }}
                   >
-                    {ALL_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
-                    ))}
-                  </select>
-                  <input
-                    value={aiTopic}
-                    onChange={(e) => setAiTopic(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && searchWithAI()}
-                    placeholder="Describe qué productos quieres (ej: monitores de salud, tensiómetros...)"
-                    className="flex-1 text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
-                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                  />
-                  <button
-                    onClick={searchWithAI}
-                    disabled={aiLoading}
-                    className="px-5 py-2 text-sm font-bold rounded-lg text-white disabled:opacity-50 transition-colors whitespace-nowrap"
-                    style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
-                  >
-                    {aiLoading ? "Analizando..." : "✨ Buscar"}
-                  </button>
-                </div>
-                {aiQueries.length > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Queries usadas:</span>
-                    {aiQueries.map((q, i) => (
-                      <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 font-medium">{q}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {aiLoading && (
-                <div className="rounded-xl border py-12 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-                  <span className="text-3xl block mb-2 animate-spin">✨</span>
-                  <p className="text-sm font-semibold text-[var(--text-muted)]">La IA está buscando y preparando productos...</p>
-                </div>
-              )}
-
-              {aiResults.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {aiResults.map((p) => {
-                    const status = aiImportStatus[p.pid] ?? "idle";
-                    return (
-                      <div
-                        key={p.pid}
-                        className="rounded-xl border p-4 flex flex-col gap-3"
-                        style={{
-                          background: "var(--surface)",
-                          borderColor: status === "done" ? "#10b981" : status === "error" ? "#ef4444" : "var(--border)",
-                        }}
-                      >
-                        <div className="flex gap-3">
-                          {p.productImage ? (
-                            <img src={p.productImage} alt="" className="w-16 h-16 rounded-lg object-contain bg-gray-50 flex-shrink-0 p-1" />
-                          ) : (
-                            <div className="w-16 h-16 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0 text-2xl">{p.icon}</div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-black text-sm text-[var(--text)] leading-snug">{p.nameEs}</p>
-                            <p className="text-[10px] text-[var(--text-muted)] line-clamp-1 mt-0.5">{p.productNameEn}</p>
-                            <p className="text-xs font-semibold text-orange-500 mt-0.5">Costo: USD ${p.sellPrice}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-black text-indigo-600 text-base">${p.priceCLP.toLocaleString("es-CL")}</span>
-                          {p.tag && <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold text-[10px] border border-amber-200">{p.tag}</span>}
-                          <span className="text-[var(--text-muted)] capitalize">{CAT_ICONS[p.category]} {p.category}</span>
-                        </div>
-                        {status === "done" ? (
-                          <p className="text-sm font-bold text-emerald-600">✅ Importado</p>
-                        ) : (
-                          <button
-                            onClick={() => importAIProduct(p)}
-                            disabled={status === "loading"}
-                            className="w-full py-2 text-sm font-black rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-                          >
-                            {status === "loading" ? "Importando..." : "📥 Importar"}
-                          </button>
-                        )}
+                    {/* Producto CJ */}
+                    <div className="flex gap-3">
+                      {cj.productImage && (
+                        <img src={cj.productImage} alt="" className="w-16 h-16 rounded-lg object-contain bg-gray-50 flex-shrink-0 p-1" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-sm text-[var(--text)] leading-snug line-clamp-2">{cj.productNameEn}</p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">PID: {cj.pid}</p>
+                        <p className="text-xs font-semibold text-orange-500 mt-0.5">Costo CJ: USD ${cj.sellPrice}</p>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    </div>
 
-              {aiResults.length === 0 && !aiLoading && (
-                <div className="rounded-xl border py-16 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-                  <span className="text-4xl block mb-3">🤖</span>
-                  <p className="text-sm font-semibold text-[var(--text-muted)]">Describe qué productos necesitas</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">La IA buscará en CJ, traducirá los nombres y calculará precios en CLP</p>
-                </div>
-              )}
-            </>
+                    {/* Formulario */}
+                    {form.status !== "done" && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Categoría</label>
+                          <select
+                            value={form.category}
+                            onChange={(e) => patchForm(cj.pid, { category: e.target.value as Category })}
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          >
+                            {ALL_CATEGORIES.map((c) => (
+                              <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Precio CLP</label>
+                          <input
+                            type="number"
+                            value={form.price}
+                            onChange={(e) => patchForm(cj.pid, { price: e.target.value })}
+                            placeholder="ej: 29990"
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          />
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Tag</label>
+                          <select
+                            value={form.tag}
+                            onChange={(e) => patchForm(cj.pid, { tag: e.target.value })}
+                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                          >
+                            <option value="">Sin tag</option>
+                            <option value="nuevo">🆕 Nuevo</option>
+                            <option value="bestseller">⭐ Bestseller</option>
+                            <option value="descuento">🔥 Descuento</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Acción */}
+                    {form.status === "done" ? (
+                      <p className="text-sm font-bold text-emerald-600">✅ Importado correctamente</p>
+                    ) : form.status === "error" ? (
+                      <p className="text-xs font-bold text-red-500">❌ {form.error}</p>
+                    ) : (
+                      <button
+                        onClick={() => importProduct(cj)}
+                        disabled={form.status === "loading" || !form.price}
+                        className="w-full py-2 text-sm font-black rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+                      >
+                        {form.status === "loading" ? "Importando..." : "📥 Importar a conAI"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
 
-          {/* ── MODO MANUAL ── */}
-          {importMode === "manual" && (
-            <>
-              <div className="rounded-xl border p-4 flex gap-2" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-                <input
-                  value={importSearch}
-                  onChange={(e) => setImportSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && searchImport()}
-                  placeholder="Buscar en CJ Dropshipping en inglés (ej: smart watch, yoga mat...)"
-                  className="flex-1 text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
-                  style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                />
-                <button
-                  onClick={searchImport}
-                  disabled={importLoading}
-                  className="px-5 py-2 text-sm font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors whitespace-nowrap"
-                >
-                  {importLoading ? "Buscando..." : "🔍 Buscar"}
-                </button>
-              </div>
-
-              {importResults.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {importResults.map((cj) => {
-                    const form = importForms[cj.pid];
-                    if (!form) return null;
-                    return (
-                      <div
-                        key={cj.pid}
-                        className="rounded-xl border p-4 flex flex-col gap-3"
-                        style={{
-                          background: "var(--surface)",
-                          borderColor: form.status === "done" ? "#10b981" : form.status === "error" ? "#ef4444" : "var(--border)",
-                        }}
-                      >
-                        <div className="flex gap-3">
-                          {cj.productImage && (
-                            <img src={cj.productImage} alt="" className="w-16 h-16 rounded-lg object-contain bg-gray-50 flex-shrink-0 p-1" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-sm text-[var(--text)] leading-snug line-clamp-2">{cj.productNameEn}</p>
-                            <p className="text-xs text-[var(--text-muted)] mt-0.5">PID: {cj.pid}</p>
-                            <p className="text-xs font-semibold text-orange-500 mt-0.5">Costo CJ: USD ${cj.sellPrice}</p>
-                          </div>
-                        </div>
-                        {form.status !== "done" && (
-                          <div className="grid grid-cols-3 gap-2">
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Categoría</label>
-                              <select
-                                value={form.category}
-                                onChange={(e) => patchForm(cj.pid, { category: e.target.value as Category })}
-                                className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
-                                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                              >
-                                {ALL_CATEGORIES.map((c) => (
-                                  <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Precio CLP</label>
-                              <input
-                                type="number"
-                                value={form.price}
-                                onChange={(e) => patchForm(cj.pid, { price: e.target.value })}
-                                placeholder="ej: 29990"
-                                className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
-                                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Tag</label>
-                              <select
-                                value={form.tag}
-                                onChange={(e) => patchForm(cj.pid, { tag: e.target.value })}
-                                className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
-                                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                              >
-                                <option value="">Sin tag</option>
-                                <option value="nuevo">🆕 Nuevo</option>
-                                <option value="bestseller">⭐ Bestseller</option>
-                                <option value="descuento">🔥 Descuento</option>
-                              </select>
-                            </div>
-                          </div>
-                        )}
-                        {form.status === "done" ? (
-                          <p className="text-sm font-bold text-emerald-600">✅ Importado correctamente</p>
-                        ) : form.status === "error" ? (
-                          <p className="text-xs font-bold text-red-500">❌ {form.error}</p>
-                        ) : (
-                          <button
-                            onClick={() => importProduct(cj)}
-                            disabled={form.status === "loading" || !form.price}
-                            className="w-full py-2 text-sm font-black rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
-                          >
-                            {form.status === "loading" ? "Importando..." : "📥 Importar a conAI"}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {importResults.length === 0 && !importLoading && (
-                <div className="rounded-xl border py-16 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-                  <span className="text-4xl block mb-3">🔍</span>
-                  <p className="text-sm font-semibold text-[var(--text-muted)]">Busca un producto en CJ para importarlo</p>
-                  <p className="text-xs text-[var(--text-muted)] mt-1">Escribe en inglés para mejores resultados</p>
-                </div>
-              )}
-            </>
+          {importResults.length === 0 && !importLoading && (
+            <div className="rounded-xl border py-16 text-center" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+              <span className="text-4xl block mb-3">🔍</span>
+              <p className="text-sm font-semibold text-[var(--text-muted)]">Busca un producto en CJ para importarlo</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Se guardará en tu tienda con imagen, precio y categoría</p>
+            </div>
           )}
         </div>
       )}
