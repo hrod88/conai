@@ -168,34 +168,30 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
       />
 
       {size === "large" && (
-        <div className="flex flex-col gap-2 p-4 flex-1">
-          <span className="text-3xl select-none leading-none">{product.icon}</span>
-          <div className="flex-1 flex flex-col gap-0.5 min-h-0">
-            <p className="font-black text-sm text-gray-800 leading-snug line-clamp-2">
-              {product.name}
-            </p>
-            <p
-              className="text-[10px] font-semibold capitalize"
-              style={{ color: `${cat.color}99` }}
-            >
-              {product.category}
-            </p>
+        <div className="flex flex-col p-4 flex-1">
+          {/* Ícono centrado verticalmente */}
+          <div className="flex-1 flex items-center justify-center min-h-0">
+            <span className="text-5xl select-none">{product.icon}</span>
           </div>
-          <div>
-            <p className="font-black text-xl leading-none" style={{ color: cat.color }}>
-              {price}
-            </p>
+          {/* Texto en la parte inferior */}
+          <div className="flex flex-col gap-1 pt-2">
             {tag && (
               <span
-                className="inline-block mt-1.5 text-[9px] font-black px-2 py-0.5 rounded-full"
+                className="inline-block text-[9px] font-black px-2 py-0.5 rounded-full w-fit"
                 style={{ background: tag.bg, color: tag.color }}
               >
                 {tag.label}
               </span>
             )}
+            <p className="font-bold text-[13px] text-gray-800 leading-snug line-clamp-2">
+              {product.name}
+            </p>
+            <p className="font-black text-xl leading-none" style={{ color: cat.color }}>
+              {price}
+            </p>
           </div>
           <span
-            className="text-[10px] font-bold transition-opacity duration-200"
+            className="text-[10px] font-bold mt-1 transition-opacity duration-200"
             style={{ color: cat.color, opacity: isHovered ? 1 : 0 }}
           >
             Ver producto →
@@ -205,7 +201,7 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "medium" && (
         <div className="flex flex-col gap-1.5 p-3 flex-1">
-          <span className="text-2xl select-none leading-none">{product.icon}</span>
+          <span className="text-3xl select-none leading-none">{product.icon}</span>
           <p className="font-bold text-[11px] text-gray-800 leading-snug line-clamp-2 flex-1">
             {product.name}
           </p>
