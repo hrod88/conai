@@ -11,6 +11,12 @@ const categories: { value: Category; label: string; icon: string }[] = [
   { value: "wearables", label: "Wearables", icon: "⌚" },
   { value: "mascotas", label: "Mascotas", icon: "🐾" },
   { value: "gadgets", label: "Gadgets", icon: "🤖" },
+  { value: "audio", label: "Audio", icon: "🎧" },
+  { value: "oficina", label: "Oficina Tech", icon: "💼" },
+  { value: "juguetes", label: "Juguetes & Bebés", icon: "🧸" },
+  { value: "deportes", label: "Deportes", icon: "⚽" },
+  { value: "electronica", label: "Electrónica", icon: "🔌" },
+  { value: "telefonos", label: "Teléfonos", icon: "📱" },
 ];
 
 const priceRanges = [
