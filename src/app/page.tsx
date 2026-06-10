@@ -13,12 +13,12 @@ const categories = [
   { value: "wearables", label: "Wearables", icon: "⌚", desc: "Relojes, gafas y accesorios IA", count: 18, from: "#f59e0b", to: "#ef4444" },
   { value: "mascotas", label: "Mascotas Tech", icon: "🐾", desc: "GPS, cámaras y alimentadores", count: 15, from: "#10b981", to: "#0ea5e9" },
   { value: "gadgets", label: "Gadgets", icon: "🤖", desc: "Drones, impresoras 3D y más", count: 40, from: "#10b981", to: "#0ea5e9" },
-  { value: "audio", label: "Audio Inteligente", icon: "🎧", desc: "Auriculares, parlantes y altavoces IA", count: 0, from: "#f97316", to: "#eab308" },
-  { value: "oficina", label: "Oficina Tech", icon: "💼", desc: "Teclados, monitores y accesorios IA", count: 0, from: "#8b5cf6", to: "#06b6d4" },
-  { value: "juguetes", label: "Juguetes & Bebés", icon: "🧸", desc: "Juguetes educativos y tecnológicos", count: 0, from: "#f43f5e", to: "#fb923c" },
-  { value: "deportes", label: "Deportes & Outdoor", icon: "⚽", desc: "Accesorios deportivos con tecnología IA", count: 0, from: "#22c55e", to: "#0ea5e9" },
-  { value: "electronica", label: "Electrónica", icon: "🔌", desc: "Gadgets y electrónica de consumo", count: 0, from: "#64748b", to: "#6366f1" },
-  { value: "telefonos", label: "Teléfonos & Accesorios", icon: "📱", desc: "Accesorios y periféricos para smartphones", count: 0, from: "#0ea5e9", to: "#6366f1" },
+  { value: "audio", label: "Audio Inteligente", icon: "🎧", desc: "Auriculares, parlantes y altavoces IA", count: 50, from: "#f97316", to: "#eab308" },
+  { value: "oficina", label: "Oficina Tech", icon: "💼", desc: "Teclados, monitores y accesorios IA", count: 50, from: "#8b5cf6", to: "#06b6d4" },
+  { value: "juguetes", label: "Juguetes & Bebés", icon: "🧸", desc: "Juguetes educativos y tecnológicos", count: 50, from: "#f43f5e", to: "#fb923c" },
+  { value: "deportes", label: "Deportes & Outdoor", icon: "⚽", desc: "Accesorios deportivos con tecnología IA", count: 50, from: "#22c55e", to: "#0ea5e9" },
+  { value: "electronica", label: "Electrónica", icon: "🔌", desc: "Gadgets y electrónica de consumo", count: 50, from: "#64748b", to: "#6366f1" },
+  { value: "telefonos", label: "Teléfonos & Accesorios", icon: "📱", desc: "Accesorios y periféricos para smartphones", count: 50, from: "#0ea5e9", to: "#6366f1" },
 ];
 
 const benefits = [
