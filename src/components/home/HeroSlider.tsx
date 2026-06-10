@@ -457,7 +457,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
 
         {/* ── Columna derecha — BentoScene ─────────────────── */}
         <div
-          className="hidden md:block h-[420px]"
+          className="hidden md:block h-[500px]"
           style={{
             opacity:    animating ? 0 : 1,
             transform:  animating ? "translateY(8px)" : "translateY(0)",
