@@ -121,6 +121,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [catProgress, setCatProgress]           = useState(0);
   const [drillCategory, setDrillCategory]       = useState<Category | null>(initialCategory ?? null);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen]           = useState(true);
 
   const scrollRef    = useRef<HTMLDivElement>(null);
   const sectionRefs  = useRef<Record<string, HTMLDivElement | null>>({});
@@ -210,12 +211,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     }
   }
 
-  function handleBack() {
-    setDrillCategory(null);
-    setActiveCategories([]);
-    setActiveSubcategory(null);
-  }
-
   function toggleCategory(val: Category) {
     setActiveCategories((prev) =>
       prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
@@ -246,10 +241,14 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden relative">
       {/* Sidebar */}
+      <div
+        className="flex-shrink-0 overflow-hidden"
+        style={{ width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }}
+      >
       <aside
-        className="w-44 flex-shrink-0 border-r overflow-y-auto p-3 flex flex-col gap-4"
+        className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-4"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       >
         <div>
@@ -367,6 +366,16 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           Limpiar filtros
         </button>
       </aside>
+      </div>
+
+      {/* Toggle sidebar */}
+      <button
+        onClick={() => setSidebarOpen((v) => !v)}
+        className="absolute top-1/2 -translate-y-1/2 z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+        style={{ left: sidebarOpen ? "164px" : "0px", transition: "left 200ms ease" }}
+      >
+        {sidebarOpen ? "‹" : "›"}
+      </button>
 
       {/* Grid principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -416,21 +425,10 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               >
                 <div className="flex items-center gap-5 w-max px-1">
                   <button
-                    onClick={handleBack}
-                    className="flex-shrink-0 flex items-center gap-1.5 text-[13px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors"
+                    onClick={() => handleCatClick(drillCategory!)}
+                    className="flex-shrink-0 text-[13px] font-bold text-white bg-indigo-600 dark:bg-indigo-500 px-2.5 py-0.5 rounded-full"
                   >
-                    ← {drillCatMeta?.label}
-                  </button>
-                  <span className="text-[var(--border)] select-none text-sm">|</span>
-                  <button
-                    onClick={() => setActiveSubcategory(null)}
-                    className={`flex-shrink-0 text-[13px] transition-colors ${
-                      activeSubcategory === null
-                        ? "font-bold text-indigo-600 dark:text-indigo-400"
-                        : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-                    }`}
-                  >
-                    Todas
+                    {drillCatMeta?.label}
                   </button>
                   {drillCategory && SUBCATEGORIES[drillCategory].map((sub) => (
                     <button
