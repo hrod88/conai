@@ -21,6 +21,7 @@ export interface Product {
   price: number;
   category: Category;
   icon: string;
+  image?: string | null;
   tag: ProductTag;
   stock: number;
   rating?: number;

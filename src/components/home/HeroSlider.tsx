@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { Product } from "@/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag"> & {
+type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & {
   category: string;
 };
 
@@ -169,9 +169,13 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "large" && (
         <div className="flex flex-col p-4 flex-1">
-          {/* Ícono centrado verticalmente */}
+          {/* Imagen o ícono centrado verticalmente */}
           <div className="flex-1 flex items-center justify-center min-h-0">
-            <span className="text-5xl select-none">{product.icon}</span>
+            {product.image ? (
+              <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain" />
+            ) : (
+              <span className="text-5xl select-none">{product.icon}</span>
+            )}
           </div>
           {/* Texto en la parte inferior */}
           <div className="flex flex-col gap-1 pt-2">
@@ -201,7 +205,13 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "medium" && (
         <div className="flex flex-col gap-1.5 p-3 flex-1">
-          <span className="text-3xl select-none leading-none">{product.icon}</span>
+          {product.image ? (
+            <div className="w-full h-20 rounded-md overflow-hidden bg-gray-50 flex items-center justify-center flex-shrink-0">
+              <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain p-1" />
+            </div>
+          ) : (
+            <span className="text-3xl select-none leading-none">{product.icon}</span>
+          )}
           <p className="font-bold text-[11px] text-gray-800 leading-snug line-clamp-2 flex-1">
             {product.name}
           </p>

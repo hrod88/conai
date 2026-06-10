@@ -265,12 +265,16 @@ export default function ProductDetailClient({
       {/* Main card */}
       <div className="rounded-2xl border p-5 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8 mb-6"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-        {/* Icon */}
+        {/* Image / Icon */}
         <div
-          className="flex items-center justify-center w-full md:w-52 h-48 md:h-52 rounded-2xl flex-shrink-0"
+          className="flex items-center justify-center w-full md:w-52 h-48 md:h-52 rounded-2xl flex-shrink-0 overflow-hidden"
           style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
         >
-          <span className="text-7xl md:text-8xl animate-float">{product.icon}</span>
+          {product.image ? (
+            <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
+          ) : (
+            <span className="text-7xl md:text-8xl animate-float">{product.icon}</span>
+          )}
         </div>
 
         {/* Info */}

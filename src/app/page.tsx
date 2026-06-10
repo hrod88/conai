@@ -58,7 +58,7 @@ const catMeta: Record<string, { color: string; bg: string; label: string }> = {
 export default async function HomePage() {
   const supabase = await createClient();
 
-  type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag"> & { category: string };
+  type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & { category: string };
 
   const [
     { data: bestsellersRaw },
@@ -66,13 +66,13 @@ export default async function HomePage() {
     { data: newRaw },
     { data: featuredRaw },
   ] = await Promise.all([
-    supabase.from("products").select("id, name, price, icon, tag, category")
+    supabase.from("products").select("id, name, price, icon, image, tag, category")
       .eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
-    supabase.from("products").select("id, name, price, icon, tag, category")
+    supabase.from("products").select("id, name, price, icon, image, tag, category")
       .eq("tag", "descuento").order("rating", { ascending: false }).limit(4),
-    supabase.from("products").select("id, name, price, icon, tag, category")
+    supabase.from("products").select("id, name, price, icon, image, tag, category")
       .eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
-    supabase.from("products").select("id, name, price, icon, tag, category")
+    supabase.from("products").select("id, name, price, icon, image, tag, category")
       .order("rating", { ascending: false }).limit(4),
   ]);
 
@@ -84,12 +84,12 @@ export default async function HomePage() {
   };
 
   const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
-  type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag" | "category">;
+  type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
   const trendingProducts: TrendingProduct[] = [];
   for (const cat of allCats) {
     const { data } = await supabase
       .from("products")
-      .select("id, name, price, icon, tag, category")
+      .select("id, name, price, icon, image, tag, category")
       .eq("category", cat)
       .eq("tag", "bestseller")
       .order("review_count", { ascending: false })
@@ -167,9 +167,17 @@ export default async function HomePage() {
                   className="group rounded-2xl border p-4 flex flex-col gap-2 transition-all hover:-translate-y-1 hover:shadow-md"
                   style={{ background: meta.bg, borderColor: `${meta.color}20` }}
                 >
-                  <div className="flex items-start justify-between gap-1">
-                    <span className="text-3xl">{p.icon}</span>
-                    <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0"
+                  <div className="relative mb-1">
+                    {p.image ? (
+                      <div className="w-full h-24 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                        <img src={p.image} alt={p.name} className="max-h-full max-w-full object-contain p-1" />
+                      </div>
+                    ) : (
+                      <div className="w-full h-24 rounded-lg bg-gray-50 flex items-center justify-center">
+                        <span className="text-3xl">{p.icon}</span>
+                      </div>
+                    )}
+                    <span className="absolute top-1 left-1 text-[9px] font-black px-1.5 py-0.5 rounded-full"
                       style={{ background: t.bg, color: t.color }}>
                       {t.label}
                     </span>
