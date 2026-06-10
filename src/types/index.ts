@@ -26,6 +26,7 @@ export interface Product {
   stock: number;
   rating?: number;
   review_count?: number;
+  subcategory?: string | null;
   created_at: string;
 }
 

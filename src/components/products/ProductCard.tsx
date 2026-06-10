@@ -63,24 +63,22 @@ export default function ProductCard({ product }: Props) {
 
       {/* Image / Icon + tag */}
       <div className="relative">
-        {product.image ? (
-          <div className="w-full h-36 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center mb-1">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-contain p-2"
-            />
-          </div>
-        ) : (
-          <div className="w-full h-36 rounded-lg bg-gray-50 flex items-center justify-center mb-1">
-            <span className="text-5xl">{product.icon}</span>
-          </div>
-        )}
         {product.tag && (
-          <span className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagStyles[product.tag]}`}>
+          <span className={`absolute top-0 left-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagStyles[product.tag]}`}>
             {tagLabel[product.tag]}
           </span>
         )}
+        <div className="w-full flex items-center justify-center pt-5 pb-1">
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-16 w-auto object-contain"
+            />
+          ) : (
+            <span className="text-4xl">{product.icon}</span>
+          )}
+        </div>
       </div>
 
       {/* Name */}
