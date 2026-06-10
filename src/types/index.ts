@@ -6,7 +6,11 @@ export type Category =
   | "mascotas"
   | "gadgets"
   | "audio"
-  | "oficina";
+  | "oficina"
+  | "juguetes"
+  | "deportes"
+  | "electronica"
+  | "telefonos";
 
 export type ProductTag = "bestseller" | "nuevo" | "descuento" | null;
 

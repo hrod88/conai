@@ -13,6 +13,10 @@ const categoryLabels: Record<string, string> = {
   gadgets: "Gadgets",
   audio: "Audio Inteligente",
   oficina: "Oficina Tech",
+  juguetes: "Juguetes & Bebés",
+  deportes: "Deportes & Outdoor",
+  electronica: "Electrónica",
+  telefonos: "Teléfonos & Accesorios",
 };
 
 export async function generateMetadata({

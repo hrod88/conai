@@ -15,6 +15,10 @@ const categories = [
   { value: "gadgets", label: "Gadgets", icon: "🤖", desc: "Drones, impresoras 3D y más", count: 40, from: "#10b981", to: "#0ea5e9" },
   { value: "audio", label: "Audio Inteligente", icon: "🎧", desc: "Auriculares, parlantes y altavoces IA", count: 0, from: "#f97316", to: "#eab308" },
   { value: "oficina", label: "Oficina Tech", icon: "💼", desc: "Teclados, monitores y accesorios IA", count: 0, from: "#8b5cf6", to: "#06b6d4" },
+  { value: "juguetes", label: "Juguetes & Bebés", icon: "🧸", desc: "Juguetes educativos y tecnológicos", count: 0, from: "#f43f5e", to: "#fb923c" },
+  { value: "deportes", label: "Deportes & Outdoor", icon: "⚽", desc: "Accesorios deportivos con tecnología IA", count: 0, from: "#22c55e", to: "#0ea5e9" },
+  { value: "electronica", label: "Electrónica", icon: "🔌", desc: "Gadgets y electrónica de consumo", count: 0, from: "#64748b", to: "#6366f1" },
+  { value: "telefonos", label: "Teléfonos & Accesorios", icon: "📱", desc: "Accesorios y periféricos para smartphones", count: 0, from: "#0ea5e9", to: "#6366f1" },
 ];
 
 const benefits = [
@@ -43,8 +47,12 @@ const catMeta: Record<string, { color: string; bg: string; label: string }> = {
   wearables: { color: "#6366f1", bg: "#eef2ff", label: "Wearables" },
   mascotas:  { color: "#0ea5e9", bg: "#f0f9ff", label: "Mascotas" },
   gadgets:   { color: "#10b981", bg: "#ecfdf5", label: "Gadgets" },
-  audio:     { color: "#f97316", bg: "#fff7ed", label: "Audio" },
-  oficina:   { color: "#8b5cf6", bg: "#f5f3ff", label: "Oficina" },
+  audio:      { color: "#f97316", bg: "#fff7ed", label: "Audio" },
+  oficina:    { color: "#8b5cf6", bg: "#f5f3ff", label: "Oficina" },
+  juguetes:   { color: "#f43f5e", bg: "#fff1f2", label: "Juguetes" },
+  deportes:   { color: "#22c55e", bg: "#f0fdf4", label: "Deportes" },
+  electronica:{ color: "#64748b", bg: "#f8fafc", label: "Electrónica" },
+  telefonos:  { color: "#0ea5e9", bg: "#f0f9ff", label: "Teléfonos" },
 };
 
 export default async function HomePage() {
@@ -62,7 +70,7 @@ export default async function HomePage() {
     featured[cat] = (data ?? []) as Pick<Product, "id" | "name" | "price" | "icon" | "tag">[];
   }
 
-  const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina"] as const;
+  const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "tag" | "category">;
   const trendingProducts: TrendingProduct[] = [];
   for (const cat of allCats) {

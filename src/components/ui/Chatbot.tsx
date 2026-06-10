@@ -42,6 +42,14 @@ function getResponse(text: string): string {
     return "🎧 En **Audio Inteligente** encontrarás auriculares con IA, parlantes Bluetooth premium, altavoces inteligentes compatibles con Alexa y Google, y más. → /productos?cat=audio";
   if (/oficina|teclado|monitor|escritorio|silla|ergon|trabajo|productividad/.test(t))
     return "💼 En **Oficina Tech** tenemos teclados mecánicos, monitores ergonómicos, accesorios de productividad con IA y todo para hacer tu espacio de trabajo más inteligente. → /productos?cat=oficina";
+  if (/juguete|niño|niños|bebe|bebé|bebés|infantil|educativo/.test(t))
+    return "🧸 En **Juguetes & Bebés** encontrarás juguetes educativos con tecnología, robótica para niños, y accesorios inteligentes para los más pequeños. → /productos?cat=juguetes";
+  if (/deporte|deportes|outdoor|exterior|fitness|running|ciclismo|ejercicio/.test(t))
+    return "⚽ En **Deportes & Outdoor** tenemos accesorios deportivos con tecnología IA, GPS, monitores de actividad y equipamiento para actividades al aire libre. → /productos?cat=deportes";
+  if (/electrónica|electronica|electrónico|electronico|consumo|componente/.test(t))
+    return "🔌 En **Electrónica** encontrarás gadgets, componentes y electrónica de consumo de última generación. → /productos?cat=electronica";
+  if (/teléfono|telefono|celular|smartphone|accesorio.*movil|funda|cargador|cable/.test(t))
+    return "📱 En **Teléfonos & Accesorios** tenemos fundas, cargadores inalámbricos, accesorios para smartphones y todo para sacarle el máximo a tu celular. → /productos?cat=telefonos";
   if (/mejor|recomienda|recomendación|popularito|popular|bestseller/.test(t))
     return "⭐ Nuestros productos más populares esta semana son el **Monitor de Salud Pro X** (Salud), el **Robot Aspirador Láser** (Hogar) y el **Dron 4K Plegable** (Gadgets). ¿Te interesa alguno?";
   if (/gracias|thank|perfecto|excelente|genial/.test(t))
