@@ -50,10 +50,54 @@ export default function CarritoPage() {
     name: "", phone: "", address: "", city: "",
     region: "Región Metropolitana de Santiago",
   });
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLabel, setCouponLabel] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [couponApplied, setCouponApplied] = useState("");
 
   const subtotal = total();
-  const envio = shipping.region ? shippingCost(shipping.region, subtotal) : 0;
-  const totalFinal = subtotal + envio;
+  const discountAmount = Math.round(subtotal * couponDiscount);
+  const envio = shipping.region ? shippingCost(shipping.region, subtotal - discountAmount) : 0;
+  const totalFinal = subtotal - discountAmount + envio;
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError("");
+    try {
+      const res = await fetch("/api/coupon/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setCouponDiscount(data.discount);
+        setCouponLabel(data.label);
+        setCouponApplied(couponInput.toUpperCase().trim());
+        setCouponError("");
+      } else {
+        setCouponError(data.error ?? "Cupón inválido");
+        setCouponDiscount(0);
+        setCouponLabel("");
+        setCouponApplied("");
+      }
+    } catch {
+      setCouponError("Error al validar el cupón");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function removeCoupon() {
+    setCouponDiscount(0);
+    setCouponLabel("");
+    setCouponApplied("");
+    setCouponInput("");
+    setCouponError("");
+  }
 
   function handleShippingChange(field: keyof ShippingData, value: string) {
     setShipping((prev) => ({ ...prev, [field]: value }));
@@ -316,10 +360,49 @@ export default function CarritoPage() {
 
             <hr style={{ borderColor: "var(--border)" }} />
 
+            {/* Cupón */}
+            {couponApplied ? (
+              <div className="flex items-center justify-between text-sm px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
+                <span className="font-bold text-emerald-600">🏷 {couponApplied} — {couponLabel}</span>
+                <button onClick={removeCoupon} className="text-emerald-400 hover:text-red-400 transition-colors text-xs font-bold">✕</button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
+                    placeholder="Código de cupón"
+                    className="flex-1 px-3 py-2 rounded-lg border text-xs bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
+                    style={{ borderColor: "var(--border)" }}
+                  />
+                  <button
+                    onClick={applyCoupon}
+                    disabled={couponLoading || !couponInput.trim()}
+                    className="px-3 py-2 bg-indigo-500 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                  >
+                    {couponLoading ? "..." : "Aplicar"}
+                  </button>
+                </div>
+                {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+              </div>
+            )}
+
+            <hr style={{ borderColor: "var(--border)" }} />
+
             <div className="flex justify-between items-center text-sm">
               <span className="text-[var(--text-muted)] font-semibold">Subtotal</span>
               <span className="font-bold text-[var(--text)]">{clp(subtotal)}</span>
             </div>
+
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-emerald-500 font-semibold">Descuento</span>
+                <span className="font-bold text-emerald-500">−{clp(discountAmount)}</span>
+              </div>
+            )}
 
             <div className="flex justify-between items-center text-sm">
               <span className="text-[var(--text-muted)] font-semibold">Envío</span>
@@ -335,7 +418,7 @@ export default function CarritoPage() {
             <div className="flex justify-between items-center">
               <span className="font-black text-[var(--text)]">Total</span>
               <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-lg">
-                {step === "cart" ? clp(subtotal) : clp(totalFinal)}
+                {step === "cart" ? clp(subtotal - discountAmount) : clp(totalFinal)}
               </span>
             </div>
 
