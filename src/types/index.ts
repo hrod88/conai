@@ -12,7 +12,7 @@ export type Category =
   | "electronica"
   | "telefonos";
 
-export type ProductTag = "bestseller" | "nuevo" | "descuento" | null;
+export type ProductTag = "bestseller" | "nuevo" | "descuento" | "oferta" | "destacado" | null;
 
 export interface Product {
   id: string;
@@ -27,6 +27,7 @@ export interface Product {
   rating?: number;
   review_count?: number;
   subcategory?: string | null;
+  original_price?: number | null;
   created_at: string;
 }
 

@@ -12,14 +12,18 @@ interface Props {
 
 const tagStyles: Record<string, string> = {
   bestseller: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700",
-  nuevo: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700",
-  descuento: "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700",
+  nuevo:      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700",
+  descuento:  "bg-red-50 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700",
+  oferta:     "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700",
+  destacado:  "bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-700",
 };
 
 const tagLabel: Record<string, string> = {
-  bestseller: "⭐ Bestseller",
-  nuevo: "🆕 Nuevo",
-  descuento: "🔥 Descuento",
+  bestseller: "⭐ Más vendidos",
+  nuevo:      "🆕 Recién llegado",
+  descuento:  "💲 Descuento",
+  oferta:     "🔥 Oferta",
+  destacado:  "✨ Destacado",
 };
 
 export default function ProductCard({ product }: Props) {
@@ -104,14 +108,21 @@ export default function ProductCard({ product }: Props) {
 
       {/* Price */}
       <div className="mt-auto pt-1.5 border-t" style={{ borderColor: "var(--border)" }}>
-        {product.tag === "descuento" && (
-          <span className="text-[11px] text-[var(--text-muted)] line-through mr-1.5">
-            ${Math.round(product.price * 1.2).toLocaleString("es-CL")}
+        <div className="flex items-baseline gap-1.5 flex-wrap">
+          {product.original_price && product.original_price > product.price && (
+            <span className="text-[11px] text-[var(--text-muted)] line-through">
+              ${Number(product.original_price).toLocaleString("es-CL")}
+            </span>
+          )}
+          <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">
+            ${Number(product.price).toLocaleString("es-CL")}
           </span>
-        )}
-        <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">
-          ${Number(product.price).toLocaleString("es-CL")}
-        </span>
+          {product.original_price && product.original_price > product.price && (
+            <span className="text-[10px] font-bold text-emerald-600">
+              -{Math.round((1 - product.price / product.original_price) * 100)}%
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Button full-width */}

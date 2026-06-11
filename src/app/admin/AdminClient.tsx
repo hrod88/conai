@@ -8,6 +8,7 @@ type CJProduct = {
   productNameEn: string;
   productNameCn?: string;
   sellPrice: number;
+  marketPrice?: number;
   productImage: string;
   description?: string;
 };
@@ -17,6 +18,7 @@ type ImportForm = {
   subcategory: string;
   nameEs: string;
   price: string;
+  originalPrice: string;
   tag: string;
   status: "idle" | "loading" | "done" | "error";
   error?: string;
@@ -81,10 +83,12 @@ const statusLabel: Record<string, string> = {
 };
 
 const tagOptions = [
-  { value: "", label: "Sin tag" },
-  { value: "bestseller", label: "Bestseller" },
-  { value: "nuevo", label: "Nuevo" },
-  { value: "descuento", label: "Descuento" },
+  { value: "",           label: "Sin tag" },
+  { value: "bestseller", label: "⭐ Más vendidos" },
+  { value: "nuevo",      label: "🆕 Recién llegado" },
+  { value: "descuento",  label: "💲 Descuento" },
+  { value: "oferta",     label: "🔥 Oferta" },
+  { value: "destacado",  label: "✨ Destacado" },
 ];
 
 export default function AdminClient({
@@ -121,7 +125,7 @@ export default function AdminClient({
     setImportResults(results);
     const forms: Record<string, ImportForm> = {};
     results.forEach((p) => {
-      forms[p.pid] = { category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, nameEs: "", price: String(Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100), tag: "", status: "idle" };
+      forms[p.pid] = { category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, nameEs: "", price: String(Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100), originalPrice: p.marketPrice ? String(Math.round(p.marketPrice * USD_CLP / 100) * 100) : "", tag: "", status: "idle" };
     });
     setImportForms(forms);
     setImportLoading(false);
@@ -139,15 +143,16 @@ export default function AdminClient({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name:        form.nameEs.trim() || cj.productNameEn,
-        description: cj.description ?? cj.productNameEn,
-        price:       Number(form.price),
-        category:    form.category,
-        subcategory: form.subcategory || null,
-        tag:         form.tag || null,
-        image:       cj.productImage,
-        icon:        CAT_ICONS[form.category],
-        cj_pid:      cj.pid,
+        name:           form.nameEs.trim() || cj.productNameEn,
+        description:    cj.description ?? cj.productNameEn,
+        price:          Number(form.price),
+        original_price: form.originalPrice ? Number(form.originalPrice) : null,
+        category:       form.category,
+        subcategory:    form.subcategory || null,
+        tag:            form.tag || null,
+        image:          cj.productImage,
+        icon:           CAT_ICONS[form.category],
+        cj_pid:         cj.pid,
       }),
     });
     const json = await res.json();
@@ -518,9 +523,11 @@ export default function AdminClient({
                               style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
                             >
                               <option value="">Sin tag</option>
-                              <option value="nuevo">🆕 Nuevo</option>
-                              <option value="bestseller">⭐ Bestseller</option>
-                              <option value="descuento">🔥 Descuento</option>
+                              <option value="bestseller">⭐ Más vendidos</option>
+                              <option value="nuevo">🆕 Recién llegado</option>
+                              <option value="descuento">💲 Descuento</option>
+                              <option value="oferta">🔥 Oferta</option>
+                              <option value="destacado">✨ Destacado</option>
                             </select>
                           </div>
                         </div>
@@ -571,6 +578,28 @@ export default function AdminClient({
                                 </span>
                               );
                             })()}
+                          </div>
+                        </div>
+
+                        {/* Precio anterior tachado */}
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">
+                            Precio anterior <span className="normal-case font-normal opacity-70">(se mostrará tachado en la tarjeta)</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={form.originalPrice}
+                              onChange={(e) => patchForm(cj.pid, { originalPrice: e.target.value })}
+                              placeholder={`ej: ${Math.round(cj.sellPrice * USD_CLP * 5 / 100) * 100} (precio retail mercado)`}
+                              className="flex-1 text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-red-300"
+                              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                            />
+                            {form.originalPrice && form.price && Number(form.originalPrice) > Number(form.price) && (
+                              <span className="text-[11px] font-bold text-emerald-600 whitespace-nowrap">
+                                -{Math.round((1 - Number(form.price) / Number(form.originalPrice)) * 100)}% desc.
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -10,6 +10,7 @@ export async function POST(req: NextRequest) {
     name: string;
     description: string;
     price: number;
+    original_price?: number | null;
     category: string;
     subcategory?: string | null;
     tag: string | null;
@@ -24,12 +25,13 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
   const { data, error } = await admin.from("products").insert({
-    name:        body.name,
-    description: body.description || body.name,
-    price:       Number(body.price),
-    category:    body.category,
-    subcategory: body.subcategory || null,
-    tag:         body.tag || null,
+    name:           body.name,
+    description:    body.description || body.name,
+    price:          Number(body.price),
+    original_price: body.original_price ?? null,
+    category:       body.category,
+    subcategory:    body.subcategory || null,
+    tag:            body.tag || null,
     image:       body.image || null,
     icon:        body.icon || "📦",
     cj_pid:      body.cj_pid || null,

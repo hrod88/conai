@@ -11,14 +11,18 @@ import ProductCard from "@/components/products/ProductCard";
 
 const tagStyles: Record<string, string> = {
   bestseller: "bg-amber-50 text-amber-700 border-amber-200",
-  nuevo: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  descuento: "bg-red-50 text-red-600 border-red-200",
+  nuevo:      "bg-emerald-50 text-emerald-700 border-emerald-200",
+  descuento:  "bg-red-50 text-red-600 border-red-200",
+  oferta:     "bg-orange-50 text-orange-600 border-orange-200",
+  destacado:  "bg-indigo-50 text-indigo-600 border-indigo-200",
 };
 
 const tagLabel: Record<string, string> = {
-  bestseller: "⭐ Bestseller",
-  nuevo: "🆕 Nuevo",
-  descuento: "🔥 Descuento",
+  bestseller: "⭐ Más vendidos",
+  nuevo:      "🆕 Recién llegado",
+  descuento:  "💲 Descuento",
+  oferta:     "🔥 Oferta",
+  destacado:  "✨ Destacado",
 };
 
 const categorySpecs: Record<string, [string, string][]> = {
@@ -341,9 +345,19 @@ export default function ProductDetailClient({
           <div className="flex items-center justify-between pt-3 border-t mt-auto" style={{ borderColor: "var(--border)" }}>
             <div>
               <p className="text-xs text-[var(--text-muted)] font-semibold mb-0.5">Precio</p>
+              {product.original_price && product.original_price > product.price && (
+                <p className="text-sm text-[var(--text-muted)] line-through leading-none mb-0.5">
+                  ${Number(product.original_price).toLocaleString("es-CL")}
+                </p>
+              )}
               <p className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">
                 ${Number(product.price).toLocaleString("es-CL")}
               </p>
+              {product.original_price && product.original_price > product.price && (
+                <p className="text-xs font-bold text-emerald-600 mt-0.5">
+                  Ahorro ${(Number(product.original_price) - Number(product.price)).toLocaleString("es-CL")} · {Math.round((1 - product.price / product.original_price) * 100)}% desc.
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2 items-end">
               <button
