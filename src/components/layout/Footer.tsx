@@ -18,9 +18,9 @@ const col2 = [
 const col3 = [
   { label: "Nosotros", href: "/nosotros" },
   { label: "Contacto", href: "/contacto" },
-  { label: "Política de envíos", href: "/nosotros" },
-  { label: "Devoluciones", href: "/nosotros" },
-  { label: "Términos de uso", href: "/nosotros" },
+  { label: "Política de envíos", href: "/envios" },
+  { label: "Devoluciones", href: "/devoluciones" },
+  { label: "Términos de uso", href: "/terminos" },
 ];
 
 export default function Footer() {
