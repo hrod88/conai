@@ -125,9 +125,12 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [priceOpen, setPriceOpen]               = useState(true);
   const [tagsOpen, setTagsOpen]                 = useState(true);
 
-  const scrollRef    = useRef<HTMLDivElement>(null);
-  const sectionRefs  = useRef<Record<string, HTMLDivElement | null>>({});
-  const isMounted    = useRef(false);
+  const scrollRef         = useRef<HTMLDivElement>(null);
+  const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
+  const isMounted         = useRef(false);
+  const outerContainerRef = useRef<HTMLDivElement>(null);
+  const catHeaderBtnRef   = useRef<HTMLButtonElement>(null);
+  const [toggleTopPx, setToggleTopPx] = useState<number>(9);
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
@@ -154,6 +157,19 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       }))
       .filter((g) => g.items.length > 0);
   }, [filtered]);
+
+  useEffect(() => {
+    const measure = () => {
+      if (!catHeaderBtnRef.current || !outerContainerRef.current) return;
+      const btnRect = catHeaderBtnRef.current.getBoundingClientRect();
+      const cRect   = outerContainerRef.current.getBoundingClientRect();
+      const centerY = Math.round(btnRect.top + btnRect.height / 2 - cRect.top);
+      setToggleTopPx(centerY - 12);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return; }
@@ -240,7 +256,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden relative">
+    <div ref={outerContainerRef} className="flex h-[calc(100vh-64px)] overflow-hidden relative">
       {/* Sidebar */}
       <div
         className="flex-shrink-0 overflow-hidden"
@@ -252,6 +268,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       >
         <div>
           <button
+            ref={catHeaderBtnRef}
             onClick={() => setCatOpen((v) => !v)}
             className="flex items-center gap-1.5 w-full mb-2"
           >
@@ -382,8 +399,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* Toggle sidebar */}
       <button
         onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute top-[9px] z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
-        style={{ left: sidebarOpen ? "164px" : "0px", transition: "left 200ms ease" }}
+        className="absolute z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+        style={{ left: sidebarOpen ? "164px" : "0px", top: `${toggleTopPx}px`, transition: "left 200ms ease" }}
       >
         {sidebarOpen ? "‹" : "›"}
       </button>
