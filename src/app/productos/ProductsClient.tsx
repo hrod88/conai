@@ -120,7 +120,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [catProgress, setCatProgress]           = useState(0);
   const [drillCategory, setDrillCategory]       = useState<Category | null>(initialCategory ?? null);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen]           = useState(true);
+  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const [isMobile, setIsMobile]                 = useState(false);
   const [catOpen, setCatOpen]                   = useState(true);
   const [priceOpen, setPriceOpen]               = useState(true);
   const [tagsOpen, setTagsOpen]                 = useState(true);
@@ -171,6 +172,15 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     measure();
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobile(mobile);
+    if (!mobile) setSidebarOpen(true);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   useEffect(() => {
@@ -253,10 +263,21 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
   return (
     <div ref={outerContainerRef} className="flex h-[calc(100vh-64px)] overflow-hidden relative">
+      {/* Mobile backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="absolute inset-0 z-20 bg-black/40"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
-        className="flex-shrink-0 overflow-hidden"
-        style={{ width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }}
+        className={isMobile ? "absolute inset-y-0 left-0 z-30 overflow-hidden" : "flex-shrink-0 overflow-hidden"}
+        style={isMobile
+          ? { transform: sidebarOpen ? "translateX(0)" : "translateX(-176px)", transition: "transform 200ms ease" }
+          : { width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }
+        }
       >
       <aside
         className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
@@ -422,7 +443,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* Toggle sidebar */}
       <button
         onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+        className="absolute z-30 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[13px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
         style={{ left: sidebarOpen ? "164px" : "0px", top: `${toggleTopPx}px`, transition: "left 200ms ease" }}
       >
         {sidebarOpen ? "‹" : "›"}
