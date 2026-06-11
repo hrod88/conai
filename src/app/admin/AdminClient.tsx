@@ -202,18 +202,23 @@ export default function AdminClient({
   const [importResults, setImportResults] = useState<CJProduct[]>([]);
   const [importLoading, setImportLoading] = useState(false);
   const [importForms, setImportForms] = useState<Record<string, ImportForm>>({});
+  const [importPage, setImportPage] = useState(1);
+  const [importTotal, setImportTotal] = useState(0);
 
   // CJ — tracking
   const [trackingData, setTrackingData] = useState<Record<string, TrackEvent[]>>({});
   const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({});
 
-  async function searchImport() {
+  async function searchImport(page = 1) {
     if (!importSearch.trim()) return;
     setImportLoading(true);
-    const res = await fetch(`/api/cj/search?q=${encodeURIComponent(importSearch)}`);
+    const res = await fetch(`/api/cj/search?q=${encodeURIComponent(importSearch)}&page=${page}`);
     const json = await res.json();
     const results: CJProduct[] = json.data?.list ?? [];
+    const total: number = json.data?.total ?? 0;
     setImportResults(results);
+    setImportPage(page);
+    setImportTotal(total);
     const forms: Record<string, ImportForm> = {};
     results.forEach((p) => {
       forms[p.pid] = { category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, nameEs: "", price: String(Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100), originalPrice: p.marketPrice ? String(Math.round(p.marketPrice * USD_CLP / 100) * 100) : "", tag: "", status: "idle" };
@@ -537,13 +542,13 @@ export default function AdminClient({
             <input
               value={importSearch}
               onChange={(e) => setImportSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && searchImport()}
+              onKeyDown={(e) => e.key === "Enter" && searchImport(1)}
               placeholder="Buscar producto en CJ Dropshipping (ej: smart watch, yoga mat...)"
               className="flex-1 text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
               style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
             />
             <button
-              onClick={searchImport}
+              onClick={() => searchImport(1)}
               disabled={importLoading}
               className="px-5 py-2 text-sm font-bold rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors whitespace-nowrap"
             >
@@ -779,6 +784,33 @@ export default function AdminClient({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Paginación */}
+          {importTotal > 0 && (
+            <div className="flex items-center justify-between px-2 py-3">
+              <button
+                onClick={() => searchImport(importPage - 1)}
+                disabled={importPage <= 1 || importLoading}
+                className="text-sm font-bold px-4 py-2 rounded-lg border disabled:opacity-40 hover:border-indigo-400 transition-colors"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                ← Anterior
+              </button>
+              <span className="text-xs text-[var(--text-muted)]">
+                Página <span className="font-bold text-[var(--text)]">{importPage}</span> de{" "}
+                <span className="font-bold text-[var(--text)]">{Math.ceil(importTotal / 50)}</span>
+                <span className="ml-2 opacity-60">({importTotal} resultados)</span>
+              </span>
+              <button
+                onClick={() => searchImport(importPage + 1)}
+                disabled={importPage >= Math.ceil(importTotal / 50) || importLoading}
+                className="text-sm font-bold px-4 py-2 rounded-lg border disabled:opacity-40 hover:border-indigo-400 transition-colors"
+                style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              >
+                Siguiente →
+              </button>
             </div>
           )}
 
