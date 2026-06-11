@@ -124,6 +124,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [catOpen, setCatOpen]                   = useState(true);
   const [priceOpen, setPriceOpen]               = useState(true);
   const [tagsOpen, setTagsOpen]                 = useState(true);
+  const [expandedCats, setExpandedCats]         = useState<Set<Category>>(new Set());
 
   const scrollRef         = useRef<HTMLDivElement>(null);
   const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
@@ -275,67 +276,83 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
           </button>
           {catOpen && categories.map((c) => {
-            const count  = products.filter((p) => p.category === c.value).length;
-            const active = activeCategories.includes(c.value);
+            const count      = products.filter((p) => p.category === c.value).length;
+            const active     = activeCategories.includes(c.value);
+            const isExpanded = expandedCats.has(c.value);
             return (
-              <label key={c.value} className="flex items-center justify-between mb-1.5 cursor-pointer group">
-                <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
-                  <input
-                    type="checkbox"
-                    checked={active}
-                    onChange={() => toggleCategory(c.value)}
-                    className="accent-indigo-600 w-3 h-3"
-                  />
-                  {c.label}
-                </span>
-                <span
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    active
-                      ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
-                      : "text-[var(--text-muted)]"
-                  }`}
-                  style={!active ? { background: "var(--surface-alt)" } : {}}
-                >
-                  {count}
-                </span>
-              </label>
+              <div key={c.value}>
+                <div className="flex items-center gap-1 mb-1.5">
+                  <button
+                    onClick={() => {
+                      const next = new Set(expandedCats);
+                      if (next.has(c.value)) next.delete(c.value); else next.add(c.value);
+                      setExpandedCats(next);
+                    }}
+                    className="flex-shrink-0 w-4 flex items-center justify-center text-[var(--text-muted)] hover:text-indigo-500"
+                  >
+                    <span
+                      className="text-[14px] leading-none inline-block"
+                      style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}
+                    >›</span>
+                  </button>
+                  <label className="flex items-center justify-between flex-1 cursor-pointer group">
+                    <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggleCategory(c.value)}
+                        className="accent-indigo-600 w-3 h-3"
+                      />
+                      {c.label}
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                        active
+                          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+                          : "text-[var(--text-muted)]"
+                      }`}
+                      style={!active ? { background: "var(--surface-alt)" } : {}}
+                    >
+                      {count}
+                    </span>
+                  </label>
+                </div>
+                {isExpanded && (
+                  <div className="ml-4 mb-1.5">
+                    {SUBCATEGORIES[c.value].map((sub) => {
+                      const subCount  = products.filter((p) => p.category === c.value && p.subcategory === sub.id).length;
+                      const subActive = activeSubcategory === sub.id && drillCategory === c.value;
+                      return (
+                        <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group">
+                          <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
+                            <input
+                              type="checkbox"
+                              checked={subActive}
+                              onChange={() => {
+                                if (subActive) {
+                                  setActiveSubcategory(null);
+                                  setDrillCategory(null);
+                                  setActiveCategories([]);
+                                } else {
+                                  setActiveSubcategory(sub.id);
+                                  setDrillCategory(c.value);
+                                  setActiveCategories([c.value]);
+                                }
+                              }}
+                              className="accent-indigo-600 w-3 h-3"
+                            />
+                            {sub.label}
+                          </span>
+                          <span className="text-[10px] text-[var(--text-muted)]">{subCount}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
-
-        {/* Subcategorías en sidebar (solo cuando hay drill activo) */}
-        {drillCategory && (
-          <>
-            <hr style={{ borderColor: "var(--border)" }} />
-            <div>
-              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase mb-2">
-                {drillCatMeta?.icon} {drillCatMeta?.label}
-              </p>
-              <label className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="subcategory"
-                  checked={activeSubcategory === null}
-                  onChange={() => setActiveSubcategory(null)}
-                  className="accent-indigo-600 w-3 h-3"
-                />
-                <span className="text-[12px] text-[var(--text-muted)] font-medium">Todas</span>
-              </label>
-              {SUBCATEGORIES[drillCategory].map((sub) => (
-                <label key={sub.id} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="subcategory"
-                    checked={activeSubcategory === sub.id}
-                    onChange={() => setActiveSubcategory(sub.id)}
-                    className="accent-indigo-600 w-3 h-3"
-                  />
-                  <span className="text-[12px] text-[var(--text-muted)] font-medium">{sub.label}</span>
-                </label>
-              ))}
-            </div>
-          </>
-        )}
 
         <hr style={{ borderColor: "var(--border)" }} />
 
