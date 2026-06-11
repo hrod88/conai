@@ -13,6 +13,18 @@ type CJProduct = {
   description?: string;
 };
 
+type CJVariant = {
+  vid: string;
+  variantNameEn: string;
+  variantSellPrice: number;
+  variantImage?: string;
+};
+
+type TrackEvent = {
+  description: string;
+  trackTime: string;
+};
+
 type ImportForm = {
   category: Category;
   subcategory: string;
@@ -22,6 +34,10 @@ type ImportForm = {
   tag: string;
   status: "idle" | "loading" | "done" | "error";
   error?: string;
+  variants?: CJVariant[];
+  variantsLoading?: boolean;
+  selectedVid?: string;
+  detailDesc?: string;
 };
 
 const CAT_ICONS: Record<Category, string> = {
@@ -116,6 +132,10 @@ export default function AdminClient({
   const [importLoading, setImportLoading] = useState(false);
   const [importForms, setImportForms] = useState<Record<string, ImportForm>>({});
 
+  // CJ — tracking
+  const [trackingData, setTrackingData] = useState<Record<string, TrackEvent[]>>({});
+  const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({});
+
   async function searchImport() {
     if (!importSearch.trim()) return;
     setImportLoading(true);
@@ -144,7 +164,7 @@ export default function AdminClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name:           form.nameEs.trim() || cj.productNameEn,
-        description:    cj.description ?? cj.productNameEn,
+        description:    form.detailDesc || cj.description || cj.productNameEn,
         price:          Number(form.price),
         original_price: form.originalPrice ? Number(form.originalPrice) : null,
         category:       form.category,
@@ -193,6 +213,28 @@ export default function AdminClient({
     setFulfillMsg((prev) => ({ ...prev, [orderId]: json.ok ? "✅ Enviado a CJ" : `❌ ${json.error}` }));
     if (json.ok) setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "shipped" } : o));
     setSaving(null);
+  }
+
+  async function loadVariants(pid: string) {
+    patchForm(pid, { variantsLoading: true });
+    const [varRes, detRes] = await Promise.all([
+      fetch(`/api/cj/variants?pid=${pid}`),
+      fetch(`/api/cj/product?pid=${pid}`),
+    ]);
+    const varJson = await varRes.json();
+    const detJson = await detRes.json();
+    const variants: CJVariant[] = varJson.data ?? [];
+    const detailDesc: string = detJson.data?.description ?? "";
+    patchForm(pid, { variants, detailDesc, variantsLoading: false });
+  }
+
+  async function loadTracking(orderId: string) {
+    setTrackingLoading((prev) => ({ ...prev, [orderId]: true }));
+    const res = await fetch(`/api/cj/track?orderNo=${orderId}`);
+    const json = await res.json();
+    const events: TrackEvent[] = json.data?.trackList ?? [];
+    setTrackingData((prev) => ({ ...prev, [orderId]: events }));
+    setTrackingLoading((prev) => ({ ...prev, [orderId]: false }));
   }
 
   const totalRevenue = orders
@@ -465,6 +507,50 @@ export default function AdminClient({
                       </div>
                     </div>
 
+                    {/* Variantes CJ */}
+                    {form.status !== "done" && (
+                      <div>
+                        {!form.variants && (
+                          <button
+                            onClick={() => loadVariants(cj.pid)}
+                            disabled={!!form.variantsLoading}
+                            className="text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-400 hover:text-indigo-600 disabled:opacity-50 transition-colors"
+                          >
+                            {form.variantsLoading ? "Cargando..." : "📦 Ver variantes"}
+                          </button>
+                        )}
+                        {form.variants && form.variants.length > 0 && (
+                          <div className="flex flex-col gap-1.5">
+                            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">
+                              Variantes ({form.variants.length}) — selecciona para actualizar precio
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {form.variants.map((v) => {
+                                const varPrice = Math.round(v.variantSellPrice * USD_CLP * 3 / 100) * 100;
+                                const isSelected = form.selectedVid === v.vid;
+                                return (
+                                  <button
+                                    key={v.vid}
+                                    onClick={() => patchForm(cj.pid, { selectedVid: v.vid, price: String(varPrice) })}
+                                    className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                                      isSelected
+                                        ? "bg-indigo-100 border-indigo-400 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                                        : "border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-300"
+                                    }`}
+                                  >
+                                    {v.variantNameEn} · USD {v.variantSellPrice}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {form.variants && form.variants.length === 0 && (
+                          <p className="text-[10px] text-[var(--text-muted)]">Sin variantes disponibles</p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Formulario */}
                     {form.status !== "done" && (
                       <div className="flex flex-col gap-2">
@@ -707,6 +793,30 @@ export default function AdminClient({
                           >
                             Enviar a CJ
                           </button>
+                        ) : o.status === "shipped" ? (
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => loadTracking(o.id)}
+                              disabled={trackingLoading[o.id]}
+                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-sky-100 text-sky-700 hover:bg-sky-200 disabled:opacity-50 transition-colors whitespace-nowrap dark:bg-sky-900/30 dark:text-sky-300"
+                            >
+                              {trackingLoading[o.id] ? "..." : "📦 Tracking"}
+                            </button>
+                            {trackingData[o.id] && (
+                              trackingData[o.id].length === 0 ? (
+                                <p className="text-[10px] text-[var(--text-muted)]">Sin datos aún</p>
+                              ) : (
+                                <div className="flex flex-col gap-0.5 max-w-[200px]">
+                                  {trackingData[o.id].slice(0, 3).map((ev, i) => (
+                                    <div key={i} className="text-[9px] text-[var(--text-muted)] leading-snug">
+                                      <span className="font-semibold text-[var(--text)]">{ev.description}</span>
+                                      <span className="ml-1 opacity-70">{ev.trackTime?.slice(0, 10)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )
+                            )}
+                          </div>
                         ) : (
                           <span className="text-[10px] text-[var(--text-muted)]">—</span>
                         )}
