@@ -6,7 +6,8 @@ export default async function AdminPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) redirect("/login");
+  const admins = (process.env.ADMIN_EMAIL ?? "").split(",").map((e) => e.trim());
+  if (!user || !admins.includes(user.email ?? "")) redirect("/");
 
   const [{ data: products }, { data: orders }] = await Promise.all([
     supabase.from("products").select("*").order("created_at", { ascending: false }),

@@ -4,7 +4,8 @@ export async function requireAdmin(): Promise<{ error: Response } | { ok: true }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+  const admins = (process.env.ADMIN_EMAIL ?? "").split(",").map((e) => e.trim());
+  if (!user || !admins.includes(user.email ?? "")) {
     return { error: Response.json({ error: "No autorizado" }, { status: 403 }) };
   }
 
