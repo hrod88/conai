@@ -1,7 +1,11 @@
 import { cjPost } from "@/lib/cj";
+import { requireAdmin } from "@/lib/admin-guard";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
+
   const orderNo = req.nextUrl.searchParams.get("orderNo");
   const trackNo = req.nextUrl.searchParams.get("trackNo");
 

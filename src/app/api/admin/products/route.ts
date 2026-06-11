@@ -1,10 +1,10 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-guard";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ error: "No autorizado" }, { status: 401 });
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
 
   const body = await req.json() as {
     name: string;

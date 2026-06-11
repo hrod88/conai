@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-guard";
 import { cjPost } from "@/lib/cj";
 import { NextRequest } from "next/server";
 
@@ -6,6 +7,9 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
+
   const { id } = await params;
   const admin = createAdminClient();
 

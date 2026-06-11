@@ -1,13 +1,13 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-guard";
 import { NextRequest } from "next/server";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return Response.json({ error: "No autorizado" }, { status: 401 });
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
 
   const { id } = await params;
   const { status } = await req.json();
