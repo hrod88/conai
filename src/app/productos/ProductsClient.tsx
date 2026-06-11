@@ -125,6 +125,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [priceOpen, setPriceOpen]               = useState(true);
   const [tagsOpen, setTagsOpen]                 = useState(true);
   const [expandedCats, setExpandedCats]         = useState<Set<Category>>(new Set());
+  const [hoveredSubcategory, setHoveredSubcategory] = useState<string | null>(null);
 
   const scrollRef         = useRef<HTMLDivElement>(null);
   const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
@@ -227,12 +228,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     }
   }
 
-  function toggleCategory(val: Category) {
-    setActiveCategories((prev) =>
-      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
-    );
-  }
-
   function togglePrice(val: string) {
     setActivePrices((prev) =>
       prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
@@ -266,6 +261,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       <aside
         className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        onMouseLeave={() => setHoveredSubcategory(null)}
       >
         <div>
           <button
@@ -334,7 +330,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       const subCount  = products.filter((p) => p.category === c.value && p.subcategory === sub.id).length;
                       const subActive = activeSubcategory === sub.id && drillCategory === c.value;
                       return (
-                        <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group">
+                        <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group" onMouseEnter={() => setHoveredSubcategory(sub.id)}>
                           <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
                             <input
                               type="checkbox"
@@ -490,7 +486,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       key={sub.id}
                       onClick={() => setActiveSubcategory(sub.id)}
                       className={`flex-shrink-0 text-[13px] transition-colors ${
-                        activeSubcategory === sub.id
+                        (hoveredSubcategory ?? activeSubcategory) === sub.id
                           ? "font-bold text-indigo-600 dark:text-indigo-400"
                           : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
                       }`}
