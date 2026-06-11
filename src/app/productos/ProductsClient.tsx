@@ -253,10 +253,10 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <div>
           <button
             onClick={() => setCatOpen((v) => !v)}
-            className="flex items-center justify-between w-full mb-2"
+            className="flex items-center gap-1.5 w-full mb-2"
           >
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: catOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
           </button>
           {catOpen && categories.map((c) => {
             const count  = products.filter((p) => p.category === c.value).length;
@@ -326,10 +326,10 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <div>
           <button
             onClick={() => setPriceOpen((v) => !v)}
-            className="flex items-center justify-between w-full mb-2"
+            className="flex items-center gap-1.5 w-full mb-2"
           >
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: priceOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
           </button>
           {priceOpen && priceRanges.map((r) => (
             <label key={r.value} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
@@ -349,10 +349,10 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <div>
           <button
             onClick={() => setTagsOpen((v) => !v)}
-            className="flex items-center justify-between w-full mb-2"
+            className="flex items-center gap-1.5 w-full mb-2"
           >
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: tagsOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
           </button>
           {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
             <label key={tag} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
