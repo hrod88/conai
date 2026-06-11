@@ -14,6 +14,8 @@ type CJProduct = {
 
 type ImportForm = {
   category: Category;
+  subcategory: string;
+  nameEs: string;
   price: string;
   tag: string;
   status: "idle" | "loading" | "done" | "error";
@@ -30,6 +32,23 @@ const ALL_CATEGORIES: Category[] = [
   "salud","belleza","hogar","wearables","mascotas","gadgets",
   "audio","oficina","juguetes","deportes","electronica","telefonos",
 ];
+
+const USD_CLP = 950;
+
+const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
+  salud:      [{ id:"ecg",label:"Relojes & ECG" },{ id:"tension",label:"Tensiómetros Smart" },{ id:"sueno",label:"Sueño & Descanso" },{ id:"glucometro",label:"Glucómetros" },{ id:"termometro",label:"Termómetros Smart" },{ id:"oximetro",label:"Oxímetros" },{ id:"masaje",label:"Masajeadores Terapéuticos" }],
+  belleza:    [{ id:"piel",label:"Cuidado de Piel IA" },{ id:"ipl",label:"Depilación IPL" },{ id:"facial",label:"Masaje Facial Smart" },{ id:"espejo",label:"Espejos Inteligentes" },{ id:"cepillo",label:"Cepillos Sónicos" }],
+  hogar:      [{ id:"iluminacion",label:"Iluminación Smart" },{ id:"enchufes",label:"Enchufes & Energía" },{ id:"seguridad",label:"Cámaras & Seguridad" },{ id:"robots",label:"Robots del Hogar" },{ id:"clima",label:"Termostatos & Clima" },{ id:"cerraduras",label:"Cerraduras Smart" }],
+  wearables:  [{ id:"smartwatch",label:"Smartwatches" },{ id:"anillos",label:"Smart Rings" },{ id:"fitness",label:"Fitness Trackers" },{ id:"gafas",label:"Gafas Smart" }],
+  mascotas:   [{ id:"gps-pet",label:"GPS & Rastreo" },{ id:"comedero",label:"Comederos Automáticos" },{ id:"camara-pet",label:"Cámaras para Mascotas" },{ id:"salud-pet",label:"Monitores de Salud" },{ id:"juguetes-pet",label:"Juguetes Interactivos" }],
+  gadgets:    [{ id:"cargadores",label:"Cargadores Inteligentes" },{ id:"proyectores",label:"Proyectores Smart" },{ id:"lamparas",label:"Lámparas Inteligentes" },{ id:"accesorios",label:"Accesorios Tech" }],
+  audio:      [{ id:"auriculares",label:"Auriculares ANC/IA" },{ id:"parlantes",label:"Parlantes Inteligentes" },{ id:"traductores",label:"Traductores en Tiempo Real" },{ id:"micros",label:"Micrófonos Smart" }],
+  oficina:    [{ id:"teclados",label:"Teclados & Ratones IA" },{ id:"monitores-of",label:"Monitores Smart" },{ id:"webcams",label:"Webcams con IA" },{ id:"productividad",label:"Gadgets de Productividad" }],
+  juguetes:   [{ id:"educativos",label:"Juguetes Educativos IA" },{ id:"bebes",label:"Monitores de Bebé" },{ id:"robots-edu",label:"Robots Educativos" },{ id:"stem",label:"STEM & Coding" }],
+  deportes:   [{ id:"relojes-dep",label:"Relojes Deportivos" },{ id:"sensores-dep",label:"Sensores de Entrenamiento" },{ id:"ropa-smart",label:"Ropa Inteligente" },{ id:"equipos-dep",label:"Equipos con IA" }],
+  electronica:[{ id:"tablets",label:"Tablets Smart" },{ id:"streaming",label:"Streaming & Smart TV" },{ id:"accesorios-elec",label:"Accesorios Smart" }],
+  telefonos:  [{ id:"smartphones",label:"Smartphones IA" },{ id:"accesorios-tel",label:"Accesorios Smart" },{ id:"fundas",label:"Fundas Inteligentes" }],
+};
 
 type Order = {
   id: string;
@@ -102,7 +121,7 @@ export default function AdminClient({
     setImportResults(results);
     const forms: Record<string, ImportForm> = {};
     results.forEach((p) => {
-      forms[p.pid] = { category: "gadgets", price: String(Math.round(p.sellPrice * 1000)), tag: "", status: "idle" };
+      forms[p.pid] = { category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, nameEs: "", price: String(Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100), tag: "", status: "idle" };
     });
     setImportForms(forms);
     setImportLoading(false);
@@ -120,10 +139,11 @@ export default function AdminClient({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name:        cj.productNameEn,
+        name:        form.nameEs.trim() || cj.productNameEn,
         description: cj.description ?? cj.productNameEn,
         price:       Number(form.price),
         category:    form.category,
+        subcategory: form.subcategory || null,
         tag:         form.tag || null,
         image:       cj.productImage,
         icon:        CAT_ICONS[form.category],
@@ -442,46 +462,116 @@ export default function AdminClient({
 
                     {/* Formulario */}
                     {form.status !== "done" && (
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="flex flex-col gap-2">
+                        {/* Nombre en español */}
                         <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Categoría</label>
-                          <select
-                            value={form.category}
-                            onChange={(e) => patchForm(cj.pid, { category: e.target.value as Category })}
-                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
-                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                          >
-                            {ALL_CATEGORIES.map((c) => (
-                              <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Precio CLP</label>
+                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Nombre en español</label>
                           <input
-                            type="number"
-                            value={form.price}
-                            onChange={(e) => patchForm(cj.pid, { price: e.target.value })}
-                            placeholder="ej: 29990"
+                            type="text"
+                            value={form.nameEs}
+                            onChange={(e) => patchForm(cj.pid, { nameEs: e.target.value })}
+                            placeholder={cj.productNameEn.slice(0, 50)}
                             className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
                             style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
                           />
                         </div>
 
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Tag</label>
-                          <select
-                            value={form.tag}
-                            onChange={(e) => patchForm(cj.pid, { tag: e.target.value })}
-                            className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
-                            style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                          >
-                            <option value="">Sin tag</option>
-                            <option value="nuevo">🆕 Nuevo</option>
-                            <option value="bestseller">⭐ Bestseller</option>
-                            <option value="descuento">🔥 Descuento</option>
-                          </select>
+                        {/* Categoría + Subcategoría + Tag */}
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Categoría</label>
+                            <select
+                              value={form.category}
+                              onChange={(e) => {
+                                const cat = e.target.value as Category;
+                                patchForm(cj.pid, { category: cat, subcategory: SUBCATEGORIES[cat][0].id });
+                              }}
+                              className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
+                              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                            >
+                              {ALL_CATEGORIES.map((c) => (
+                                <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Subcategoría</label>
+                            <select
+                              value={form.subcategory}
+                              onChange={(e) => patchForm(cj.pid, { subcategory: e.target.value })}
+                              className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                            >
+                              {SUBCATEGORIES[form.category].map((s) => (
+                                <option key={s.id} value={s.id}>{s.label}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Tag</label>
+                            <select
+                              value={form.tag}
+                              onChange={(e) => patchForm(cj.pid, { tag: e.target.value })}
+                              className="text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                            >
+                              <option value="">Sin tag</option>
+                              <option value="nuevo">🆕 Nuevo</option>
+                              <option value="bestseller">⭐ Bestseller</option>
+                              <option value="descuento">🔥 Descuento</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Precio con orientación de ganancia */}
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Precio de venta CLP</label>
+                            <span className="text-[10px] text-[var(--text-muted)]">Costo CJ ≈ ${Math.round(cj.sellPrice * USD_CLP).toLocaleString("es-CL")}</span>
+                          </div>
+                          <div className="flex gap-1.5">
+                            {([
+                              { mult: 2, label: "2×", hint: "mínimo",      active: "bg-amber-100 border-amber-400 text-amber-700" },
+                              { mult: 3, label: "3×", hint: "recomendado", active: "bg-emerald-100 border-emerald-400 text-emerald-700" },
+                              { mult: 4, label: "4×", hint: "premium",     active: "bg-indigo-100 border-indigo-400 text-indigo-700" },
+                            ] as const).map(({ mult, label, hint, active }) => {
+                              const suggested = Math.round(cj.sellPrice * USD_CLP * mult / 100) * 100;
+                              const margin = Math.round((1 - 1 / mult) * 100);
+                              const isActive = form.price === String(suggested);
+                              return (
+                                <button
+                                  key={mult}
+                                  type="button"
+                                  onClick={() => patchForm(cj.pid, { price: String(suggested) })}
+                                  className={`flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all ${isActive ? active : "border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-300"}`}
+                                >
+                                  <div>{label} ${suggested.toLocaleString("es-CL")}</div>
+                                  <div className="font-normal opacity-80">{hint} · {margin}%</div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={form.price}
+                              onChange={(e) => patchForm(cj.pid, { price: e.target.value })}
+                              placeholder="ej: 29990"
+                              className="flex-1 text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                            />
+                            {form.price && Number(form.price) > 0 && (() => {
+                              const costClp = Math.round(cj.sellPrice * USD_CLP);
+                              const margin = Math.round((1 - costClp / Number(form.price)) * 100);
+                              return (
+                                <span className={`text-[11px] font-bold whitespace-nowrap ${margin >= 60 ? "text-emerald-600" : margin >= 40 ? "text-amber-500" : "text-red-500"}`}>
+                                  {margin}% margen
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
                       </div>
                     )}

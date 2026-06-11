@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
     description: string;
     price: number;
     category: string;
+    subcategory?: string | null;
     tag: string | null;
     image: string;
     icon: string;
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
     description: body.description || body.name,
     price:       Number(body.price),
     category:    body.category,
+    subcategory: body.subcategory || null,
     tag:         body.tag || null,
     image:       body.image || null,
     icon:        body.icon || "📦",
