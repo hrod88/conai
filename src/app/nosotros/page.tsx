@@ -1,3 +1,8 @@
+export const metadata = {
+  title: "Nosotros — conAI",
+  description: "Conoce conAI, la tienda chilena de productos tecnológicos con inteligencia artificial.",
+};
+
 export default function NosotrosPage() {
   return (
     <div className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-14">
@@ -58,8 +63,8 @@ export default function NosotrosPage() {
       <section className="bg-gradient-to-r from-indigo-500 to-sky-400 rounded-2xl p-8">
         <div className="grid grid-cols-3 gap-6 text-center text-white">
           {[
-            { num: "180+", label: "Productos" },
-            { num: "6", label: "Categorías" },
+            { num: "600+", label: "Productos" },
+            { num: "12", label: "Categorías" },
             { num: "100%", label: "Chileno" },
           ].map((s) => (
             <div key={s.label}>
