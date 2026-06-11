@@ -116,7 +116,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   );
   const [activePrices, setActivePrices]         = useState<string[]>([]);
   const [activeTags, setActiveTags]             = useState<string[]>([]);
-  const [sort, setSort]                         = useState<"default" | "price-asc" | "price-desc" | "rating">("default");
   const [scrollCat, setScrollCat]               = useState<Category | null>(initialCategory);
   const [catProgress, setCatProgress]           = useState(0);
   const [drillCategory, setDrillCategory]       = useState<Category | null>(initialCategory ?? null);
@@ -141,11 +140,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       if (activeTags.length > 0 && (!p.tag || !activeTags.includes(p.tag))) return false;
       return true;
     });
-    if (sort === "price-asc")  result = [...result].sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") result = [...result].sort((a, b) => b.price - a.price);
-    if (sort === "rating")     result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return result;
-  }, [products, activeCategories, activePrices, activeTags, sort, activeSubcategory]);
+  }, [products, activeCategories, activePrices, activeTags, activeSubcategory]);
 
   const grouped = useMemo(() => {
     return categories
@@ -447,17 +443,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               </div>
             </div>
 
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as typeof sort)}
-              className="flex-shrink-0 text-[11px] font-bold px-2 py-1.5 rounded-lg border outline-none cursor-pointer"
-              style={{ background: "var(--surface-alt)", borderColor: "var(--border)", color: "var(--text-muted)" }}
-            >
-              <option value="default">Relevancia</option>
-              <option value="price-asc">Precio: menor</option>
-              <option value="price-desc">Precio: mayor</option>
-              <option value="rating">Mejor puntuados</option>
-            </select>
           </div>
 
           {/* Barra de progreso por categoría */}
