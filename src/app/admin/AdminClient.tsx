@@ -82,7 +82,17 @@ type Order = {
   shipping_cost: number | null;
 };
 
-type Tab = "productos" | "pedidos" | "importar";
+type Tab = "productos" | "pedidos" | "importar" | "cupones";
+
+type Coupon = {
+  id: string;
+  code: string;
+  discount: number;
+  label: string;
+  active: boolean;
+  expires_at: string | null;
+  created_at: string;
+};
 
 const statusStyles: Record<string, string> = {
   pending:   "bg-amber-50 text-amber-700 border-amber-200",
@@ -110,14 +120,63 @@ const tagOptions = [
 export default function AdminClient({
   products: initialProducts,
   orders: initialOrders,
+  coupons: initialCoupons,
 }: {
   products: Product[];
   orders: Order[];
+  coupons: Coupon[];
 }) {
   const [tab, setTab] = useState<Tab>("productos");
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [saving, setSaving] = useState<string | null>(null);
+
+  // Cupones
+  const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
+  const [couponForm, setCouponForm] = useState({ code: "", discount: "", label: "", expires_at: "" });
+  const [couponSaving, setCouponSaving] = useState(false);
+  const [couponError, setCouponError] = useState("");
+
+  async function createCoupon() {
+    if (!couponForm.code || !couponForm.discount || !couponForm.label) {
+      setCouponError("Código, descuento y descripción son obligatorios");
+      return;
+    }
+    setCouponSaving(true);
+    setCouponError("");
+    const res = await fetch("/api/admin/coupons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: couponForm.code,
+        discount: Number(couponForm.discount) / 100,
+        label: couponForm.label,
+        expires_at: couponForm.expires_at || null,
+      }),
+    });
+    const json = await res.json();
+    if (json.ok) {
+      setCoupons((prev) => [json.data, ...prev]);
+      setCouponForm({ code: "", discount: "", label: "", expires_at: "" });
+    } else {
+      setCouponError(json.error ?? "Error al crear cupón");
+    }
+    setCouponSaving(false);
+  }
+
+  async function toggleCoupon(id: string, active: boolean) {
+    await fetch(`/api/admin/coupons/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    setCoupons((prev) => prev.map((c) => c.id === id ? { ...c, active } : c));
+  }
+
+  async function deleteCoupon(id: string) {
+    await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" });
+    setCoupons((prev) => prev.filter((c) => c.id !== id));
+  }
 
   // CJ — vincular
   const [cjSearch, setCjSearch] = useState("");
@@ -298,7 +357,7 @@ export default function AdminClient({
 
       {/* Tabs */}
       <div className="flex rounded-xl p-1 w-fit" style={{ background: "var(--surface-alt)" }}>
-        {(["productos", "pedidos", "importar"] as Tab[]).map((t) => (
+        {(["productos", "pedidos", "importar", "cupones"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -307,7 +366,7 @@ export default function AdminClient({
             }`}
             style={tab === t ? { background: "var(--surface)" } : {}}
           >
-            {t === "importar" ? "📥 Importar CJ" : t}
+            {t === "importar" ? "📥 Importar CJ" : t === "cupones" ? "🏷 Cupones" : t}
           </button>
         ))}
       </div>
@@ -827,6 +886,117 @@ export default function AdminClient({
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Tab Cupones ─────────────────────────────────────── */}
+      {tab === "cupones" && (
+        <div className="flex flex-col gap-6">
+
+          {/* Formulario crear cupón */}
+          <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <h2 className="font-black text-[var(--text)]">Nuevo cupón</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Código</label>
+                <input
+                  type="text"
+                  value={couponForm.code}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
+                  placeholder="CONAI20"
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                  style={{ borderColor: "var(--border)" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Descuento (%)</label>
+                <input
+                  type="number"
+                  min={1} max={100}
+                  value={couponForm.discount}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, discount: e.target.value }))}
+                  placeholder="20"
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  style={{ borderColor: "var(--border)" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Descripción</label>
+                <input
+                  type="text"
+                  value={couponForm.label}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, label: e.target.value }))}
+                  placeholder="20% de descuento"
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  style={{ borderColor: "var(--border)" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Expira (opcional)</label>
+                <input
+                  type="date"
+                  value={couponForm.expires_at}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, expires_at: e.target.value }))}
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  style={{ borderColor: "var(--border)" }}
+                />
+              </div>
+            </div>
+            {couponError && <p className="text-xs text-red-500">{couponError}</p>}
+            <button
+              onClick={createCoupon}
+              disabled={couponSaving}
+              className="self-start px-5 py-2 bg-indigo-500 text-white text-sm font-bold rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50"
+            >
+              {couponSaving ? "Guardando..." : "Crear cupón"}
+            </button>
+          </div>
+
+          {/* Lista de cupones */}
+          <div className="rounded-xl border overflow-hidden" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: "var(--border)" }}>
+              <p className="font-black text-[var(--text)]">{coupons.length} cupones</p>
+            </div>
+            {coupons.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">No hay cupones creados</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b" style={{ borderColor: "var(--border)" }}>
+                    {["Código", "Descuento", "Descripción", "Expira", "Estado", ""].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {coupons.map((c) => (
+                    <tr key={c.id} className="border-b last:border-0 hover:bg-[var(--surface-alt)] transition-colors" style={{ borderColor: "var(--border)" }}>
+                      <td className="px-4 py-3 font-mono font-black text-indigo-500">{c.code}</td>
+                      <td className="px-4 py-3 font-bold text-[var(--text)]">{Math.round(c.discount * 100)}%</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{c.label}</td>
+                      <td className="px-4 py-3 text-[var(--text-muted)]">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("es-CL") : "—"}</td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => toggleCoupon(c.id, !c.active)}
+                          className={`px-2 py-1 rounded-full text-[10px] font-black border transition-colors ${c.active ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-400 border-gray-200"}`}
+                        >
+                          {c.active ? "Activo" : "Inactivo"}
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => deleteCoupon(c.id)}
+                          className="text-[var(--text-muted)] hover:text-red-500 transition-colors text-xs font-bold"
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
     </div>
