@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const data = await cjGet("/product/list", {
       productNameEn: q,
       pageNum: "1",
-      pageSize: "20",
+      pageSize: "50",
     });
     return Response.json(data);
   } catch (err) {
