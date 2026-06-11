@@ -382,7 +382,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* Toggle sidebar */}
       <button
         onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute top-[13px] z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+        className="absolute top-[9px] z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
         style={{ left: sidebarOpen ? "164px" : "0px", transition: "left 200ms ease" }}
       >
         {sidebarOpen ? "‹" : "›"}
