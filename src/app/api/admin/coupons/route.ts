@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   if ("error" in guard) return guard.error;
 
   const body = await req.json();
-  const { code, discount, label, expires_at } = body;
+  const { code, type, discount, label, min_purchase, max_uses, expires_at } = body;
 
   if (!code || !discount || !label) {
     return Response.json({ error: "Faltan campos obligatorios" }, { status: 400 });
@@ -31,8 +31,11 @@ export async function POST(req: Request) {
     .from("coupons")
     .insert({
       code: String(code).toUpperCase().trim(),
+      type: type ?? "percentage",
       discount: Number(discount),
       label: String(label).trim(),
+      min_purchase: min_purchase ? Number(min_purchase) : null,
+      max_uses: max_uses ? Number(max_uses) : null,
       expires_at: expires_at || null,
     })
     .select()

@@ -87,8 +87,12 @@ type Tab = "productos" | "pedidos" | "importar" | "cupones";
 type Coupon = {
   id: string;
   code: string;
+  type: "percentage" | "fixed";
   discount: number;
   label: string;
+  min_purchase: number | null;
+  max_uses: number | null;
+  uses_count: number;
   active: boolean;
   expires_at: string | null;
   created_at: string;
@@ -133,7 +137,10 @@ export default function AdminClient({
 
   // Cupones
   const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
-  const [couponForm, setCouponForm] = useState({ code: "", discount: "", label: "", expires_at: "" });
+  const [couponForm, setCouponForm] = useState({
+    code: "", type: "percentage", discount: "", label: "",
+    min_purchase: "", max_uses: "", expires_at: "",
+  });
   const [couponSaving, setCouponSaving] = useState(false);
   const [couponError, setCouponError] = useState("");
 
@@ -149,15 +156,20 @@ export default function AdminClient({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         code: couponForm.code,
-        discount: Number(couponForm.discount) / 100,
+        type: couponForm.type,
+        discount: couponForm.type === "percentage"
+          ? Number(couponForm.discount) / 100
+          : Number(couponForm.discount),
         label: couponForm.label,
+        min_purchase: couponForm.min_purchase ? Number(couponForm.min_purchase) : null,
+        max_uses: couponForm.max_uses ? Number(couponForm.max_uses) : null,
         expires_at: couponForm.expires_at || null,
       }),
     });
     const json = await res.json();
     if (json.ok) {
       setCoupons((prev) => [json.data, ...prev]);
-      setCouponForm({ code: "", discount: "", label: "", expires_at: "" });
+      setCouponForm({ code: "", type: "percentage", discount: "", label: "", min_purchase: "", max_uses: "", expires_at: "" });
     } else {
       setCouponError(json.error ?? "Error al crear cupón");
     }
@@ -896,52 +908,100 @@ export default function AdminClient({
           {/* Formulario crear cupón */}
           <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
             <h2 className="font-black text-[var(--text)]">Nuevo cupón</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+            {/* Fila 1: Código · Tipo · Descuento */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Código</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Código *</label>
                 <input
                   type="text"
                   value={couponForm.code}
                   onChange={(e) => setCouponForm((p) => ({ ...p, code: e.target.value.toUpperCase() }))}
-                  placeholder="CONAI20"
+                  placeholder="VERANO20"
                   className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                   style={{ borderColor: "var(--border)" }}
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Descuento (%)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Tipo *</label>
+                <select
+                  value={couponForm.type}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, type: e.target.value, discount: "" }))}
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  style={{ borderColor: "var(--border)", background: "var(--bg)" }}
+                >
+                  <option value="percentage">% Porcentaje</option>
+                  <option value="fixed">$ Monto fijo</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
+                  {couponForm.type === "percentage" ? "% Descuento *" : "$ Descuento *"}
+                </label>
                 <input
                   type="number"
-                  min={1} max={100}
+                  min={1}
+                  max={couponForm.type === "percentage" ? 100 : undefined}
                   value={couponForm.discount}
                   onChange={(e) => setCouponForm((p) => ({ ...p, discount: e.target.value }))}
-                  placeholder="20"
+                  placeholder={couponForm.type === "percentage" ? "20" : "5000"}
                   className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
                   style={{ borderColor: "var(--border)" }}
                 />
               </div>
+            </div>
+
+            {/* Fila 2: Descripción · Compra mínima · Usos máximos */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Descripción</label>
                 <input
                   type="text"
                   value={couponForm.label}
                   onChange={(e) => setCouponForm((p) => ({ ...p, label: e.target.value }))}
-                  placeholder="20% de descuento"
+                  placeholder="20% de descuento en toda la tienda"
                   className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
                   style={{ borderColor: "var(--border)" }}
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Expira (opcional)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Compra mínima $</label>
                 <input
-                  type="date"
-                  value={couponForm.expires_at}
-                  onChange={(e) => setCouponForm((p) => ({ ...p, expires_at: e.target.value }))}
-                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  type="number"
+                  min={0}
+                  value={couponForm.min_purchase}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, min_purchase: e.target.value }))}
+                  placeholder="20000"
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
+                  style={{ borderColor: "var(--border)" }}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Usos máximos</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={couponForm.max_uses}
+                  onChange={(e) => setCouponForm((p) => ({ ...p, max_uses: e.target.value }))}
+                  placeholder="100"
+                  className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
                   style={{ borderColor: "var(--border)" }}
                 />
               </div>
             </div>
+
+            {/* Fila 3: Expira */}
+            <div className="flex flex-col gap-1 max-w-xs">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Expira</label>
+              <input
+                type="date"
+                value={couponForm.expires_at}
+                onChange={(e) => setCouponForm((p) => ({ ...p, expires_at: e.target.value }))}
+                className="px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors"
+                style={{ borderColor: "var(--border)" }}
+              />
+            </div>
+
             {couponError && <p className="text-xs text-red-500">{couponError}</p>}
             <button
               onClick={createCoupon}
@@ -958,43 +1018,59 @@ export default function AdminClient({
               <p className="font-black text-[var(--text)]">{coupons.length} cupones</p>
             </div>
             {coupons.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">No hay cupones creados</p>
+              <div className="py-16 text-center">
+                <span className="text-4xl block mb-3">🏷️</span>
+                <p className="text-sm text-[var(--text-muted)]">Aún no hay cupones creados</p>
+              </div>
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                    {["Código", "Descuento", "Descripción", "Expira", "Estado", ""].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {coupons.map((c) => (
-                    <tr key={c.id} className="border-b last:border-0 hover:bg-[var(--surface-alt)] transition-colors" style={{ borderColor: "var(--border)" }}>
-                      <td className="px-4 py-3 font-mono font-black text-indigo-500">{c.code}</td>
-                      <td className="px-4 py-3 font-bold text-[var(--text)]">{Math.round(c.discount * 100)}%</td>
-                      <td className="px-4 py-3 text-[var(--text-muted)]">{c.label}</td>
-                      <td className="px-4 py-3 text-[var(--text-muted)]">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("es-CL") : "—"}</td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => toggleCoupon(c.id, !c.active)}
-                          className={`px-2 py-1 rounded-full text-[10px] font-black border transition-colors ${c.active ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-400 border-gray-200"}`}
-                        >
-                          {c.active ? "Activo" : "Inactivo"}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => deleteCoupon(c.id)}
-                          className="text-[var(--text-muted)] hover:text-red-500 transition-colors text-xs font-bold"
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b" style={{ borderColor: "var(--border)" }}>
+                      {["Código", "Tipo", "Descuento", "Descripción", "Compra mín.", "Usos", "Expira", "Estado", ""].map((h) => (
+                        <th key={h} className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] whitespace-nowrap">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {coupons.map((c) => (
+                      <tr key={c.id} className="border-b last:border-0 hover:bg-[var(--surface-alt)] transition-colors" style={{ borderColor: "var(--border)" }}>
+                        <td className="px-4 py-3 font-mono font-black text-indigo-500">{c.code}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{c.type === "fixed" ? "$ Fijo" : "% Porcentaje"}</td>
+                        <td className="px-4 py-3 font-bold text-[var(--text)]">
+                          {c.type === "fixed"
+                            ? `$${Number(c.discount).toLocaleString("es-CL")}`
+                            : `${Math.round(c.discount * 100)}%`}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{c.label}</td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">
+                          {c.min_purchase ? `$${Number(c.min_purchase).toLocaleString("es-CL")}` : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">
+                          {c.max_uses ? `${c.uses_count ?? 0}/${c.max_uses}` : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-[var(--text-muted)]">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("es-CL") : "—"}</td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => toggleCoupon(c.id, !c.active)}
+                            className={`px-2 py-1 rounded-full text-[10px] font-black border transition-colors ${c.active ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-gray-100 text-gray-400 border-gray-200"}`}
+                          >
+                            {c.active ? "Activo" : "Inactivo"}
+                          </button>
+                        </td>
+                        <td className="px-4 py-3">
+                          <button
+                            onClick={() => deleteCoupon(c.id)}
+                            className="text-[var(--text-muted)] hover:text-red-500 transition-colors text-xs font-bold"
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

@@ -53,12 +53,15 @@ export default function CarritoPage() {
   const [couponInput, setCouponInput] = useState("");
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponType, setCouponType] = useState<"percentage" | "fixed">("percentage");
   const [couponLabel, setCouponLabel] = useState("");
   const [couponError, setCouponError] = useState("");
   const [couponApplied, setCouponApplied] = useState("");
 
   const subtotal = total();
-  const discountAmount = Math.round(subtotal * couponDiscount);
+  const discountAmount = couponType === "fixed"
+    ? Math.min(couponDiscount, subtotal)
+    : Math.round(subtotal * couponDiscount);
   const envio = shipping.region ? shippingCost(shipping.region, subtotal - discountAmount) : 0;
   const totalFinal = subtotal - discountAmount + envio;
 
@@ -70,11 +73,12 @@ export default function CarritoPage() {
       const res = await fetch("/api/coupon/validate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponInput }),
+        body: JSON.stringify({ code: couponInput, total: subtotal }),
       });
       const data = await res.json();
       if (data.valid) {
         setCouponDiscount(data.discount);
+        setCouponType(data.type ?? "percentage");
         setCouponLabel(data.label);
         setCouponApplied(couponInput.toUpperCase().trim());
         setCouponError("");
