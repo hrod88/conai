@@ -129,7 +129,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
   const isMounted         = useRef(false);
   const outerContainerRef = useRef<HTMLDivElement>(null);
-  const catHeaderBtnRef   = useRef<HTMLButtonElement>(null);
+  const topBarRef         = useRef<HTMLDivElement>(null);
   const [toggleTopPx, setToggleTopPx] = useState<number>(9);
 
   const filtered = useMemo(() => {
@@ -160,11 +160,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
   useEffect(() => {
     const measure = () => {
-      if (!catHeaderBtnRef.current || !outerContainerRef.current) return;
-      const btnRect = catHeaderBtnRef.current.getBoundingClientRect();
+      if (!topBarRef.current || !outerContainerRef.current) return;
+      const barRect = topBarRef.current.getBoundingClientRect();
       const cRect   = outerContainerRef.current.getBoundingClientRect();
-      const centerY = Math.round(btnRect.top + btnRect.height / 2 - cRect.top);
-      setToggleTopPx(centerY - 12);
+      const barBottom = Math.round(barRect.bottom - cRect.top);
+      setToggleTopPx(barBottom - 12);
     };
     measure();
     window.addEventListener("resize", measure);
@@ -268,7 +268,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       >
         <div>
           <button
-            ref={catHeaderBtnRef}
             onClick={() => setCatOpen((v) => !v)}
             className="flex items-center gap-1.5 w-full mb-2"
           >
@@ -409,7 +408,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Barra superior: categorías ↔ subcategorías animadas */}
-        <div className="flex flex-col" style={{ background: "var(--surface)" }}>
+        <div ref={topBarRef} className="flex flex-col" style={{ background: "var(--surface)" }}>
           <div className="flex items-center gap-3 px-4 pt-2 pb-1">
 
             {/* Contenedor animado */}
