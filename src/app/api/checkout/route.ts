@@ -19,9 +19,10 @@ const tx = new WebpayPlus.Transaction(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { items, total, shipping } = body as {
+    const { items, total, shipping, coupon_code } = body as {
       items: { id: string; name: string; price: number; quantity: number }[];
       total: number;
+      coupon_code?: string | null;
       shipping?: {
         name: string;
         phone: string;
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest) {
         shipping_city: shipping?.city ?? null,
         shipping_region: shipping?.region ?? null,
         shipping_cost: shipping?.cost ?? 0,
+        coupon_code: coupon_code ?? null,
       })
       .select()
       .single();

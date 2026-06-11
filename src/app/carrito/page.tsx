@@ -128,6 +128,7 @@ export default function CarritoPage() {
           })),
           total: totalFinal,
           shipping: { ...shipping, cost: envio },
+          coupon_code: couponApplied || null,
         }),
       });
       const data = await res.json();

@@ -58,6 +58,21 @@ export async function GET(req: NextRequest) {
           );
         }
 
+        // Incrementar uses_count del cupón si se usó uno
+        if (order.coupon_code) {
+          const { data: coupon } = await admin
+            .from("coupons")
+            .select("uses_count")
+            .eq("code", order.coupon_code)
+            .single();
+          if (coupon != null) {
+            await admin
+              .from("coupons")
+              .update({ uses_count: (coupon.uses_count ?? 0) + 1 })
+              .eq("code", order.coupon_code);
+          }
+        }
+
         if (user?.email && items) {
           await sendOrderConfirmation({
             to: user.email,
