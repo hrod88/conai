@@ -300,7 +300,18 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       <input
                         type="checkbox"
                         checked={active}
-                        onChange={() => toggleCategory(c.value)}
+                        onChange={() => {
+                          if (active) {
+                            setActiveCategories([]);
+                            setDrillCategory(null);
+                            setActiveSubcategory(null);
+                          } else {
+                            setActiveCategories([c.value]);
+                            setDrillCategory(c.value);
+                            setActiveSubcategory(null);
+                            setExpandedCats((prev) => { const n = new Set(prev); n.add(c.value); return n; });
+                          }
+                        }}
                         className="accent-indigo-600 w-3 h-3"
                       />
                       {c.label}
