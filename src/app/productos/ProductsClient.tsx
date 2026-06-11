@@ -247,7 +247,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         style={{ width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }}
       >
       <aside
-        className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-4"
+        className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       >
         <div>
@@ -255,7 +255,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             onClick={() => setCatOpen((v) => !v)}
             className="flex items-center gap-1.5 w-full mb-2"
           >
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+            <span className="text-[var(--text-muted)] text-[14px] leading-none" style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
           </button>
           {catOpen && categories.map((c) => {
@@ -328,7 +328,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             onClick={() => setPriceOpen((v) => !v)}
             className="flex items-center gap-1.5 w-full mb-2"
           >
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+            <span className="text-[var(--text-muted)] text-[14px] leading-none" style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
           </button>
           {priceOpen && priceRanges.map((r) => (
@@ -351,7 +351,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             onClick={() => setTagsOpen((v) => !v)}
             className="flex items-center gap-1.5 w-full mb-2"
           >
-            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+            <span className="text-[var(--text-muted)] text-[14px] leading-none" style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
             <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
           </button>
           {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
@@ -382,7 +382,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* Toggle sidebar */}
       <button
         onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute top-[11px] z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+        className="absolute top-[8px] z-20 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
         style={{ left: sidebarOpen ? "164px" : "0px", transition: "left 200ms ease" }}
       >
         {sidebarOpen ? "‹" : "›"}
