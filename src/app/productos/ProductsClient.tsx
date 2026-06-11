@@ -121,6 +121,9 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [drillCategory, setDrillCategory]       = useState<Category | null>(initialCategory ?? null);
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen]           = useState(true);
+  const [catOpen, setCatOpen]                   = useState(true);
+  const [priceOpen, setPriceOpen]               = useState(true);
+  const [tagsOpen, setTagsOpen]                 = useState(true);
 
   const scrollRef    = useRef<HTMLDivElement>(null);
   const sectionRefs  = useRef<Record<string, HTMLDivElement | null>>({});
@@ -248,10 +251,14 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       >
         <div>
-          <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase mb-2">
-            Categorías
-          </p>
-          {categories.map((c) => {
+          <button
+            onClick={() => setCatOpen((v) => !v)}
+            className="flex items-center justify-between w-full mb-2"
+          >
+            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: catOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
+          </button>
+          {catOpen && categories.map((c) => {
             const count  = products.filter((p) => p.category === c.value).length;
             const active = activeCategories.includes(c.value);
             return (
@@ -317,10 +324,14 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <hr style={{ borderColor: "var(--border)" }} />
 
         <div>
-          <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase mb-2">
-            Precio
-          </p>
-          {priceRanges.map((r) => (
+          <button
+            onClick={() => setPriceOpen((v) => !v)}
+            className="flex items-center justify-between w-full mb-2"
+          >
+            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: priceOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
+          </button>
+          {priceOpen && priceRanges.map((r) => (
             <label key={r.value} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
               <input
                 type="checkbox"
@@ -336,10 +347,14 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <hr style={{ borderColor: "var(--border)" }} />
 
         <div>
-          <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase mb-2">
-            Destacados
-          </p>
-          {["bestseller", "nuevo", "descuento"].map((tag) => (
+          <button
+            onClick={() => setTagsOpen((v) => !v)}
+            className="flex items-center justify-between w-full mb-2"
+          >
+            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
+            <span className="text-[var(--text-muted)] text-[10px]" style={{ transform: tagsOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms" }}>▾</span>
+          </button>
+          {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
             <label key={tag} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
               <input
                 type="checkbox"
