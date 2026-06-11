@@ -205,6 +205,36 @@ export default function AdminClient({
   const [importPage, setImportPage] = useState(1);
   const [importTotal, setImportTotal] = useState(0);
 
+  // Seed catálogo base
+  const SEED_TOTAL = 53;
+  const [seeding, setSeeding] = useState(false);
+  const [seedProgress, setSeedProgress] = useState(0);
+  const [seedInserted, setSeedInserted] = useState(0);
+  const [seedDone, setSeedDone] = useState(false);
+
+  async function runSeed() {
+    if (!confirm(`¿Importar catálogo base (~1.060 productos en tendencia)?\n\nEsto tomará ~2 minutos. No cierres la pestaña.`)) return;
+    setSeeding(true);
+    setSeedProgress(0);
+    setSeedInserted(0);
+    setSeedDone(false);
+    let total = 0;
+    for (let i = 0; i < SEED_TOTAL; i++) {
+      try {
+        const res = await fetch("/api/admin/seed", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ index: i }),
+        });
+        const json = await res.json();
+        if (json.ok) { total += json.inserted; setSeedInserted(total); }
+      } catch { /* continuar con siguiente */ }
+      setSeedProgress(i + 1);
+    }
+    setSeeding(false);
+    setSeedDone(true);
+  }
+
   // CJ — tracking
   const [trackingData, setTrackingData] = useState<Record<string, TrackEvent[]>>({});
   const [trackingLoading, setTrackingLoading] = useState<Record<string, boolean>>({});
@@ -537,6 +567,39 @@ export default function AdminClient({
       {/* ── Tab Importar CJ ──────────────────────────────────── */}
       {tab === "importar" && (
         <div className="flex flex-col gap-4">
+
+          {/* Catálogo base automático */}
+          <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-sm font-bold text-[var(--text)]">🚀 Importar catálogo base</p>
+                <p className="text-xs text-[var(--text-muted)]">~1.060 productos IA en tendencia 2026, distribuidos en las 53 subcategorías</p>
+              </div>
+              <button
+                onClick={runSeed}
+                disabled={seeding}
+                className="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+              >
+                {seeding ? "Importando..." : seedDone ? "✅ Completado" : "▶ Iniciar importación"}
+              </button>
+            </div>
+            {(seeding || seedDone) && (
+              <div className="flex flex-col gap-1.5">
+                <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-300"
+                    style={{ width: `${Math.round((seedProgress / SEED_TOTAL) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[var(--text-muted)]">
+                  {seedDone
+                    ? `✅ Listo — ${seedInserted} productos importados`
+                    : `Procesando subcategoría ${seedProgress} de ${SEED_TOTAL} — ${seedInserted} productos importados`}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Buscador */}
           <div className="rounded-xl border p-4 flex gap-2" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
             <input
