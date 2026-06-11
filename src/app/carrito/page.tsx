@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCartStore } from "@/store/cart";
 import { useState } from "react";
 
 function clp(n: number) {
   return `$${Math.round(n).toLocaleString("es-CL")}`;
 }
+
+const FREE_SHIPPING = 49990;
 
 const REGIONES = [
   "Región Metropolitana de Santiago",
@@ -28,7 +31,7 @@ const REGIONES = [
 ];
 
 function shippingCost(region: string, subtotal: number): number {
-  if (subtotal >= 49990) return 0;
+  if (subtotal >= FREE_SHIPPING) return 0;
   return region === "Región Metropolitana de Santiago" ? 2990 : 4990;
 }
 
@@ -64,6 +67,9 @@ export default function CarritoPage() {
     : Math.round(subtotal * couponDiscount);
   const envio = shipping.region ? shippingCost(shipping.region, subtotal - discountAmount) : 0;
   const totalFinal = subtotal - discountAmount + envio;
+
+  const freeShippingProgress = Math.min((subtotal / FREE_SHIPPING) * 100, 100);
+  const faltanEnvioGratis = Math.max(0, FREE_SHIPPING - subtotal);
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
@@ -161,71 +167,64 @@ export default function CarritoPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-8">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
 
-      {/* Header con steps */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-[var(--text)]">
-          {step === "cart" ? "Tu carrito" : "Datos de envío"}
-        </h1>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-bold px-3 py-1 rounded-full transition-colors ${step === "cart" ? "bg-indigo-500 text-white" : "text-[var(--text-muted)]"}`}>
-            1 · Carrito
-          </span>
-          <span className="text-[var(--text-muted)] text-xs">→</span>
-          <span className={`text-xs font-bold px-3 py-1 rounded-full transition-colors ${step === "shipping" ? "bg-indigo-500 text-white" : "text-[var(--text-muted)]"}`}>
-            2 · Envío
-          </span>
+      {/* Steps bar */}
+      <div className="border-b" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3">
+          {[
+            { n: 1, label: "Carrito", active: step === "cart" },
+            { n: 2, label: "Envío", active: step === "shipping" },
+            { n: 3, label: "Pago", active: false },
+          ].map(({ n, label, active }, i) => (
+            <div key={n} className="flex items-center gap-3">
+              {i > 0 && <span className="text-[var(--text-muted)] text-xs">›</span>}
+              <div className="flex items-center gap-2">
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${active ? "bg-indigo-500 text-white" : "border text-[var(--text-muted)]"}`}
+                  style={!active ? { borderColor: "var(--border)" } : {}}>
+                  {n}
+                </span>
+                <span className={`text-sm font-semibold ${active ? "text-[var(--text)]" : "text-[var(--text-muted)]"}`}>{label}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      {/* Free shipping bar */}
+      <div className="border-b" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
+        <div className="max-w-5xl mx-auto px-6 py-3 flex flex-col gap-2">
+          {subtotal >= FREE_SHIPPING ? (
+            <p className="text-sm font-bold text-emerald-500">¡Tienes envío gratis en este pedido! 🎉</p>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">
+              Te faltan{" "}
+              <span className="font-bold text-[var(--text)]">{clp(faltanEnvioGratis)}</span>{" "}
+              para obtener{" "}
+              <span className="font-bold text-indigo-500">envío gratis</span>
+            </p>
+          )}
+          <div className="h-1.5 rounded-full overflow-hidden w-full" style={{ background: "var(--border)" }}>
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-500"
+              style={{ width: `${freeShippingProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
 
-        {/* Contenido principal */}
+      {/* Main */}
+      <div className="max-w-5xl mx-auto px-6 py-6 flex flex-col lg:flex-row gap-6 items-start">
+
+        {/* Productos / Envío */}
         <div className="flex-1 flex flex-col gap-3">
+
           {step === "cart" ? (
             <>
-              {items.map(({ product, quantity }) => (
-                <div
-                  key={product.id}
-                  className="rounded-xl p-4 flex items-center gap-4 border transition-colors"
-                  style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-                >
-                  <span className="text-3xl flex-shrink-0">{product.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-[var(--text)] truncate">{product.name}</p>
-                    <p className="text-xs text-[var(--text-muted)] truncate">{product.description}</p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => updateQty(product.id, quantity - 1)}
-                      className="w-7 h-7 rounded-full border flex items-center justify-center text-sm font-bold text-[var(--text-muted)] hover:text-indigo-600 transition-colors"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      −
-                    </button>
-                    <span className="w-6 text-center text-sm font-bold text-[var(--text)]">{quantity}</span>
-                    <button
-                      onClick={() => updateQty(product.id, quantity + 1)}
-                      className="w-7 h-7 rounded-full border flex items-center justify-center text-sm font-bold text-[var(--text-muted)] hover:text-indigo-600 transition-colors"
-                      style={{ borderColor: "var(--border)" }}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm w-24 text-right flex-shrink-0">
-                    {clp(product.price * quantity)}
-                  </span>
-                  <button
-                    onClick={() => remove(product.id)}
-                    className="text-[var(--text-muted)] hover:text-red-400 transition-colors flex-shrink-0"
-                    aria-label="Eliminar"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <div className="flex justify-end">
+              <div className="flex items-center justify-between mb-1">
+                <h1 className="text-lg font-black text-[var(--text)]">
+                  Mi carrito ({items.reduce((s, i) => s + i.quantity, 0)} productos)
+                </h1>
                 <button
                   onClick={clear}
                   className="text-xs text-[var(--text-muted)] hover:text-red-500 font-semibold transition-colors"
@@ -233,18 +232,99 @@ export default function CarritoPage() {
                   Vaciar carrito
                 </button>
               </div>
+
+              {items.map(({ product, quantity }) => (
+                <div
+                  key={product.id}
+                  className="rounded-xl border flex gap-4 p-4 transition-colors"
+                  style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                >
+                  {/* Imagen / ícono */}
+                  <div
+                    className="w-20 h-20 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
+                    style={{ background: "var(--surface-alt, #f3f4f6)" }}
+                  >
+                    {product.image ? (
+                      <Image
+                        src={product.image}
+                        alt={product.name}
+                        width={80}
+                        height={80}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <span className="text-3xl">{product.icon}</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <p className="font-bold text-sm text-[var(--text)] leading-tight line-clamp-2">{product.name}</p>
+                    <p className="text-xs text-[var(--text-muted)] line-clamp-1">{product.description}</p>
+
+                    {/* Precio + qty en mobile: columna */}
+                    <div className="flex items-center justify-between mt-auto pt-2">
+                      {/* Qty */}
+                      <div
+                        className="flex items-center rounded-lg border overflow-hidden"
+                        style={{ borderColor: "var(--border)" }}
+                      >
+                        <button
+                          onClick={() => updateQty(product.id, quantity - 1)}
+                          className="w-8 h-8 flex items-center justify-center text-sm font-bold text-[var(--text-muted)] hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors"
+                        >
+                          −
+                        </button>
+                        <span className="w-8 text-center text-sm font-bold text-[var(--text)]">{quantity}</span>
+                        <button
+                          onClick={() => updateQty(product.id, quantity + 1)}
+                          className="w-8 h-8 flex items-center justify-center text-sm font-bold text-[var(--text-muted)] hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {/* Precio */}
+                      <div className="text-right">
+                        {product.original_price && product.original_price > product.price && (
+                          <p className="text-xs text-[var(--text-muted)] line-through">
+                            {clp(product.original_price * quantity)}
+                          </p>
+                        )}
+                        <p className="font-extrabold text-indigo-600 dark:text-indigo-400">
+                          {clp(product.price * quantity)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => remove(product.id)}
+                    className="self-start text-[var(--text-muted)] hover:text-red-400 transition-colors p-1 flex-shrink-0"
+                    aria-label="Eliminar"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
             </>
           ) : (
-            /* Formulario de envío */
+            /* Formulario envío */
             <div
               className="rounded-xl border p-6 flex flex-col gap-5"
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
+              <h2 className="font-black text-[var(--text)]">Datos de envío</h2>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                    Nombre completo *
-                  </label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Nombre completo *</label>
                   <input
                     type="text"
                     value={shipping.name}
@@ -255,9 +335,7 @@ export default function CarritoPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                    Teléfono *
-                  </label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Teléfono *</label>
                   <input
                     type="tel"
                     value={shipping.phone}
@@ -270,9 +348,7 @@ export default function CarritoPage() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                  Dirección *
-                </label>
+                <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Dirección *</label>
                 <input
                   type="text"
                   value={shipping.address}
@@ -285,9 +361,7 @@ export default function CarritoPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                    Ciudad / Comuna *
-                  </label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Ciudad / Comuna *</label>
                   <input
                     type="text"
                     value={shipping.city}
@@ -298,13 +372,11 @@ export default function CarritoPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                    Región *
-                  </label>
+                  <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Región *</label>
                   <select
                     value={shipping.region}
                     onChange={(e) => handleShippingChange("region", e.target.value)}
-                    className="px-3 py-2.5 rounded-lg border text-sm bg-transparent text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                    className="px-3 py-2.5 rounded-lg border text-sm text-[var(--text)] focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                     style={{ borderColor: "var(--border)", background: "var(--surface)" }}
                   >
                     {REGIONES.map((r) => (
@@ -314,21 +386,18 @@ export default function CarritoPage() {
                 </div>
               </div>
 
-              {/* Info costo de envío */}
               <div
                 className="flex items-center gap-3 px-4 py-3 rounded-lg border text-sm"
-                style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
+                style={{ borderColor: "var(--border)", background: "var(--surface-alt, #f9fafb)" }}
               >
                 <span className="text-xl">🚚</span>
-                <div className="flex-1">
-                  {subtotal >= 49990 ? (
+                <div>
+                  {subtotal >= FREE_SHIPPING ? (
                     <p className="font-bold text-emerald-500">¡Envío gratis! Pedido sobre $49.990</p>
                   ) : (
                     <>
                       <p className="font-bold text-[var(--text)]">
-                        {shipping.region === "Región Metropolitana de Santiago"
-                          ? "Envío RM: $2.990"
-                          : "Envío a regiones: $4.990"}
+                        {shipping.region === "Región Metropolitana de Santiago" ? "Envío RM: $2.990" : "Envío a regiones: $4.990"}
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">Gratis sobre $49.990 · Despacho en 3-5 días hábiles</p>
                     </>
@@ -347,18 +416,19 @@ export default function CarritoPage() {
         </div>
 
         {/* Resumen lateral */}
-        <div className="lg:w-72 flex-shrink-0">
+        <div className="lg:w-80 flex-shrink-0 w-full">
           <div
-            className="rounded-xl p-5 flex flex-col gap-4 sticky top-20 border"
+            className="rounded-xl border p-5 flex flex-col gap-4 sticky top-20"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
-            <h2 className="font-black text-[var(--text)]">Resumen</h2>
+            <h2 className="font-black text-[var(--text)]">Resumen del pedido</h2>
 
+            {/* Líneas de producto */}
             <div className="flex flex-col gap-2 text-sm">
               {items.map(({ product, quantity }) => (
                 <div key={product.id} className="flex justify-between text-[var(--text-muted)]">
-                  <span className="truncate mr-2">{product.name} ×{quantity}</span>
-                  <span className="flex-shrink-0">{clp(product.price * quantity)}</span>
+                  <span className="truncate mr-2 flex-1">{product.name} ×{quantity}</span>
+                  <span className="flex-shrink-0 font-medium text-[var(--text)]">{clp(product.price * quantity)}</span>
                 </div>
               ))}
             </div>
@@ -367,19 +437,23 @@ export default function CarritoPage() {
 
             {/* Cupón */}
             {couponApplied ? (
-              <div className="flex items-center justify-between text-sm px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
-                <span className="font-bold text-emerald-600">🏷 {couponApplied} — {couponLabel}</span>
-                <button onClick={removeCoupon} className="text-emerald-400 hover:text-red-400 transition-colors text-xs font-bold">✕</button>
+              <div className="flex items-center justify-between text-sm px-3 py-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
+                <div>
+                  <p className="font-bold text-emerald-600 text-xs">🏷 {couponApplied}</p>
+                  <p className="text-emerald-500 text-xs">{couponLabel}</p>
+                </div>
+                <button onClick={removeCoupon} className="text-emerald-400 hover:text-red-400 transition-colors text-xs font-bold ml-2">✕</button>
               </div>
             ) : (
               <div className="flex flex-col gap-1.5">
+                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Cupón de descuento</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && applyCoupon()}
-                    placeholder="Código de cupón"
+                    placeholder="Ej: CONAI20"
                     className="flex-1 px-3 py-2 rounded-lg border text-xs bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors"
                     style={{ borderColor: "var(--border)" }}
                   />
@@ -397,32 +471,37 @@ export default function CarritoPage() {
 
             <hr style={{ borderColor: "var(--border)" }} />
 
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-[var(--text-muted)] font-semibold">Subtotal</span>
-              <span className="font-bold text-[var(--text)]">{clp(subtotal)}</span>
-            </div>
-
-            {discountAmount > 0 && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-emerald-500 font-semibold">Descuento</span>
-                <span className="font-bold text-emerald-500">−{clp(discountAmount)}</span>
+            {/* Totales */}
+            <div className="flex flex-col gap-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">Subtotal</span>
+                <span className="font-semibold text-[var(--text)]">{clp(subtotal)}</span>
               </div>
-            )}
 
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-[var(--text-muted)] font-semibold">Envío</span>
-              {step === "cart" ? (
-                <span className="font-bold text-[var(--text-muted)]">—</span>
-              ) : envio === 0 ? (
-                <span className="font-bold text-emerald-500">Gratis</span>
-              ) : (
-                <span className="font-bold text-[var(--text)]">{clp(envio)}</span>
+              {discountAmount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-emerald-500 font-semibold">Descuento cupón</span>
+                  <span className="font-bold text-emerald-500">−{clp(discountAmount)}</span>
+                </div>
               )}
+
+              <div className="flex justify-between">
+                <span className="text-[var(--text-muted)]">Despacho</span>
+                {step === "cart" ? (
+                  <span className="text-[var(--text-muted)]">—</span>
+                ) : envio === 0 ? (
+                  <span className="font-bold text-emerald-500">Gratis</span>
+                ) : (
+                  <span className="font-semibold text-[var(--text)]">{clp(envio)}</span>
+                )}
+              </div>
             </div>
+
+            <hr style={{ borderColor: "var(--border)" }} />
 
             <div className="flex justify-between items-center">
-              <span className="font-black text-[var(--text)]">Total</span>
-              <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-lg">
+              <span className="font-black text-base text-[var(--text)]">Total</span>
+              <span className="font-extrabold text-xl text-indigo-600 dark:text-indigo-400">
                 {step === "cart" ? clp(subtotal - discountAmount) : clp(totalFinal)}
               </span>
             </div>
@@ -430,7 +509,7 @@ export default function CarritoPage() {
             {step === "cart" ? (
               <button
                 onClick={() => setStep("shipping")}
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
               >
                 Continuar con envío →
               </button>
@@ -438,19 +517,20 @@ export default function CarritoPage() {
               <button
                 onClick={handleCheckout}
                 disabled={loading || !isShippingValid()}
-                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
               >
                 {loading ? "Procesando..." : "Pagar con Transbank 🔒"}
               </button>
             )}
 
-            <p className="text-[10px] text-[var(--text-muted)] text-center">
-              {step === "cart"
-                ? "Envío gratis sobre $49.990"
-                : "Pago 100% seguro · Transbank WebPay"}
-            </p>
+            <div className="flex items-center justify-center gap-4 text-[10px] text-[var(--text-muted)]">
+              <span>🔒 Pago seguro</span>
+              <span>🚚 Despacho rápido</span>
+              <span>↩ Devoluciones</span>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );
