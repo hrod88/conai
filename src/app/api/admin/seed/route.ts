@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
       const data = await cjGet("/product/list", {
         productNameEn: entry.query,
         pageNum: "1",
-        pageSize: "20",
+        pageSize: "50",
         sort: "BESTSELLING",
         warehouseCountryCode: warehouse,
       });
