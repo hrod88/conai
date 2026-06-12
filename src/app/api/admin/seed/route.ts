@@ -122,7 +122,7 @@ export async function GET(req: NextRequest) {
         marketPrice?: number;
       }[] = data?.data?.list ?? [];
 
-      const filtered = list.filter((p) => p.marketPrice && p.marketPrice > 0 && p.sellPrice > 0);
+      const filtered = list.filter((p) => p.sellPrice >= 5);
 
       const products: SeedProduct[] = filtered.map((p) => {
         const price = Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100;
