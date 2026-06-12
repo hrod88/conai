@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     image: string;
     icon: string;
     cj_pid: string;
+    stock?: number;
   };
 
   if (!body.name || !body.price || !body.category) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     image:       body.image || null,
     icon:        body.icon || "📦",
     cj_pid:      body.cj_pid || null,
-    stock:       999,
+    stock:       body.stock ?? 50,
     rating:      0,
     review_count: 0,
   }).select("id").single();
