@@ -12,7 +12,7 @@ export async function dropiGet(path: string, params?: Record<string, string>) {
 
   const res = await fetch(url.toString(), {
     headers: {
-      "dropi-integration-key": getKey(),
+      "Authorization": `Bearer ${getKey()}`,
       "Content-Type": "application/json",
     },
     cache: "no-store",
@@ -30,7 +30,7 @@ export async function dropiPost(path: string, body: unknown) {
   const res = await fetch(`${DROPI_BASE}${path}`, {
     method: "POST",
     headers: {
-      "dropi-integration-key": getKey(),
+      "Authorization": `Bearer ${getKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

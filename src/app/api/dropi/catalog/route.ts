@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       try {
         const res = await fetch(`${DROPI_BASE}${path}`, {
           method: "POST",
-          headers: { "dropi-integration-key": DROPI_KEY, "Content-Type": "application/json" },
+          headers: { "Authorization": `Bearer ${DROPI_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({ page: 1, per_page: 5 }),
           cache: "no-store",
         });
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`${DROPI_BASE}/api/products`, {
       method: "POST",
-      headers: { "dropi-integration-key": DROPI_KEY, "Content-Type": "application/json" },
+      headers: { "Authorization": `Bearer ${DROPI_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({ page: Number(page), per_page: 20, ...(q ? { search: q } : {}) }),
       cache: "no-store",
     });
