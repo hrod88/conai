@@ -163,7 +163,7 @@ export async function GET(req: NextRequest) {
           category:       entry.category,
           subcategory:    entry.subcategory,
           tag:            entry.tag,
-          warehouse:      "CL",
+          warehouse:      warehouse,
         };
       });
 
