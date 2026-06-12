@@ -21,6 +21,17 @@ export async function GET(req: NextRequest) {
 
   const probe = req.nextUrl.searchParams.get("probe");
 
+  // Debug: verificar que el token llega correctamente
+  if (probe === "debug") {
+    const key = DROPI_KEY;
+    return Response.json({
+      keyLength: key.length,
+      keyStart: key.slice(0, 20),
+      keyEnd: key.slice(-10),
+      base: DROPI_BASE,
+    });
+  }
+
   // Modo descubrimiento POST: prueba paths con POST y body vacío
   if (probe === "1") {
     const results: Record<string, { status: number; preview: unknown }> = {};
