@@ -32,6 +32,25 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  // Modo login: obtener token de usuario
+  if (probe === "login") {
+    const email    = req.nextUrl.searchParams.get("email") ?? "";
+    const password = req.nextUrl.searchParams.get("pass") ?? "";
+    const candidates = ["/api/login", "/api/auth/login", "/api/v3/login", "/login", "/auth/login"];
+    const results: Record<string, { status: number; preview: string }> = {};
+    for (const path of candidates) {
+      const res = await fetch(`${DROPI_BASE}${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        cache: "no-store",
+      });
+      const text = await res.text();
+      results[path] = { status: res.status, preview: text.slice(0, 300) };
+    }
+    return Response.json(results);
+  }
+
   // Modo descubrimiento POST: prueba paths con POST y body vacío
   if (probe === "1") {
     const results: Record<string, { status: number; preview: unknown }> = {};
