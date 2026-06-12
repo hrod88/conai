@@ -29,6 +29,7 @@ export interface Product {
   subcategory?: string | null;
   original_price?: number | null;
   cj_pid?: string | null;
+  warehouse?: string | null;
   active?: boolean;
   created_at: string;
 }

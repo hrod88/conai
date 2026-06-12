@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
       pageNum: page,
       pageSize: "50",
       sort,
+      warehouseCountryCode: "CL",
     };
     if (minPrice) params.minPrice = minPrice;
     if (maxPrice) params.maxPrice = maxPrice;

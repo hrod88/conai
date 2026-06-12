@@ -221,7 +221,7 @@ export default function AdminClient({
   const [importMaxPrice, setImportMaxPrice] = useState("");
 
   // Catálogo seed por categoría
-  type SeedProduct = { pid: string; name: string; image: string | null; price: number; original_price: number; category: string; subcategory: string; tag: string };
+  type SeedProduct = { pid: string; name: string; image: string | null; price: number; original_price: number; category: string; subcategory: string; tag: string; warehouse: string };
   type SeedGroup   = { id: string; label: string; products: SeedProduct[] };
 
   const CAT_SEED_META: Record<string, { icon: string; label: string }> = {

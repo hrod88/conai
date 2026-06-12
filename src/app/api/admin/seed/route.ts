@@ -91,6 +91,7 @@ export type SeedProduct = {
   category: string;
   subcategory: string;
   tag: string;
+  warehouse: string;
 };
 
 export type SeedGroup = {
@@ -125,6 +126,7 @@ export async function GET(req: NextRequest) {
         pageNum: "1",
         pageSize: "20",
         sort: "BESTSELLING",
+        warehouseCountryCode: "CL",
       });
 
       const list: {
@@ -152,6 +154,7 @@ export async function GET(req: NextRequest) {
           category:       entry.category,
           subcategory:    entry.subcategory,
           tag:            entry.tag,
+          warehouse:      "CL",
         };
       });
 
@@ -189,6 +192,7 @@ export async function POST(req: NextRequest) {
     image:         p.image || null,
     icon:          "📦",
     cj_pid:        p.pid,
+    warehouse:     p.warehouse,
     stock:         999,
     rating:        0,
     review_count:  0,
