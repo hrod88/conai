@@ -1,4 +1,4 @@
-const DROPI_BASE = process.env.DROPI_API_URL ?? "https://api.dropi.co";
+const DROPI_BASE = process.env.DROPI_API_URL ?? "https://api.dropi.cl";
 
 function getKey(): string {
   const key = process.env.DROPI_API_KEY;
