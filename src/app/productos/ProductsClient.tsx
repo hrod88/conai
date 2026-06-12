@@ -5,18 +5,18 @@ import type { Product, Category } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
 
 const categories: { value: Category; label: string; icon: string }[] = [
-  { value: "salud",      label: "Salud",            icon: "❤️" },
-  { value: "belleza",    label: "Belleza Tech",      icon: "✨" },
-  { value: "hogar",      label: "Hogar Inteligente", icon: "🏠" },
-  { value: "wearables",  label: "Wearables",         icon: "⌚" },
-  { value: "mascotas",   label: "Mascotas",          icon: "🐾" },
-  { value: "gadgets",    label: "Gadgets",           icon: "🤖" },
-  { value: "audio",      label: "Audio",             icon: "🎧" },
-  { value: "oficina",    label: "Oficina Tech",      icon: "💼" },
-  { value: "juguetes",   label: "Juguetes & Bebés",  icon: "🧸" },
-  { value: "deportes",   label: "Deportes",          icon: "⚽" },
-  { value: "electronica",label: "Electrónica",       icon: "🔌" },
-  { value: "telefonos",  label: "Teléfonos",         icon: "📱" },
+  { value: "salud",       label: "Salud",            icon: "❤️" },
+  { value: "belleza",     label: "Belleza Tech",      icon: "✨" },
+  { value: "hogar",       label: "Hogar Inteligente", icon: "🏠" },
+  { value: "wearables",   label: "Wearables",         icon: "⌚" },
+  { value: "mascotas",    label: "Mascotas",          icon: "🐾" },
+  { value: "gadgets",     label: "Gadgets",           icon: "🤖" },
+  { value: "audio",       label: "Audio",             icon: "🎧" },
+  { value: "oficina",     label: "Oficina Tech",      icon: "💼" },
+  { value: "juguetes",    label: "Juguetes & Bebés",  icon: "🧸" },
+  { value: "deportes",    label: "Deportes",          icon: "⚽" },
+  { value: "electronica", label: "Electrónica",       icon: "🔌" },
+  { value: "telefonos",   label: "Teléfonos",         icon: "📱" },
 ];
 
 const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
@@ -51,11 +51,11 @@ const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
     { id: "gafas",      label: "Gafas Smart" },
   ],
   mascotas: [
-    { id: "gps-pet",     label: "GPS & Rastreo" },
-    { id: "comedero",    label: "Comederos Automáticos" },
-    { id: "camara-pet",  label: "Cámaras para Mascotas" },
-    { id: "salud-pet",   label: "Monitores de Salud" },
-    { id: "juguetes-pet",label: "Juguetes Interactivos" },
+    { id: "gps-pet",      label: "GPS & Rastreo" },
+    { id: "comedero",     label: "Comederos Automáticos" },
+    { id: "camara-pet",   label: "Cámaras para Mascotas" },
+    { id: "salud-pet",    label: "Monitores de Salud" },
+    { id: "juguetes-pet", label: "Juguetes Interactivos" },
   ],
   gadgets: [
     { id: "cargadores",  label: "Cargadores Inteligentes" },
@@ -70,16 +70,16 @@ const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
     { id: "micros",      label: "Micrófonos Smart" },
   ],
   oficina: [
-    { id: "teclados",       label: "Teclados & Ratones IA" },
-    { id: "monitores-of",   label: "Monitores Smart" },
-    { id: "webcams",        label: "Webcams con IA" },
-    { id: "productividad",  label: "Gadgets de Productividad" },
+    { id: "teclados",      label: "Teclados & Ratones IA" },
+    { id: "monitores-of",  label: "Monitores Smart" },
+    { id: "webcams",       label: "Webcams con IA" },
+    { id: "productividad", label: "Gadgets de Productividad" },
   ],
   juguetes: [
-    { id: "educativos",  label: "Juguetes Educativos IA" },
-    { id: "bebes",       label: "Monitores de Bebé" },
-    { id: "robots-edu",  label: "Robots Educativos" },
-    { id: "stem",        label: "STEM & Coding" },
+    { id: "educativos", label: "Juguetes Educativos IA" },
+    { id: "bebes",      label: "Monitores de Bebé" },
+    { id: "robots-edu", label: "Robots Educativos" },
+    { id: "stem",       label: "STEM & Coding" },
   ],
   deportes: [
     { id: "relojes-dep",  label: "Relojes Deportivos" },
@@ -88,9 +88,9 @@ const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
     { id: "equipos-dep",  label: "Equipos con IA" },
   ],
   electronica: [
-    { id: "tablets",          label: "Tablets Smart" },
-    { id: "streaming",        label: "Streaming & Smart TV" },
-    { id: "accesorios-elec",  label: "Accesorios Smart" },
+    { id: "tablets",         label: "Tablets Smart" },
+    { id: "streaming",       label: "Streaming & Smart TV" },
+    { id: "accesorios-elec", label: "Accesorios Smart" },
   ],
   telefonos: [
     { id: "smartphones",    label: "Smartphones IA" },
@@ -105,6 +105,15 @@ const priceRanges = [
   { value: "high", label: "Más de $400" },
 ];
 
+type SortOption = "relevance" | "price_asc" | "price_desc" | "rating";
+
+const sortOptions: { value: SortOption; label: string }[] = [
+  { value: "relevance",  label: "Más relevantes" },
+  { value: "price_asc",  label: "Precio: menor a mayor" },
+  { value: "price_desc", label: "Precio: mayor a menor" },
+  { value: "rating",     label: "Mejor calificados" },
+];
+
 interface Props {
   products: Product[];
   initialCategory: Category | null;
@@ -114,19 +123,22 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [activeCategories, setActiveCategories] = useState<Category[]>(
     initialCategory ? [initialCategory] : []
   );
-  const [activePrices, setActivePrices]         = useState<string[]>([]);
-  const [activeTags, setActiveTags]             = useState<string[]>([]);
-  const [scrollCat, setScrollCat]               = useState<Category | null>(initialCategory);
-  const [catProgress, setCatProgress]           = useState(0);
-  const [drillCategory, setDrillCategory]       = useState<Category | null>(initialCategory ?? null);
-  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen]           = useState(false);
-  const [isMobile, setIsMobile]                 = useState(false);
-  const [catOpen, setCatOpen]                   = useState(true);
-  const [priceOpen, setPriceOpen]               = useState(true);
-  const [tagsOpen, setTagsOpen]                 = useState(true);
-  const [expandedCats, setExpandedCats]         = useState<Set<Category>>(new Set());
+  const [activePrices, setActivePrices]             = useState<string[]>([]);
+  const [activeTags, setActiveTags]                 = useState<string[]>([]);
+  const [scrollCat, setScrollCat]                   = useState<Category | null>(initialCategory);
+  const [catProgress, setCatProgress]               = useState(0);
+  const [drillCategory, setDrillCategory]           = useState<Category | null>(initialCategory ?? null);
+  const [activeSubcategory, setActiveSubcategory]   = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen]               = useState(false);
+  const [isMobile, setIsMobile]                     = useState(false);
+  const [catOpen, setCatOpen]                       = useState(true);
+  const [priceOpen, setPriceOpen]                   = useState(true);
+  const [tagsOpen, setTagsOpen]                     = useState(true);
+  const [expandedCats, setExpandedCats]             = useState<Set<Category>>(new Set());
   const [hoveredSubcategory, setHoveredSubcategory] = useState<string | null>(null);
+  const [filterSheetOpen, setFilterSheetOpen]       = useState(false);
+  const [sortSheetOpen, setSortSheetOpen]           = useState(false);
+  const [sortBy, setSortBy]                         = useState<SortOption>("relevance");
 
   const scrollRef         = useRef<HTMLDivElement>(null);
   const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
@@ -149,8 +161,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       if (activeTags.length > 0 && (!p.tag || !activeTags.includes(p.tag))) return false;
       return true;
     });
+    if (sortBy === "price_asc")  result = [...result].sort((a, b) => a.price - b.price);
+    if (sortBy === "price_desc") result = [...result].sort((a, b) => b.price - a.price);
+    if (sortBy === "rating")     result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return result;
-  }, [products, activeCategories, activePrices, activeTags, activeSubcategory]);
+  }, [products, activeCategories, activePrices, activeTags, activeSubcategory, sortBy]);
 
   const grouped = useMemo(() => {
     return categories
@@ -164,8 +179,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   useEffect(() => {
     const measure = () => {
       if (!topBarRef.current || !outerContainerRef.current) return;
-      const barRect = topBarRef.current.getBoundingClientRect();
-      const cRect   = outerContainerRef.current.getBoundingClientRect();
+      const barRect  = topBarRef.current.getBoundingClientRect();
+      const cRect    = outerContainerRef.current.getBoundingClientRect();
       const barBottom = Math.round(barRect.bottom - cRect.top);
       setToggleTopPx(barBottom - 12);
     };
@@ -197,7 +212,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     const container = scrollRef.current;
     if (!container) return;
     function onScroll() {
-      const scrollTop = container!.scrollTop;
+      const scrollTop       = container!.scrollTop;
       const containerHeight = container!.clientHeight;
       let activeCat: Category | null = null;
       for (const cat of categories) {
@@ -208,8 +223,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       setScrollCat(activeCat);
       const activeEl = activeCat ? sectionRefs.current[activeCat] : null;
       if (activeEl) {
-        const top      = activeEl.offsetTop;
-        const height   = activeEl.offsetHeight;
+        const top        = activeEl.offsetTop;
+        const height     = activeEl.offsetHeight;
         const scrollable = Math.max(1, height - containerHeight + 80);
         const progress   = Math.max(0, Math.min(100, ((scrollTop - top + 80) / scrollable) * 100));
         setCatProgress(progress);
@@ -220,7 +235,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   }, [grouped]);
 
   function scrollToCategory(catValue: Category) {
-    const el = sectionRefs.current[catValue];
+    const el        = sectionRefs.current[catValue];
     const container = scrollRef.current;
     if (!el || !container) return;
     container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
@@ -260,10 +275,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
   const drillCatMeta   = drillCategory ? categories.find((c) => c.value === drillCategory) : null;
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
+  const activeFilterCount = activePrices.length + activeTags.length;
 
   return (
     <div ref={outerContainerRef} className="flex h-[calc(100vh-64px)] overflow-hidden relative">
-      {/* Mobile backdrop */}
+      {/* Mobile backdrop (sidebar) */}
       {isMobile && sidebarOpen && (
         <div
           className="absolute inset-0 z-20 bg-black/40"
@@ -279,193 +295,280 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           : { width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }
         }
       >
-      <aside
-        className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        onMouseLeave={() => setHoveredSubcategory(null)}
-      >
-        <div>
-          <button
-            onClick={() => setCatOpen((v) => !v)}
-            className="flex items-center gap-1.5 w-full mb-2"
-          >
-            <span className="text-[var(--text-muted)] text-[18px] leading-none" style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
-          </button>
-          {catOpen && categories.map((c) => {
-            const count      = products.filter((p) => p.category === c.value).length;
-            const active     = activeCategories.includes(c.value);
-            const isExpanded = expandedCats.has(c.value);
-            return (
-              <div key={c.value}>
-                <div className="flex items-center gap-1 mb-1.5">
-                  <button
-                    onClick={() => {
-                      const next = new Set(expandedCats);
-                      if (next.has(c.value)) next.delete(c.value); else next.add(c.value);
-                      setExpandedCats(next);
-                    }}
-                    className="flex-shrink-0 w-4 flex items-center justify-center text-[var(--text-muted)] hover:text-indigo-500"
-                  >
-                    <span
-                      className="text-[14px] leading-none inline-block"
-                      style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}
-                    >›</span>
-                  </button>
-                  <label className="flex items-center justify-between flex-1 cursor-pointer group">
-                    <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
-                      <input
-                        type="checkbox"
-                        checked={active}
-                        onChange={() => {
-                          if (active) {
-                            setActiveCategories([]);
-                            setDrillCategory(null);
-                            setActiveSubcategory(null);
-                          } else {
-                            setActiveCategories([c.value]);
-                            setDrillCategory(c.value);
-                            setActiveSubcategory(null);
-                            setExpandedCats((prev) => { const n = new Set(prev); n.add(c.value); return n; });
-                          }
-                        }}
-                        className="accent-indigo-600 w-3 h-3"
-                      />
-                      {c.label}
-                    </span>
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        active
-                          ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
-                          : "text-[var(--text-muted)]"
-                      }`}
-                      style={!active ? { background: "var(--surface-alt)" } : {}}
-                    >
-                      {count}
-                    </span>
-                  </label>
-                </div>
-                {isExpanded && (
-                  <div className="ml-4 mb-1.5">
-                    {SUBCATEGORIES[c.value].map((sub) => {
-                      const subCount  = products.filter((p) => p.category === c.value && p.subcategory === sub.id).length;
-                      const subActive = activeSubcategory === sub.id && drillCategory === c.value;
-                      return (
-                        <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group" onMouseEnter={() => setHoveredSubcategory(sub.id)}>
-                          <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
-                            <input
-                              type="checkbox"
-                              checked={subActive}
-                              onChange={() => {
-                                if (subActive) {
-                                  setActiveSubcategory(null);
-                                  setDrillCategory(null);
-                                  setActiveCategories([]);
-                                } else {
-                                  setActiveSubcategory(sub.id);
-                                  setDrillCategory(c.value);
-                                  setActiveCategories([c.value]);
-                                }
-                              }}
-                              className="accent-indigo-600 w-3 h-3"
-                            />
-                            {sub.label}
-                          </span>
-                          <span className="text-[10px] text-[var(--text-muted)]">{subCount}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <hr style={{ borderColor: "var(--border)" }} />
-
-        <div>
-          <button
-            onClick={() => setPriceOpen((v) => !v)}
-            className="flex items-center gap-1.5 w-full mb-2"
-          >
-            <span className="text-[var(--text-muted)] text-[18px] leading-none" style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
-          </button>
-          {priceOpen && priceRanges.map((r) => (
-            <label key={r.value} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={activePrices.includes(r.value)}
-                onChange={() => togglePrice(r.value)}
-                className="accent-indigo-600 w-3 h-3"
-              />
-              <span className="text-[12px] text-[var(--text-muted)] font-medium">{r.label}</span>
-            </label>
-          ))}
-        </div>
-
-        <hr style={{ borderColor: "var(--border)" }} />
-
-        <div>
-          <button
-            onClick={() => setTagsOpen((v) => !v)}
-            className="flex items-center gap-1.5 w-full mb-2"
-          >
-            <span className="text-[var(--text-muted)] text-[18px] leading-none" style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-            <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
-          </button>
-          {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
-            <label key={tag} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={activeTags.includes(tag)}
-                onChange={() => toggleTag(tag)}
-                className="accent-indigo-600 w-3 h-3"
-              />
-              <span className="text-[12px] text-[var(--text-muted)] capitalize font-medium">{tag}</span>
-            </label>
-          ))}
-        </div>
-
-        <hr style={{ borderColor: "var(--border)" }} />
-
-        <button
-          onClick={clearFilters}
-          className="text-[11px] font-semibold text-[var(--text-muted)] hover:text-indigo-500 border rounded-lg py-1.5 transition-colors"
-          style={{ borderColor: "var(--border)" }}
+        <aside
+          className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          onMouseLeave={() => setHoveredSubcategory(null)}
         >
-          Limpiar filtros
-        </button>
-      </aside>
+          <div>
+            <button
+              onClick={() => setCatOpen((v) => !v)}
+              className="flex items-center gap-1.5 w-full mb-2"
+            >
+              <span className="text-[var(--text-muted)] text-[18px] leading-none"
+                style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
+            </button>
+            {catOpen && categories.map((c) => {
+              const count      = products.filter((p) => p.category === c.value).length;
+              const active     = activeCategories.includes(c.value);
+              const isExpanded = expandedCats.has(c.value);
+              return (
+                <div key={c.value}>
+                  <div className="flex items-center gap-1 mb-1.5">
+                    <button
+                      onClick={() => {
+                        const next = new Set(expandedCats);
+                        if (next.has(c.value)) next.delete(c.value); else next.add(c.value);
+                        setExpandedCats(next);
+                      }}
+                      className="flex-shrink-0 w-4 flex items-center justify-center text-[var(--text-muted)] hover:text-indigo-500"
+                    >
+                      <span className="text-[14px] leading-none inline-block"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+                    </button>
+                    <label className="flex items-center justify-between flex-1 cursor-pointer group">
+                      <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
+                        <input
+                          type="checkbox"
+                          checked={active}
+                          onChange={() => {
+                            if (active) {
+                              setActiveCategories([]);
+                              setDrillCategory(null);
+                              setActiveSubcategory(null);
+                            } else {
+                              setActiveCategories([c.value]);
+                              setDrillCategory(c.value);
+                              setActiveSubcategory(null);
+                              setExpandedCats((prev) => { const n = new Set(prev); n.add(c.value); return n; });
+                            }
+                          }}
+                          className="accent-indigo-600 w-3 h-3"
+                        />
+                        {c.label}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                          active
+                            ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+                            : "text-[var(--text-muted)]"
+                        }`}
+                        style={!active ? { background: "var(--surface-alt)" } : {}}
+                      >
+                        {count}
+                      </span>
+                    </label>
+                  </div>
+                  {isExpanded && (
+                    <div className="ml-4 mb-1.5">
+                      {SUBCATEGORIES[c.value].map((sub) => {
+                        const subCount  = products.filter((p) => p.category === c.value && p.subcategory === sub.id).length;
+                        const subActive = activeSubcategory === sub.id && drillCategory === c.value;
+                        return (
+                          <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group"
+                            onMouseEnter={() => setHoveredSubcategory(sub.id)}>
+                            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
+                              <input
+                                type="checkbox"
+                                checked={subActive}
+                                onChange={() => {
+                                  if (subActive) {
+                                    setActiveSubcategory(null);
+                                    setDrillCategory(null);
+                                    setActiveCategories([]);
+                                  } else {
+                                    setActiveSubcategory(sub.id);
+                                    setDrillCategory(c.value);
+                                    setActiveCategories([c.value]);
+                                  }
+                                }}
+                                className="accent-indigo-600 w-3 h-3"
+                              />
+                              {sub.label}
+                            </span>
+                            <span className="text-[10px] text-[var(--text-muted)]">{subCount}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <hr style={{ borderColor: "var(--border)" }} />
+
+          <div>
+            <button onClick={() => setPriceOpen((v) => !v)} className="flex items-center gap-1.5 w-full mb-2">
+              <span className="text-[var(--text-muted)] text-[18px] leading-none"
+                style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
+            </button>
+            {priceOpen && priceRanges.map((r) => (
+              <label key={r.value} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={activePrices.includes(r.value)}
+                  onChange={() => togglePrice(r.value)}
+                  className="accent-indigo-600 w-3 h-3"
+                />
+                <span className="text-[12px] text-[var(--text-muted)] font-medium">{r.label}</span>
+              </label>
+            ))}
+          </div>
+
+          <hr style={{ borderColor: "var(--border)" }} />
+
+          <div>
+            <button onClick={() => setTagsOpen((v) => !v)} className="flex items-center gap-1.5 w-full mb-2">
+              <span className="text-[var(--text-muted)] text-[18px] leading-none"
+                style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
+              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
+            </button>
+            {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
+              <label key={tag} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={activeTags.includes(tag)}
+                  onChange={() => toggleTag(tag)}
+                  className="accent-indigo-600 w-3 h-3"
+                />
+                <span className="text-[12px] text-[var(--text-muted)] capitalize font-medium">{tag}</span>
+              </label>
+            ))}
+          </div>
+
+          <hr style={{ borderColor: "var(--border)" }} />
+
+          <button
+            onClick={clearFilters}
+            className="text-[11px] font-semibold text-[var(--text-muted)] hover:text-indigo-500 border rounded-lg py-1.5 transition-colors"
+            style={{ borderColor: "var(--border)" }}
+          >
+            Limpiar filtros
+          </button>
+        </aside>
       </div>
 
-      {/* Toggle sidebar */}
-      <button
-        onClick={() => setSidebarOpen((v) => !v)}
-        className="absolute z-30 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[13px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
-        style={{ left: sidebarOpen ? "164px" : "0px", top: `${toggleTopPx}px`, transition: "left 200ms ease" }}
-      >
-        {sidebarOpen ? "‹" : "›"}
-      </button>
+      {/* Toggle sidebar — solo desktop */}
+      {!isMobile && (
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className="absolute z-30 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[13px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
+          style={{ left: sidebarOpen ? "164px" : "0px", top: `${toggleTopPx}px`, transition: "left 200ms ease" }}
+        >
+          {sidebarOpen ? "‹" : "›"}
+        </button>
+      )}
 
       {/* Grid principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* Barra superior: categorías ↔ subcategorías animadas */}
-        <div ref={topBarRef} className="flex flex-col" style={{ background: "var(--surface)" }}>
-          <div className="flex items-center gap-3 px-4 pt-2 pb-1">
+        {/* ── Barra móvil: pills de categorías + filtros ── */}
+        <div
+          className="md:hidden flex flex-col border-b"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          {/* Fila 1: pills de categorías */}
+          <div
+            className="flex gap-2 overflow-x-auto px-3 pt-2.5 pb-1.5"
+            style={{ scrollbarWidth: "none" } as React.CSSProperties}
+          >
+            <button
+              onClick={clearFilters}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
+                activeCategories.length === 0
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "border-[var(--border)] text-[var(--text-muted)]"
+              }`}
+              style={activeCategories.length > 0 ? { background: "var(--bg)" } : {}}
+            >
+              Todo
+            </button>
+            {categories.map((c) => {
+              const active = activeCategories.includes(c.value);
+              return (
+                <button
+                  key={c.value}
+                  onClick={() => handleCatClick(c.value)}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
+                    active
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "border-[var(--border)] text-[var(--text-muted)]"
+                  }`}
+                  style={!active ? { background: "var(--bg)" } : {}}
+                >
+                  <span className="text-sm leading-none">{c.icon}</span>
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
 
-            {/* Contenedor animado */}
+          {/* Fila 2: subcategorías (cuando hay categoría seleccionada) */}
+          {drillCategory && (
+            <div
+              className="flex gap-2 overflow-x-auto px-3 pb-1.5"
+              style={{ scrollbarWidth: "none" } as React.CSSProperties}
+            >
+              {SUBCATEGORIES[drillCategory].map((sub) => {
+                const active = activeSubcategory === sub.id;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => setActiveSubcategory(active ? null : sub.id)}
+                    className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                      active
+                        ? "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700"
+                        : "border-[var(--border)] text-[var(--text-muted)]"
+                    }`}
+                    style={!active ? { background: "var(--bg)" } : {}}
+                  >
+                    {sub.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Fila 3: botones Ordenar + Filtros */}
+          <div className="flex gap-2 px-3 pb-2.5 pt-1">
+            <button
+              onClick={() => setSortSheetOpen(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border transition-colors"
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
+            >
+              ↕ Ordenar
+              {sortBy !== "relevance" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block" />
+              )}
+            </button>
+            <button
+              onClick={() => setFilterSheetOpen(true)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border transition-colors"
+              style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
+            >
+              ⚙️ Filtros
+              {activeFilterCount > 0 && (
+                <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-black leading-none">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Barra desktop: categorías ↔ subcategorías animadas ── */}
+        <div ref={topBarRef} className="hidden md:flex flex-col" style={{ background: "var(--surface)" }}>
+          <div className="flex items-center gap-3 px-4 pt-2 pb-1">
             <div className="relative overflow-hidden flex-1 h-8">
 
               {/* Capa 1 — Categorías */}
               <div
                 className="absolute inset-0 flex items-center overflow-x-auto"
-                style={{
-                  opacity: drillCategory ? 0 : 1,
-                  pointerEvents: drillCategory ? "none" : "auto",
-                }}
+                style={{ opacity: drillCategory ? 0 : 1, pointerEvents: drillCategory ? "none" : "auto" }}
               >
                 <div className="flex items-center justify-center gap-6 min-w-full w-max mx-auto">
                   {categories.map((c) => {
@@ -490,10 +593,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               {/* Capa 2 — Subcategorías */}
               <div
                 className="absolute inset-0 flex items-center overflow-x-auto"
-                style={{
-                  opacity: drillCategory ? 1 : 0,
-                  pointerEvents: drillCategory ? "auto" : "none",
-                }}
+                style={{ opacity: drillCategory ? 1 : 0, pointerEvents: drillCategory ? "auto" : "none" }}
               >
                 <div className="flex items-center gap-5 w-max px-1">
                   <button
@@ -518,7 +618,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                 </div>
               </div>
             </div>
-
           </div>
 
           {/* Barra de progreso por categoría */}
@@ -596,6 +695,129 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           )}
         </div>
       </div>
+
+      {/* ── Bottom Sheet: Filtros (móvil) ── */}
+      {filterSheetOpen && isMobile && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setFilterSheetOpen(false)}
+          />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl max-h-[85vh] flex flex-col"
+            style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
+            </div>
+
+            <div className="overflow-y-auto px-5 pb-8 pt-2">
+              <h3 className="text-base font-black text-[var(--text)] mb-5">Filtros</h3>
+
+              {/* Precio */}
+              <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-3">Precio</p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {priceRanges.map((r) => {
+                  const active = activePrices.includes(r.value);
+                  return (
+                    <button
+                      key={r.value}
+                      onClick={() => togglePrice(r.value)}
+                      className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-colors ${
+                        active
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-[var(--border)] text-[var(--text-muted)]"
+                      }`}
+                      style={!active ? { background: "var(--surface)" } : {}}
+                    >
+                      {r.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Destacados */}
+              <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-3">Destacados</p>
+              <div className="flex flex-wrap gap-2 mb-8">
+                {[
+                  { value: "bestseller", label: "⭐ Bestseller" },
+                  { value: "nuevo",      label: "🆕 Nuevo" },
+                  { value: "descuento",  label: "🔥 Descuento" },
+                ].map((tag) => {
+                  const active = activeTags.includes(tag.value);
+                  return (
+                    <button
+                      key={tag.value}
+                      onClick={() => toggleTag(tag.value)}
+                      className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-colors ${
+                        active
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "border-[var(--border)] text-[var(--text-muted)]"
+                      }`}
+                      style={!active ? { background: "var(--surface)" } : {}}
+                    >
+                      {tag.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Acciones */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { clearFilters(); setFilterSheetOpen(false); }}
+                  className="flex-1 py-3 rounded-2xl border text-sm font-bold transition-colors"
+                  style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-muted)" }}
+                >
+                  Limpiar
+                </button>
+                <button
+                  onClick={() => setFilterSheetOpen(false)}
+                  className="flex-1 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold"
+                >
+                  Aplicar{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Bottom Sheet: Ordenar (móvil) ── */}
+      {sortSheetOpen && isMobile && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setSortSheetOpen(false)}
+          />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
+            style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}
+          >
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
+            </div>
+            <div className="px-5 pt-2 pb-10">
+              <h3 className="text-base font-black text-[var(--text)] mb-4">Ordenar por</h3>
+              {sortOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setSortBy(opt.value); setSortSheetOpen(false); }}
+                  className="w-full flex items-center justify-between py-4 border-b text-sm font-medium last:border-0 transition-colors"
+                  style={{
+                    borderColor: "var(--border)",
+                    color: sortBy === opt.value ? "#6366f1" : "var(--text)",
+                  }}
+                >
+                  {opt.label}
+                  {sortBy === opt.value && <span className="text-indigo-600 font-black text-base">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
