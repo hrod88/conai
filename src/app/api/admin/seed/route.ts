@@ -128,8 +128,11 @@ export async function GET(req: NextRequest) {
 
   const multiplier = WAREHOUSE_MULTIPLIER[warehouse] ?? 3.0;
 
-  const results = await Promise.allSettled(
-    entries.map(async (entry) => {
+  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  const groups: SeedGroup[] = [];
+  for (const entry of entries) {
+    try {
       const data = await cjGet("/product/list", {
         productNameEn: entry.query,
         pageNum: "1",
@@ -167,13 +170,12 @@ export async function GET(req: NextRequest) {
         };
       });
 
-      return { id: entry.subcategory, label: entry.label, products } as SeedGroup;
-    })
-  );
-
-  const groups: SeedGroup[] = results
-    .filter((r): r is PromiseFulfilledResult<SeedGroup> => r.status === "fulfilled")
-    .map((r) => r.value);
+      groups.push({ id: entry.subcategory, label: entry.label, products });
+    } catch {
+      groups.push({ id: entry.subcategory, label: entry.label, products: [] });
+    }
+    await sleep(1200);
+  }
 
   const total = groups.reduce((acc, g) => acc + g.products.length, 0);
   return Response.json({ category, groups, total });
