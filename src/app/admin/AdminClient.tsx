@@ -410,6 +410,14 @@ export default function AdminClient({
     setSaving(null);
   }
 
+  async function deleteAllProducts() {
+    if (!confirm(`¿Eliminar los ${products.length} productos? Esta acción no se puede deshacer.`)) return;
+    setSaving("__all__");
+    await fetch("/api/admin/products", { method: "DELETE" });
+    setProducts([]);
+    setSaving(null);
+  }
+
   async function deleteProduct(id: string) {
     if (!confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) return;
     setSaving(id);
@@ -486,7 +494,18 @@ export default function AdminClient({
       {tab === "productos" && (
         <div className="rounded-xl border overflow-hidden" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
           <div className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ borderColor: "var(--border)" }}>
-            <h2 className="font-black text-[var(--text)] text-sm">{products.length} productos</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-black text-[var(--text)] text-sm">{products.length} productos</h2>
+              {products.length > 0 && (
+                <button
+                  onClick={deleteAllProducts}
+                  disabled={saving === "__all__"}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                >
+                  {saving === "__all__" ? "Eliminando..." : "🗑 Eliminar todos"}
+                </button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <input
                 value={cjSearch}

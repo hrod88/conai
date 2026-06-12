@@ -45,3 +45,14 @@ export async function POST(req: NextRequest) {
 
   return Response.json({ ok: true, id: data.id });
 }
+
+export async function DELETE(_req: NextRequest) {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("products").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  return Response.json({ ok: true });
+}
