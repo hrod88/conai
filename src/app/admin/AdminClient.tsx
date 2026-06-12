@@ -205,34 +205,66 @@ export default function AdminClient({
   const [importPage, setImportPage] = useState(1);
   const [importTotal, setImportTotal] = useState(0);
 
-  // Seed catálogo base
-  const SEED_TOTAL = 53;
-  const [seeding, setSeeding] = useState(false);
-  const [seedProgress, setSeedProgress] = useState(0);
-  const [seedInserted, setSeedInserted] = useState(0);
-  const [seedDone, setSeedDone] = useState(false);
+  // Seed por categoría
+  type SeedProduct = { pid: string; name: string; image: string | null; price: number; original_price: number; category: string; subcategory: string; tag: string };
+  type SeedGroup   = { id: string; label: string; products: SeedProduct[] };
 
-  async function runSeed() {
-    if (!confirm(`¿Importar catálogo base (~1.060 productos en tendencia)?\n\nEsto tomará ~2 minutos. No cierres la pestaña.`)) return;
-    setSeeding(true);
-    setSeedProgress(0);
-    setSeedInserted(0);
-    setSeedDone(false);
-    let total = 0;
-    for (let i = 0; i < SEED_TOTAL; i++) {
-      try {
-        const res = await fetch("/api/admin/seed", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ index: i }),
-        });
-        const json = await res.json();
-        if (json.ok) { total += json.inserted; setSeedInserted(total); }
-      } catch { /* continuar con siguiente */ }
-      setSeedProgress(i + 1);
-    }
-    setSeeding(false);
-    setSeedDone(true);
+  const CAT_SEED_META: Record<string, { icon: string; label: string }> = {
+    salud:       { icon: "🏥", label: "Salud"       },
+    belleza:     { icon: "💄", label: "Belleza"     },
+    hogar:       { icon: "🏠", label: "Hogar"       },
+    wearables:   { icon: "⌚", label: "Wearables"   },
+    mascotas:    { icon: "🐾", label: "Mascotas"    },
+    gadgets:     { icon: "🔧", label: "Gadgets"     },
+    audio:       { icon: "🎵", label: "Audio"       },
+    oficina:     { icon: "💼", label: "Oficina"     },
+    juguetes:    { icon: "🧸", label: "Juguetes"    },
+    deportes:    { icon: "🏃", label: "Deportes"    },
+    electronica: { icon: "📺", label: "Electrónica" },
+    telefonos:   { icon: "📱", label: "Teléfonos"   },
+  };
+
+  const [seedCat, setSeedCat]               = useState<string | null>(null);
+  const [seedGroups, setSeedGroups]         = useState<SeedGroup[]>([]);
+  const [seedSelected, setSeedSelected]     = useState<Set<string>>(new Set());
+  const [seedLoading, setSeedLoading]       = useState(false);
+  const [seedImporting, setSeedImporting]   = useState(false);
+  const [seedImportDone, setSeedImportDone] = useState<number | null>(null);
+
+  async function loadCategoryPreview(cat: string) {
+    setSeedCat(cat);
+    setSeedLoading(true);
+    setSeedGroups([]);
+    setSeedSelected(new Set());
+    setSeedImportDone(null);
+    const res   = await fetch(`/api/admin/seed?category=${cat}`);
+    const json  = await res.json();
+    const groups: SeedGroup[] = json.groups ?? [];
+    setSeedGroups(groups);
+    setSeedSelected(new Set(groups.flatMap((g) => g.products.map((p) => p.pid))));
+    setSeedLoading(false);
+  }
+
+  function toggleSeedProduct(pid: string) {
+    setSeedSelected((prev) => {
+      const next = new Set(prev);
+      next.has(pid) ? next.delete(pid) : next.add(pid);
+      return next;
+    });
+  }
+
+  async function confirmSeedImport() {
+    const selected = seedGroups.flatMap((g) => g.products).filter((p) => seedSelected.has(p.pid));
+    if (!selected.length) return;
+    setSeedImporting(true);
+    const res  = await fetch("/api/admin/seed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ products: selected }),
+    });
+    const json = await res.json();
+    setSeedImportDone(json.inserted ?? 0);
+    setSeedImporting(false);
   }
 
   // CJ — tracking
@@ -568,34 +600,136 @@ export default function AdminClient({
       {tab === "importar" && (
         <div className="flex flex-col gap-4">
 
-          {/* Catálogo base automático */}
-          <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <p className="text-sm font-bold text-[var(--text)]">🚀 Importar catálogo base</p>
-                <p className="text-xs text-[var(--text-muted)]">~1.060 productos IA en tendencia 2026, distribuidos en las 53 subcategorías</p>
-              </div>
-              <button
-                onClick={runSeed}
-                disabled={seeding}
-                className="px-4 py-2 text-sm font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors whitespace-nowrap"
-              >
-                {seeding ? "Importando..." : seedDone ? "✅ Completado" : "▶ Iniciar importación"}
-              </button>
+          {/* Seed por categoría */}
+          <div className="rounded-xl border p-4 flex flex-col gap-4" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <div>
+              <p className="text-sm font-bold text-[var(--text)]">🚀 Importar catálogo por categoría</p>
+              <p className="text-xs text-[var(--text-muted)]">Elige una categoría, previsualiza los productos y confirma los que quieres importar</p>
             </div>
-            {(seeding || seedDone) && (
-              <div className="flex flex-col gap-1.5">
-                <div className="w-full h-2 rounded-full bg-gray-200 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-300"
-                    style={{ width: `${Math.round((seedProgress / SEED_TOTAL) * 100)}%` }}
-                  />
+
+            {/* Grid de categorías */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {Object.entries(CAT_SEED_META).map(([cat, meta]) => (
+                <button
+                  key={cat}
+                  onClick={() => loadCategoryPreview(cat)}
+                  disabled={seedLoading}
+                  className={`flex flex-col items-center gap-1 px-2 py-3 rounded-xl border text-xs font-semibold transition-all ${
+                    seedCat === cat
+                      ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                      : "border-[var(--border)] hover:border-indigo-300 text-[var(--text)]"
+                  } disabled:opacity-50`}
+                  style={{ background: seedCat === cat ? undefined : "var(--bg)" }}
+                >
+                  <span className="text-xl">{meta.icon}</span>
+                  <span>{meta.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Estado de carga */}
+            {seedLoading && (
+              <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                <span className="animate-spin">⟳</span>
+                Buscando productos en CJ para {seedCat ? CAT_SEED_META[seedCat]?.label : ""}...
+              </div>
+            )}
+
+            {/* Preview de productos */}
+            {!seedLoading && seedGroups.length > 0 && (
+              <div className="flex flex-col gap-3">
+                {/* Controles */}
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-sm font-bold text-[var(--text)]">
+                    {CAT_SEED_META[seedCat!]?.icon} {CAT_SEED_META[seedCat!]?.label} —{" "}
+                    <span className="text-[var(--text-muted)] font-normal">
+                      {seedSelected.size} de {seedGroups.reduce((a, g) => a + g.products.length, 0)} seleccionados
+                    </span>
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSeedSelected(new Set(seedGroups.flatMap((g) => g.products.map((p) => p.pid))))}
+                      className="text-xs px-3 py-1 rounded-lg border border-[var(--border)] hover:bg-indigo-50 text-[var(--text)]"
+                    >
+                      Seleccionar todos
+                    </button>
+                    <button
+                      onClick={() => setSeedSelected(new Set())}
+                      className="text-xs px-3 py-1 rounded-lg border border-[var(--border)] hover:bg-red-50 text-[var(--text)]"
+                    >
+                      Deseleccionar todos
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--text-muted)]">
-                  {seedDone
-                    ? `✅ Listo — ${seedInserted} productos importados`
-                    : `Procesando subcategoría ${seedProgress} de ${SEED_TOTAL} — ${seedInserted} productos importados`}
-                </p>
+
+                {/* Grupos por subcategoría */}
+                <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto pr-1">
+                  {seedGroups.map((group) => (
+                    <div key={group.id}>
+                      <p className="text-xs font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-wide">
+                        📂 {group.label} ({group.products.length})
+                      </p>
+                      <div className="flex flex-col gap-1">
+                        {group.products.map((p) => (
+                          <label
+                            key={p.pid}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
+                              seedSelected.has(p.pid)
+                                ? "border-indigo-200 bg-indigo-50/50"
+                                : "border-[var(--border)] opacity-50"
+                            }`}
+                            style={{ background: seedSelected.has(p.pid) ? undefined : "var(--bg)" }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={seedSelected.has(p.pid)}
+                              onChange={() => toggleSeedProduct(p.pid)}
+                              className="accent-indigo-500 w-4 h-4 flex-shrink-0"
+                            />
+                            {p.image && (
+                              <img src={p.image} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold truncate text-[var(--text)]">{p.name}</p>
+                              <p className="text-[10px] text-[var(--text-muted)]">
+                                ${p.price.toLocaleString("es-CL")} CLP · <span className="line-through">${p.original_price.toLocaleString("es-CL")}</span>
+                              </p>
+                            </div>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                              p.tag === "bestseller" ? "bg-amber-100 text-amber-700" :
+                              p.tag === "nuevo"      ? "bg-emerald-100 text-emerald-700" :
+                              p.tag === "destacado"  ? "bg-indigo-100 text-indigo-700" :
+                              "bg-orange-100 text-orange-700"
+                            }`}>
+                              {p.tag}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Botón confirmar */}
+                {seedImportDone === null ? (
+                  <button
+                    onClick={confirmSeedImport}
+                    disabled={seedImporting || seedSelected.size === 0}
+                    className="w-full py-2.5 text-sm font-bold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                  >
+                    {seedImporting ? "Importando..." : `Importar ${seedSelected.size} productos seleccionados →`}
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                    <p className="text-sm font-bold text-emerald-700">✅ {seedImportDone} productos importados</p>
+                    <button
+                      onClick={() => { setSeedGroups([]); setSeedCat(null); setSeedImportDone(null); }}
+                      className="text-xs px-3 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      Importar otra categoría
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
