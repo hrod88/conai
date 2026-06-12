@@ -410,6 +410,14 @@ export default function AdminClient({
     setSaving(null);
   }
 
+  async function deleteProduct(id: string) {
+    if (!confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) return;
+    setSaving(id);
+    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    setSaving(null);
+  }
+
   async function updateProduct(id: string, fields: { stock?: number; tag?: string | null; price?: number }) {
     setSaving(id);
     const res = await fetch(`/api/admin/products/${id}`, {
@@ -549,6 +557,7 @@ export default function AdminClient({
                   <th className="text-right px-5 py-3">Stock</th>
                   <th className="text-left px-5 py-3">Tag</th>
                   <th className="text-right px-5 py-3">Rating</th>
+                  <th className="px-5 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -604,6 +613,16 @@ export default function AdminClient({
                     </td>
                     <td className="px-5 py-3 text-right text-amber-500 font-semibold">
                       ★ {p.rating?.toFixed(1) ?? "—"}
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <button
+                        onClick={() => deleteProduct(p.id)}
+                        disabled={saving === p.id}
+                        className="text-[var(--text-muted)] hover:text-red-500 disabled:opacity-40 transition-colors text-base leading-none"
+                        title="Eliminar producto"
+                      >
+                        🗑
+                      </button>
                     </td>
                   </tr>
                 ))}

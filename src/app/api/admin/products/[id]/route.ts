@@ -28,3 +28,18 @@ export async function PATCH(
 
   return Response.json({ ok: true });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const guard = await requireAdmin();
+  if ("error" in guard) return guard.error;
+
+  const { id } = await params;
+  const admin = createAdminClient();
+  const { error } = await admin.from("products").delete().eq("id", id);
+  if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  return Response.json({ ok: true });
+}
