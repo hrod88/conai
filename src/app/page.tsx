@@ -67,13 +67,13 @@ export default async function HomePage() {
     { data: featuredRaw },
   ] = await Promise.all([
     supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
+      .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
     supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .eq("tag", "descuento").order("rating", { ascending: false }).limit(4),
+      .neq("active", false).eq("tag", "descuento").order("rating", { ascending: false }).limit(4),
     supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
+      .neq("active", false).eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
     supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .order("rating", { ascending: false }).limit(4),
+      .neq("active", false).order("rating", { ascending: false }).limit(4),
   ]);
 
   const heroData = {
@@ -90,6 +90,7 @@ export default async function HomePage() {
     const { data } = await supabase
       .from("products")
       .select("id, name, price, icon, image, tag, category")
+      .neq("active", false)
       .eq("category", cat)
       .eq("tag", "bestseller")
       .order("review_count", { ascending: false })

@@ -15,6 +15,7 @@ export default async function ProductosPage({
   const { data: products } = await supabase
     .from("products")
     .select("*")
+    .neq("active", false)
     .order("created_at", { ascending: false });
 
   return (

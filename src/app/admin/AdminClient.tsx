@@ -197,6 +197,17 @@ export default function AdminClient({
   const [cjLoading, setCjLoading] = useState(false);
   const [linkingProduct, setLinkingProduct] = useState<string | null>(null);
   const [fulfillMsg, setFulfillMsg] = useState<Record<string, string>>({});
+  const [showCjPanel, setShowCjPanel] = useState(false);
+
+  // Productos tab — split layout
+  const [catSearch, setCatSearch] = useState("");
+  const [selectedCat, setSelectedCat] = useState<string>("__all__");
+  const [selectedSubcat, setSelectedSubcat] = useState<string | null>(null);
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+  const [prodSearch, setProdSearch] = useState("");
+  const [prodSort, setProdSort] = useState<"name" | "price" | "stock" | "rating">("name");
+  const [prodSortDir, setProdSortDir] = useState<"asc" | "desc">("asc");
+  const [selectedProds, setSelectedProds] = useState<Set<string>>(new Set());
 
   // CJ — importar
   const [importSearch, setImportSearch]     = useState("");
@@ -426,6 +437,54 @@ export default function AdminClient({
     setSaving(null);
   }
 
+  async function toggleActiveProduct(id: string, active: boolean) {
+    setSaving(id);
+    await fetch(`/api/admin/products/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active }),
+    });
+    setProducts((prev) => prev.map((p) => p.id === id ? { ...p, active } : p));
+    setSaving(null);
+  }
+
+  async function bulkDeleteProducts() {
+    if (!confirm(`¿Eliminar ${selectedProds.size} productos? Esta acción no se puede deshacer.`)) return;
+    setSaving("__bulk__");
+    await Promise.all([...selectedProds].map((id) => fetch(`/api/admin/products/${id}`, { method: "DELETE" })));
+    setProducts((prev) => prev.filter((p) => !selectedProds.has(p.id)));
+    setSelectedProds(new Set());
+    setSaving(null);
+  }
+
+  async function bulkChangeTag(tag: string) {
+    setSaving("__bulk__");
+    await Promise.all([...selectedProds].map((id) =>
+      fetch(`/api/admin/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tag: tag || null }),
+      })
+    ));
+    setProducts((prev) => prev.map((p) => selectedProds.has(p.id) ? { ...p, tag: (tag || null) as Product["tag"] } : p));
+    setSaving(null);
+  }
+
+  async function bulkMoveCategory(cat: Category) {
+    if (!cat) return;
+    setSaving("__bulk__");
+    await Promise.all([...selectedProds].map((id) =>
+      fetch(`/api/admin/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: cat, subcategory: null }),
+      })
+    ));
+    setProducts((prev) => prev.map((p) => selectedProds.has(p.id) ? { ...p, category: cat, subcategory: null } : p));
+    setSelectedProds(new Set());
+    setSaving(null);
+  }
+
   async function updateProduct(id: string, fields: { stock?: number; tag?: string | null; price?: number }) {
     setSaving(id);
     const res = await fetch(`/api/admin/products/${id}`, {
@@ -443,6 +502,30 @@ export default function AdminClient({
 
   const inputCls = "text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400";
   const inputStyle = { background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" };
+
+  // Productos tab — computed
+  const catCounts = ALL_CATEGORIES.reduce((acc, cat) => {
+    acc[cat] = products.filter((p) => p.category === cat).length;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const filteredProds = products
+    .filter((p) => {
+      if (selectedCat !== "__all__" && p.category !== selectedCat) return false;
+      if (selectedSubcat && p.subcategory !== selectedSubcat) return false;
+      if (prodSearch && !p.name.toLowerCase().includes(prodSearch.toLowerCase())) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      if (prodSort === "price")  cmp = a.price - b.price;
+      if (prodSort === "stock")  cmp = a.stock - b.stock;
+      if (prodSort === "rating") cmp = (a.rating ?? 0) - (b.rating ?? 0);
+      if (prodSort === "name")   cmp = a.name.localeCompare(b.name);
+      return prodSortDir === "asc" ? cmp : -cmp;
+    });
+
+  const allProdsSelected = filteredProds.length > 0 && filteredProds.every((p) => selectedProds.has(p.id));
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6">
@@ -492,163 +575,334 @@ export default function AdminClient({
 
       {/* ── Tab Productos ────────────────────────────────────── */}
       {tab === "productos" && (
-        <div className="rounded-xl border overflow-hidden" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-          <div className="px-5 py-4 border-b flex items-center justify-between gap-4" style={{ borderColor: "var(--border)" }}>
-            <div className="flex items-center gap-3">
-              <h2 className="font-black text-[var(--text)] text-sm">{products.length} productos</h2>
-              {products.length > 0 && (
-                <button
-                  onClick={deleteAllProducts}
-                  disabled={saving === "__all__"}
-                  className="text-xs font-bold px-2.5 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
-                >
-                  {saving === "__all__" ? "Eliminando..." : "🗑 Eliminar todos"}
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                value={cjSearch}
-                onChange={(e) => setCjSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && searchCJ()}
-                placeholder="Buscar en CJ Dropshipping..."
-                className="text-xs px-3 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
-                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-              />
-              <button
-                onClick={searchCJ}
-                disabled={cjLoading}
-                className="text-xs font-bold px-3 py-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
-              >
-                {cjLoading ? "..." : "Buscar CJ"}
-              </button>
-            </div>
+        <>
+          {/* Panel CJ colapsable */}
+          <div className="rounded-xl border overflow-hidden" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+            <button
+              onClick={() => setShowCjPanel((v) => !v)}
+              className="w-full px-5 py-3 flex items-center justify-between text-xs font-bold text-[var(--text-muted)] hover:bg-[var(--surface-alt)] transition-colors"
+            >
+              <span>🔗 Vincular productos con CJ Dropshipping</span>
+              <span>{showCjPanel ? "▲" : "▼"}</span>
+            </button>
+            {showCjPanel && (
+              <div className="border-t px-5 py-3 flex flex-col gap-2" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
+                <div className="flex gap-2">
+                  <input
+                    value={cjSearch}
+                    onChange={(e) => setCjSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && searchCJ()}
+                    placeholder="Buscar en CJ Dropshipping..."
+                    className="flex-1 text-xs px-3 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={inputStyle}
+                  />
+                  <button onClick={searchCJ} disabled={cjLoading} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50">
+                    {cjLoading ? "..." : "Buscar CJ"}
+                  </button>
+                </div>
+                {cjResults.length > 0 && (
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                    <p className="text-[10px] font-bold text-[var(--text-muted)]">{cjResults.length} resultados — haz clic en &quot;Vincular&quot; junto al producto conAI</p>
+                    {cjResults.map((cj) => (
+                      <div key={cj.pid} className="flex items-center gap-3 text-xs py-1 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {cj.productImage && <img src={cj.productImage} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />}
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate text-[var(--text)]">{cj.productNameEn}</p>
+                            <p className="text-[var(--text-muted)]">PID: {cj.pid} · USD {cj.sellPrice}</p>
+                          </div>
+                        </div>
+                        <button onClick={() => setLinkingProduct(linkingProduct === cj.pid ? null : cj.pid)} className="text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 flex-shrink-0">
+                          {linkingProduct === cj.pid ? "Cancelar" : "Vincular →"}
+                        </button>
+                        {linkingProduct === cj.pid && (
+                          <div className="flex flex-col gap-0.5 text-[10px] flex-shrink-0 max-h-28 overflow-y-auto">
+                            <p className="font-bold text-[var(--text-muted)]">¿A cuál?</p>
+                            {products.map((p) => (
+                              <button key={p.id} onClick={() => linkCJ(p.id, cj.pid)} className="text-left px-2 py-0.5 rounded hover:bg-indigo-100 text-[var(--text)]">
+                                {p.icon} {p.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {cjResults.length > 0 && (
-            <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)", background: "var(--bg)" }}>
-              <p className="text-xs font-bold text-[var(--text-muted)] mb-2">{cjResults.length} resultados — haz clic en &quot;Vincular&quot; al lado del producto conAI que corresponda</p>
-              <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
-                {cjResults.map((cj) => (
-                  <div key={cj.pid} className="flex items-center justify-between gap-3 text-xs py-1 border-b last:border-0" style={{ borderColor: "var(--border)" }}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      {cj.productImage && <img src={cj.productImage} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />}
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate text-[var(--text)]">{cj.productNameEn}</p>
-                        <p className="text-[var(--text-muted)]">PID: {cj.pid} · USD {cj.sellPrice}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setLinkingProduct(linkingProduct === cj.pid ? null : cj.pid)}
-                      className="flex-shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
-                    >
-                      {linkingProduct === cj.pid ? "Cancelar" : "Vincular →"}
+          {/* Split layout */}
+          <div className="rounded-xl border overflow-hidden flex" style={{ background: "var(--surface)", borderColor: "var(--border)", height: "calc(100vh - 360px)", minHeight: "520px" }}>
+
+            {/* ── Izquierda: Categorías ── */}
+            <div className="w-52 flex-shrink-0 border-r flex flex-col" style={{ borderColor: "var(--border)" }}>
+              <div className="px-3 py-3 border-b flex flex-col gap-2" style={{ borderColor: "var(--border)" }}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Categorías</span>
+                  {products.length > 0 && (
+                    <button onClick={deleteAllProducts} disabled={saving === "__all__"} className="text-[10px] font-bold text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors" title="Eliminar todos">
+                      🗑 todos
                     </button>
-                    {linkingProduct === cj.pid && (
-                      <div className="flex flex-col gap-1 text-[10px] text-[var(--text-muted)] flex-shrink-0">
-                        <p className="font-bold">¿A cuál producto conAI?</p>
-                        <div className="max-h-32 overflow-y-auto flex flex-col gap-0.5">
-                          {products.map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => linkCJ(p.id, cj.pid)}
-                              className="text-left px-2 py-0.5 rounded hover:bg-indigo-100 text-[var(--text)] transition-colors"
-                            >
-                              {p.icon} {p.name}
-                            </button>
+                  )}
+                </div>
+                <input
+                  value={catSearch}
+                  onChange={(e) => setCatSearch(e.target.value)}
+                  placeholder="Buscar categoría..."
+                  className="w-full text-xs px-2 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Todos */}
+              <button
+                onClick={() => { setSelectedCat("__all__"); setSelectedSubcat(null); setSelectedProds(new Set()); }}
+                className={`flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors border-b ${selectedCat === "__all__" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300" : "text-[var(--text)] hover:bg-[var(--surface-alt)]"}`}
+                style={{ borderColor: "var(--border)" }}
+              >
+                <span>✦ Todos</span>
+                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${selectedCat === "__all__" ? "bg-indigo-100 text-indigo-600" : "bg-[var(--border)] text-[var(--text-muted)]"}`}>{products.length}</span>
+              </button>
+
+              {/* Lista de categorías */}
+              <div className="flex-1 overflow-y-auto">
+                {ALL_CATEGORIES
+                  .filter((cat) => !catSearch || cat.toLowerCase().includes(catSearch.toLowerCase()))
+                  .map((cat) => (
+                    <div key={cat}>
+                      <div
+                        className={`flex items-center gap-1.5 px-3 py-2 cursor-pointer transition-colors ${selectedCat === cat && !selectedSubcat ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300" : "text-[var(--text)] hover:bg-[var(--surface-alt)]"}`}
+                        onClick={() => {
+                          setSelectedCat(cat);
+                          setSelectedSubcat(null);
+                          setSelectedProds(new Set());
+                          setExpandedCats((prev) => { const n = new Set(prev); n.has(cat) ? n.delete(cat) : n.add(cat); return n; });
+                        }}
+                      >
+                        <span className="text-sm">{CAT_ICONS[cat as Category]}</span>
+                        <span className="flex-1 text-xs font-semibold capitalize truncate">{cat}</span>
+                        <span className="text-[10px] font-black text-[var(--text-muted)]">{catCounts[cat] ?? 0}</span>
+                        <span className="text-[9px] text-[var(--text-muted)]">{expandedCats.has(cat) ? "▼" : "▶"}</span>
+                      </div>
+                      {/* Barra de progreso */}
+                      <div className="px-3 pb-1.5">
+                        <div className="h-0.5 rounded-full" style={{ background: "var(--border)" }}>
+                          <div className="h-0.5 rounded-full bg-indigo-400 transition-all" style={{ width: `${products.length ? ((catCounts[cat] ?? 0) / products.length) * 100 : 0}%` }} />
+                        </div>
+                      </div>
+                      {/* Subcategorías */}
+                      {expandedCats.has(cat) && SUBCATEGORIES[cat as Category]?.map((sub) => {
+                        const cnt = products.filter((p) => p.category === cat && p.subcategory === sub.id).length;
+                        if (cnt === 0) return null;
+                        return (
+                          <button
+                            key={sub.id}
+                            onClick={() => { setSelectedCat(cat); setSelectedSubcat(sub.id); setSelectedProds(new Set()); }}
+                            className={`w-full flex items-center justify-between pl-8 pr-3 py-1.5 text-[11px] transition-colors ${selectedSubcat === sub.id ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20" : "text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-alt)]"}`}
+                          >
+                            <span className="truncate">— {sub.label}</span>
+                            <span className="font-bold ml-1 flex-shrink-0">{cnt}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+              </div>
+
+              <div className="px-3 py-2 border-t text-[10px] text-[var(--text-muted)]" style={{ borderColor: "var(--border)" }}>
+                Total: {products.length} productos
+              </div>
+            </div>
+
+            {/* ── Derecha: Productos ── */}
+            <div className="flex-1 flex flex-col min-w-0">
+
+              {/* Breadcrumb */}
+              <div className="px-4 py-2 border-b flex items-center gap-1 text-xs flex-wrap" style={{ borderColor: "var(--border)" }}>
+                <button onClick={() => { setSelectedCat("__all__"); setSelectedSubcat(null); }} className="text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">Todos</button>
+                {selectedCat !== "__all__" && (
+                  <><span className="text-[var(--text-muted)]">›</span>
+                  <button onClick={() => setSelectedSubcat(null)} className="text-[var(--text-muted)] hover:text-[var(--text)] capitalize transition-colors">{selectedCat}</button></>
+                )}
+                {selectedSubcat && (
+                  <><span className="text-[var(--text-muted)]">›</span>
+                  <span className="font-semibold text-[var(--text)]">{SUBCATEGORIES[selectedCat as Category]?.find((s) => s.id === selectedSubcat)?.label}</span></>
+                )}
+                <span className="ml-auto font-bold text-[var(--text)]">{filteredProds.length} productos</span>
+              </div>
+
+              {/* Toolbar */}
+              <div className="px-4 py-2 border-b flex items-center gap-2 flex-wrap" style={{ borderColor: "var(--border)" }}>
+                <input
+                  value={prodSearch}
+                  onChange={(e) => { setProdSearch(e.target.value); setSelectedProds(new Set()); }}
+                  placeholder="Buscar producto..."
+                  className="text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none focus:border-indigo-400 w-44"
+                  style={inputStyle}
+                />
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Ordenar:</span>
+                {(["name", "price", "stock", "rating"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { if (prodSort === s) setProdSortDir((d) => d === "asc" ? "desc" : "asc"); else { setProdSort(s); setProdSortDir("asc"); } }}
+                    className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${prodSort === s ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-400"}`}
+                  >
+                    {s === "name" ? "A-Z" : s === "price" ? "Precio" : s === "stock" ? "Stock" : "Rating"}
+                    {prodSort === s && (prodSortDir === "asc" ? " ↑" : " ↓")}
+                  </button>
+                ))}
+              </div>
+
+              {/* Header tabla */}
+              <div className="grid items-center px-4 py-2 border-b text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]"
+                style={{ borderColor: "var(--border)", gridTemplateColumns: "auto 1fr auto auto auto auto auto auto" }}>
+                <input
+                  type="checkbox"
+                  checked={allProdsSelected}
+                  onChange={() => setSelectedProds(allProdsSelected ? new Set() : new Set(filteredProds.map((p) => p.id)))}
+                  className="mr-3 accent-indigo-500 w-3.5 h-3.5"
+                />
+                <span>Producto</span>
+                <span className="px-2 text-right">Precio</span>
+                <span className="px-2 text-right">Stock</span>
+                <span className="px-2">Tag</span>
+                <span className="px-2 text-center">Rating</span>
+                <span className="px-2 text-center">Vis.</span>
+                <span className="px-2" />
+              </div>
+
+              {/* Filas */}
+              <div className="flex-1 overflow-y-auto">
+                {filteredProds.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full gap-2 text-[var(--text-muted)]">
+                    <span className="text-3xl">📦</span>
+                    <p className="text-sm">{prodSearch ? "Sin resultados para esa búsqueda" : "Sin productos en esta categoría"}</p>
+                  </div>
+                ) : filteredProds.map((p) => {
+                  const discountPct = p.original_price && p.original_price > p.price
+                    ? Math.round((p.original_price - p.price) / p.original_price * 100) : null;
+                  const isActive = p.active !== false;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`grid items-center px-4 py-2 border-b transition-colors hover:bg-indigo-50/20 dark:hover:bg-indigo-900/10 ${selectedProds.has(p.id) ? "bg-indigo-50/50 dark:bg-indigo-900/10" : ""}`}
+                      style={{ borderColor: "var(--border)", gridTemplateColumns: "auto 1fr auto auto auto auto auto auto", opacity: saving === p.id ? 0.5 : isActive ? 1 : 0.45 }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedProds.has(p.id)}
+                        onChange={() => setSelectedProds((prev) => { const n = new Set(prev); n.has(p.id) ? n.delete(p.id) : n.add(p.id); return n; })}
+                        className="mr-3 accent-indigo-500 w-3.5 h-3.5"
+                      />
+                      {/* Info producto */}
+                      <div className="flex items-center gap-2 min-w-0">
+                        {p.image
+                          ? <img src={p.image} alt="" className="w-9 h-9 rounded object-cover flex-shrink-0" />
+                          : <div className="w-9 h-9 rounded bg-gray-100 flex items-center justify-center text-lg flex-shrink-0">{p.icon}</div>
+                        }
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold truncate text-[var(--text)] max-w-[200px]">{p.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            {p.subcategory && <span className="text-[9px] text-[var(--text-muted)]">{p.subcategory}</span>}
+                            {!p.cj_pid && <span className="text-[9px] text-amber-500 font-bold">⚠ sin CJ</span>}
+                            {p.review_count ? <span className="text-[9px] text-[var(--text-muted)]">{p.review_count} reseñas</span> : null}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Precio */}
+                      <div className="px-2 text-right">
+                        <input
+                          type="number"
+                          defaultValue={p.price}
+                          onBlur={(e) => { const v = Number(e.target.value); if (v !== p.price) updateProduct(p.id, { price: v }); }}
+                          className="w-24 text-right text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-transparent border-b border-transparent hover:border-indigo-300 focus:border-indigo-500 focus:outline-none"
+                        />
+                        {p.original_price && <p className="text-[9px] text-[var(--text-muted)] line-through">${p.original_price.toLocaleString("es-CL")}</p>}
+                        {discountPct && <span className="text-[9px] font-bold text-emerald-600">-{discountPct}%</span>}
+                      </div>
+                      {/* Stock */}
+                      <div className="px-2 text-right">
+                        <input
+                          type="number"
+                          defaultValue={p.stock}
+                          min={0}
+                          onBlur={(e) => { const v = Number(e.target.value); if (v !== p.stock) updateProduct(p.id, { stock: v }); }}
+                          className={`w-14 text-right text-xs font-bold bg-transparent border-b border-transparent hover:border-indigo-300 focus:border-indigo-500 focus:outline-none ${p.stock === 0 ? "text-red-500" : p.stock < 5 ? "text-amber-500" : "text-emerald-600"}`}
+                        />
+                        <div className="flex justify-end gap-0.5 mt-0.5">
+                          {[0, 1, 2].map((i) => (
+                            <span key={i} className={`w-1.5 h-1.5 rounded-full ${i < (p.stock === 0 ? 0 : p.stock < 5 ? 1 : 3) ? p.stock === 0 ? "bg-red-400" : p.stock < 5 ? "bg-amber-400" : "bg-emerald-400" : "bg-gray-200"}`} />
                           ))}
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {/* Tag */}
+                      <div className="px-2">
+                        <select
+                          value={p.tag ?? ""}
+                          onChange={(e) => updateProduct(p.id, { tag: e.target.value || null })}
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-transparent cursor-pointer focus:outline-none"
+                          style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
+                        >
+                          {tagOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      </div>
+                      {/* Rating */}
+                      <div className="px-2 text-center">
+                        <span className="text-[10px] font-bold text-amber-500">★ {p.rating?.toFixed(1) ?? "—"}</span>
+                      </div>
+                      {/* Visibilidad */}
+                      <div className="px-2 text-center">
+                        <button
+                          onClick={() => toggleActiveProduct(p.id, !isActive)}
+                          className="text-sm transition-opacity hover:opacity-60"
+                          title={isActive ? "Publicado — clic para ocultar" : "Oculto — clic para publicar"}
+                        >
+                          {isActive ? "👁" : "🚫"}
+                        </button>
+                      </div>
+                      {/* Eliminar */}
+                      <div className="px-2">
+                        <button onClick={() => deleteProduct(p.id)} disabled={saving === p.id} className="text-[var(--text-muted)] hover:text-red-500 disabled:opacity-40 transition-colors text-sm">🗑</button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          )}
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b text-xs text-[var(--text-muted)] font-bold uppercase tracking-wide" style={{ borderColor: "var(--border)" }}>
-                  <th className="text-left px-5 py-3">Producto</th>
-                  <th className="text-left px-5 py-3">Categoría</th>
-                  <th className="text-right px-5 py-3">Precio</th>
-                  <th className="text-right px-5 py-3">Stock</th>
-                  <th className="text-left px-5 py-3">Tag</th>
-                  <th className="text-right px-5 py-3">Rating</th>
-                  <th className="px-5 py-3" />
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="border-b transition-colors hover:bg-indigo-50/20 dark:hover:bg-indigo-900/10"
-                    style={{ borderColor: "var(--border)", opacity: saving === p.id ? 0.5 : 1 }}
-                  >
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <span>{p.icon}</span>
-                        <span className="font-semibold text-[var(--text)] truncate max-w-[180px]">{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-[var(--text-muted)] capitalize">{p.category}</td>
-                    <td className="px-5 py-3 text-right">
-                      <input
-                        type="number"
-                        defaultValue={p.price}
-                        onBlur={(e) => {
-                          const val = Number(e.target.value);
-                          if (val !== p.price) updateProduct(p.id, { price: val });
-                        }}
-                        className="w-24 text-right text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-transparent border-b border-transparent hover:border-indigo-300 focus:border-indigo-500 focus:outline-none transition-colors"
-                      />
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <input
-                        type="number"
-                        defaultValue={p.stock}
-                        min={0}
-                        onBlur={(e) => {
-                          const val = Number(e.target.value);
-                          if (val !== p.stock) updateProduct(p.id, { stock: val });
-                        }}
-                        className={`w-16 text-right text-sm font-bold bg-transparent border-b border-transparent hover:border-indigo-300 focus:border-indigo-500 focus:outline-none transition-colors ${
-                          p.stock > 10 ? "text-emerald-600" : p.stock > 0 ? "text-amber-500" : "text-red-500"
-                        }`}
-                      />
-                    </td>
-                    <td className="px-5 py-3">
-                      <select
-                        value={p.tag ?? ""}
-                        onChange={(e) => updateProduct(p.id, { tag: e.target.value || null })}
-                        className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-transparent cursor-pointer focus:outline-none"
-                        style={{ borderColor: "var(--border)", color: "var(--text-muted)" }}
-                      >
-                        {tagOptions.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-5 py-3 text-right text-amber-500 font-semibold">
-                      ★ {p.rating?.toFixed(1) ?? "—"}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <button
-                        onClick={() => deleteProduct(p.id)}
-                        disabled={saving === p.id}
-                        className="text-[var(--text-muted)] hover:text-red-500 disabled:opacity-40 transition-colors text-base leading-none"
-                        title="Eliminar producto"
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
-        </div>
+
+          {/* Barra flotante de acciones masivas */}
+          {selectedProds.size > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+              <span className="text-sm font-black text-[var(--text)]">{selectedProds.size} seleccionados</span>
+              <div className="h-4 w-px" style={{ background: "var(--border)" }} />
+              <button onClick={bulkDeleteProducts} disabled={saving === "__bulk__"} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+                {saving === "__bulk__" ? "..." : "🗑 Eliminar"}
+              </button>
+              <select
+                defaultValue=""
+                onChange={(e) => { if (e.target.value) { bulkChangeTag(e.target.value); (e.target as HTMLSelectElement).value = ""; } }}
+                className="text-xs font-bold px-2 py-1.5 rounded-lg border cursor-pointer focus:outline-none"
+                style={inputStyle}
+              >
+                <option value="" disabled>🏷 Cambiar tag...</option>
+                {tagOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <select
+                defaultValue=""
+                onChange={(e) => { if (e.target.value) bulkMoveCategory(e.target.value as Category); }}
+                className="text-xs font-bold px-2 py-1.5 rounded-lg border cursor-pointer focus:outline-none"
+                style={inputStyle}
+              >
+                <option value="" disabled>📂 Mover a categoría...</option>
+                {ALL_CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>)}
+              </select>
+              <button onClick={() => setSelectedProds(new Set())} className="text-xs text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">✕</button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ── Tab Importar ─────────────────────────────────────── */}

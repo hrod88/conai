@@ -28,6 +28,8 @@ export interface Product {
   review_count?: number;
   subcategory?: string | null;
   original_price?: number | null;
+  cj_pid?: string | null;
+  active?: boolean;
   created_at: string;
 }
 
