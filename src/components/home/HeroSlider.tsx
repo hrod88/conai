@@ -261,13 +261,16 @@ function BentoScene({
 }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  if (products.length < 4) {
+  if (products.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">
         Cargando productos...
       </div>
     );
   }
+
+  // Rellena hasta 4 repitiendo los disponibles si hay menos
+  const display = [0, 1, 2, 3].map((i) => products[i % products.length]);
 
   const enter = (i: number) => { setHoveredIdx(i); onHover(true); };
   const leave = ()           => { setHoveredIdx(null); onHover(false); };
@@ -304,7 +307,7 @@ function BentoScene({
         {/* Grande — ocupa ambas filas */}
         <div style={{ gridRow: "1 / 3" }}>
           <BentoCard
-            product={products[0]} size="large"
+            product={display[0]} size="large"
             accentFrom={config.accentFrom}
             isHovered={hoveredIdx === 0}
             onEnter={() => enter(0)} onLeave={leave}
@@ -313,7 +316,7 @@ function BentoScene({
 
         {/* Mediano — fila superior derecha */}
         <BentoCard
-          product={products[1]} size="medium"
+          product={display[1]} size="medium"
           accentFrom={config.accentFrom}
           isHovered={hoveredIdx === 1}
           onEnter={() => enter(1)} onLeave={leave}
@@ -322,13 +325,13 @@ function BentoScene({
         {/* Pequeños — fila inferior derecha, lado a lado */}
         <div className="grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
           <BentoCard
-            product={products[2]} size="small"
+            product={display[2]} size="small"
             accentFrom={config.accentFrom}
             isHovered={hoveredIdx === 2}
             onEnter={() => enter(2)} onLeave={leave}
           />
           <BentoCard
-            product={products[3]} size="small"
+            product={display[3]} size="small"
             accentFrom={config.accentFrom}
             isHovered={hoveredIdx === 3}
             onEnter={() => enter(3)} onLeave={leave}
