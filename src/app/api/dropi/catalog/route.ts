@@ -32,23 +32,46 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Modo login: obtener token de usuario
-  if (probe === "login") {
-    const email    = req.nextUrl.searchParams.get("email") ?? "";
-    const password = req.nextUrl.searchParams.get("pass") ?? "";
-    const candidates = ["/api/login", "/api/auth/login", "/api/v3/login", "/login", "/auth/login"];
-    const results: Record<string, { status: number; preview: string }> = {};
-    for (const path of candidates) {
-      const res = await fetch(`${DROPI_BASE}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-        cache: "no-store",
-      });
-      const text = await res.text();
-      results[path] = { status: res.status, preview: text.slice(0, 300) };
-    }
-    return Response.json(results);
+  // Modo auth: prueba distintas formas de enviar el token
+  if (probe === "auth") {
+    const attempts: Record<string, { status: number; preview: string }> = {};
+    const body = JSON.stringify({ page: 1, per_page: 5 });
+
+    // 1. dropi-integration-key header (original)
+    let res = await fetch(`${DROPI_BASE}/api/products`, {
+      method: "POST",
+      headers: { "dropi-integration-key": DROPI_KEY, "Content-Type": "application/json" },
+      body, cache: "no-store",
+    });
+    attempts["header:dropi-integration-key"] = { status: res.status, preview: (await res.text()).slice(0, 200) };
+
+    // 2. Token en query param
+    res = await fetch(`${DROPI_BASE}/api/products?token=${DROPI_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body, cache: "no-store",
+    });
+    attempts["queryparam:token"] = { status: res.status, preview: (await res.text()).slice(0, 200) };
+
+    // 3. Token en body
+    res = await fetch(`${DROPI_BASE}/api/products`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ page: 1, per_page: 5, token: DROPI_KEY }),
+      cache: "no-store",
+    });
+    attempts["body:token"] = { status: res.status, preview: (await res.text()).slice(0, 200) };
+
+    // 4. Login con integration key como password
+    res = await fetch(`${DROPI_BASE}/api/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: DROPI_KEY }),
+      cache: "no-store",
+    });
+    attempts["login:token-body"] = { status: res.status, preview: (await res.text()).slice(0, 200) };
+
+    return Response.json(attempts);
   }
 
   // Modo descubrimiento POST: prueba paths con POST y body vacío
