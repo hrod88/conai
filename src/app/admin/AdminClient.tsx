@@ -439,6 +439,23 @@ export default function AdminClient({
     setSaving(null);
   }
 
+  const [enriching, setEnriching] = useState(false);
+  const [enrichMsg, setEnrichMsg] = useState<string | null>(null);
+
+  async function enrichImages() {
+    if (!confirm("¿Enriquecer imágenes de todos los productos con CJ pid? Esto puede tardar ~1 min.")) return;
+    setEnriching(true);
+    setEnrichMsg(null);
+    const res = await fetch("/api/admin/products/enrich", { method: "POST" });
+    const json = await res.json();
+    if (json.error) {
+      setEnrichMsg("Error: " + json.error);
+    } else {
+      setEnrichMsg(`✅ ${json.enriched} de ${json.total} productos enriquecidos`);
+    }
+    setEnriching(false);
+  }
+
   async function deleteProduct(id: string) {
     if (!confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) return;
     setSaving(id);
@@ -651,12 +668,22 @@ export default function AdminClient({
               <div className="px-3 py-3 border-b flex flex-col gap-2" style={{ borderColor: "var(--border)" }}>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Categorías</span>
-                  {products.length > 0 && (
-                    <button onClick={deleteAllProducts} disabled={saving === "__all__"} className="text-[10px] font-bold text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors" title="Eliminar todos">
-                      🗑 todos
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {products.some((p) => p.cj_pid) && (
+                      <button onClick={enrichImages} disabled={enriching} className="text-[10px] font-bold text-indigo-400 hover:text-indigo-600 disabled:opacity-40 transition-colors" title="Enriquecer imágenes desde CJ">
+                        {enriching ? "⏳" : "🖼 imgs"}
+                      </button>
+                    )}
+                    {products.length > 0 && (
+                      <button onClick={deleteAllProducts} disabled={saving === "__all__"} className="text-[10px] font-bold text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors" title="Eliminar todos">
+                        🗑 todos
+                      </button>
+                    )}
+                  </div>
                 </div>
+                {enrichMsg && (
+                  <p className="text-[10px] text-indigo-600 font-semibold">{enrichMsg}</p>
+                )}
                 <input
                   value={catSearch}
                   onChange={(e) => setCatSearch(e.target.value)}

@@ -231,6 +231,11 @@ export default function ProductDetailClient({
   const [reviews, setReviews] = useState<ReviewRow[]>(initialReviews);
   const [hasReviewed, setHasReviewed] = useState(initialHasReviewed);
   const fav = isFavorite(product.id);
+  const allImages = [
+    ...(product.image ? [product.image] : []),
+    ...(product.images ?? []).filter((img) => img !== product.image),
+  ];
+  const [activeImg, setActiveImg] = useState(allImages[0] ?? null);
 
   function handleAdd() {
     add(product);
@@ -269,15 +274,32 @@ export default function ProductDetailClient({
       {/* Main card */}
       <div className="rounded-2xl border p-5 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8 mb-6"
         style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-        {/* Image / Icon */}
-        <div
-          className="flex items-center justify-center w-full md:w-52 h-48 md:h-52 rounded-2xl flex-shrink-0 overflow-hidden"
-          style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
-        >
-          {product.image ? (
-            <img src={product.image} alt={product.name} className="w-full h-full object-contain p-4" />
-          ) : (
-            <span className="text-7xl md:text-8xl animate-float">{product.icon}</span>
+        {/* Image / Icon + thumbnails */}
+        <div className="flex flex-col gap-2 w-full md:w-52 flex-shrink-0">
+          <div
+            className="flex items-center justify-center w-full h-48 md:h-52 rounded-2xl overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
+          >
+            {activeImg ? (
+              <img src={activeImg} alt={product.name} className="w-full h-full object-contain p-4" />
+            ) : (
+              <span className="text-7xl md:text-8xl animate-float">{product.icon}</span>
+            )}
+          </div>
+          {allImages.length > 1 && (
+            <div className="flex gap-1.5 flex-wrap">
+              {allImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(img)}
+                  className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeImg === img ? "border-indigo-500" : "border-transparent opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
           )}
         </div>
 

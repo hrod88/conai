@@ -31,6 +31,7 @@ export interface Product {
   cj_pid?: string | null;
   warehouse?: string | null;
   active?: boolean;
+  images?: string[] | null;
   created_at: string;
 }
 
