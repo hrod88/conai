@@ -86,13 +86,8 @@ export default function ProductCard({ product }: Props) {
       </div>
 
       {/* Name */}
-      <p className="font-bold text-[13px] text-[var(--text)] leading-tight">
+      <p className="font-bold text-[13px] text-[var(--text)] leading-tight line-clamp-2 flex-1">
         {product.name}
-      </p>
-
-      {/* Desc */}
-      <p className="text-[11px] text-[var(--text-muted)] line-clamp-2 leading-snug flex-1">
-        {product.description}
       </p>
 
       {/* Rating */}
