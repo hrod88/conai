@@ -257,20 +257,20 @@ export default function AdminClient({
     const json  = await res.json();
     const groups: SeedGroup[] = json.groups ?? [];
     setSeedGroups(groups);
-    setSeedSelected(new Set(groups.flatMap((g) => g.products.map((p) => p.pid))));
+    setSeedSelected(new Set(groups.flatMap((g) => g.products.map((p) => `${g.id}:${p.pid}`))));
     setSeedLoading(false);
   }
 
-  function toggleSeedProduct(pid: string) {
+  function toggleSeedProduct(key: string) {
     setSeedSelected((prev) => {
       const next = new Set(prev);
-      next.has(pid) ? next.delete(pid) : next.add(pid);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   }
 
   async function confirmSeedImport() {
-    const selected = seedGroups.flatMap((g) => g.products).filter((p) => seedSelected.has(p.pid));
+    const selected = seedGroups.flatMap((g) => g.products.filter((p) => seedSelected.has(`${g.id}:${p.pid}`)));
     if (!selected.length) return;
     setSeedImporting(true);
     const res  = await fetch("/api/admin/seed", {
@@ -1261,7 +1261,7 @@ export default function AdminClient({
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setSeedSelected(new Set(seedGroups.flatMap((g) => g.products.map((p) => p.pid))))}
+                    onClick={() => setSeedSelected(new Set(seedGroups.flatMap((g) => g.products.map((p) => `${g.id}:${p.pid}`))))}
                     className="text-xs px-3 py-1 rounded-lg border border-[var(--border)] hover:bg-indigo-50 text-[var(--text)]"
                   >
                     Seleccionar todos
@@ -1282,20 +1282,22 @@ export default function AdminClient({
                       📂 {group.label} ({group.products.length})
                     </p>
                     <div className="flex flex-col gap-1">
-                      {group.products.map((p) => (
+                      {group.products.map((p) => {
+                        const selKey = `${group.id}:${p.pid}`;
+                        return (
                         <label
-                          key={p.pid}
+                          key={selKey}
                           className={`flex items-center gap-3 px-3 py-2 rounded-lg border cursor-pointer transition-colors ${
-                            seedSelected.has(p.pid)
+                            seedSelected.has(selKey)
                               ? "border-indigo-200 bg-indigo-50/50"
                               : "border-[var(--border)] opacity-50"
                           }`}
-                          style={{ background: seedSelected.has(p.pid) ? undefined : "var(--bg)" }}
+                          style={{ background: seedSelected.has(selKey) ? undefined : "var(--bg)" }}
                         >
                           <input
                             type="checkbox"
-                            checked={seedSelected.has(p.pid)}
-                            onChange={() => toggleSeedProduct(p.pid)}
+                            checked={seedSelected.has(selKey)}
+                            onChange={() => toggleSeedProduct(selKey)}
                             className="accent-indigo-500 w-4 h-4 flex-shrink-0"
                           />
                           {p.image && (
@@ -1321,7 +1323,8 @@ export default function AdminClient({
                             {p.tag}
                           </span>
                         </label>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
