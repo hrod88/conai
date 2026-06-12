@@ -279,8 +279,17 @@ export default function AdminClient({
       body: JSON.stringify({ products: selected }),
     });
     const json = await res.json();
+    if (json.error) {
+      alert("Error al importar: " + json.error);
+      setSeedImporting(false);
+      return;
+    }
     setSeedImportDone(json.inserted ?? 0);
     setSeedImporting(false);
+    // Recargar lista de productos para actualizar el contador
+    const pr = await fetch("/api/admin/products");
+    const pj = await pr.json();
+    if (Array.isArray(pj)) setProducts(pj);
   }
 
   // CJ — tracking
