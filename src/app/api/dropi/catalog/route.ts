@@ -5,16 +5,19 @@ const DROPI_BASE = process.env.DROPI_API_URL ?? "https://api.dropi.cl";
 const DROPI_KEY  = process.env.DROPI_API_KEY ?? "";
 
 const CANDIDATE_PATHS = [
-  "/v3/groupings",
-  "/v3/products",
-  "/v3/catalog",
-  "/products",
-  "/catalog",
-  "/groupings",
-  "/v3/inventory",
-  "/inventory",
-  "/v3/items",
-  "/items",
+  "/api/v3/groupings",
+  "/api/v3/products",
+  "/api/products",
+  "/api/catalog",
+  "/wc/v3/products",
+  "/integration/products",
+  "/integration/v3/products",
+  "/v1/products",
+  "/v1/groupings",
+  "/v2/products",
+  "/v2/groupings",
+  "/orders/myorders",
+  "/",
 ];
 
 export async function GET(req: NextRequest) {
