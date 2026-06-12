@@ -16,7 +16,9 @@ export async function getCJToken(): Promise<string> {
   });
 
   const json = await res.json();
-  if (!json.data?.accessToken) throw new Error("CJ auth failed: " + JSON.stringify(json));
+  if (json.code !== 200 || !json.data?.accessToken) {
+    throw new Error(`CJ auth failed (${json.code}): ${json.message ?? JSON.stringify(json)}`);
+  }
 
   cachedToken = json.data.accessToken as string;
   tokenExpiry = Date.now() + 23 * 60 * 60 * 1000; // 23 horas
