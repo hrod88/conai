@@ -240,19 +240,20 @@ export default function AdminClient({
   };
 
   const [seedCat, setSeedCat]               = useState<string | null>(null);
+  const [seedWarehouse, setSeedWarehouse]   = useState<"CN" | "US">("CN");
   const [seedGroups, setSeedGroups]         = useState<SeedGroup[]>([]);
   const [seedSelected, setSeedSelected]     = useState<Set<string>>(new Set());
   const [seedLoading, setSeedLoading]       = useState(false);
   const [seedImporting, setSeedImporting]   = useState(false);
   const [seedImportDone, setSeedImportDone] = useState<number | null>(null);
 
-  async function loadCategoryPreview(cat: string) {
+  async function loadCategoryPreview(cat: string, wh = seedWarehouse) {
     setSeedCat(cat);
     setSeedLoading(true);
     setSeedGroups([]);
     setSeedSelected(new Set());
     setSeedImportDone(null);
-    const res   = await fetch(`/api/admin/seed?category=${cat}`);
+    const res   = await fetch(`/api/admin/seed?category=${cat}&warehouse=${wh}`);
     const json  = await res.json();
     const groups: SeedGroup[] = json.groups ?? [];
     setSeedGroups(groups);
@@ -1188,6 +1189,29 @@ export default function AdminClient({
             <p className="text-xs text-[var(--text-muted)]">Elige una categoría, previsualiza los productos y confirma los que quieres importar</p>
           </div>
 
+          {/* Selector de bodega */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-[var(--text-muted)]">Bodega:</span>
+            {(["CN", "US"] as const).map((wh) => (
+              <button
+                key={wh}
+                onClick={() => {
+                  setSeedWarehouse(wh);
+                  if (seedCat) loadCategoryPreview(seedCat, wh);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+                  seedWarehouse === wh
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                    : "border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-300"
+                }`}
+              >
+                {wh === "CN" ? "🇨🇳 China" : "🇺🇸 EE.UU."}
+                {wh === "CN" && <span className="text-[9px] text-emerald-600 font-normal">×3.0</span>}
+                {wh === "US" && <span className="text-[9px] text-blue-600 font-normal">×3.5</span>}
+              </button>
+            ))}
+          </div>
+
           {/* Grid de categorías */}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
             {Object.entries(CAT_SEED_META).map(([cat, meta]) => (
@@ -1212,7 +1236,7 @@ export default function AdminClient({
           {seedLoading && (
             <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
               <span className="animate-spin">⟳</span>
-              Buscando productos en CJ para {seedCat ? CAT_SEED_META[seedCat]?.label : ""}...
+              Buscando en bodega {seedWarehouse === "US" ? "🇺🇸 EE.UU." : "🇨🇳 China"} — {seedCat ? CAT_SEED_META[seedCat]?.label : ""}...
             </div>
           )}
 
@@ -1274,6 +1298,11 @@ export default function AdminClient({
                               ${p.price.toLocaleString("es-CL")} CLP · <span className="line-through">${p.original_price.toLocaleString("es-CL")}</span>
                             </p>
                           </div>
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${
+                            p.warehouse === "US" ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-600"
+                          }`}>
+                            {p.warehouse === "US" ? "🇺🇸 US" : "🇨🇳 CN"}
+                          </span>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${
                             p.tag === "bestseller" ? "bg-amber-100 text-amber-700" :
                             p.tag === "nuevo"      ? "bg-emerald-100 text-emerald-700" :

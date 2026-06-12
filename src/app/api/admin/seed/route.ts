@@ -105,12 +105,19 @@ function matchesKeywords(name: string, keywords: string[]): boolean {
   return keywords.some((kw) => lower.includes(kw.toLowerCase()));
 }
 
-// GET ?category=salud → preview sin insertar
+const WAREHOUSE_MULTIPLIER: Record<string, number> = {
+  CN: 3.0,
+  US: 3.5,
+};
+
+// GET ?category=salud&warehouse=CN → preview sin insertar
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin();
   if ("error" in guard) return guard.error;
 
-  const category = req.nextUrl.searchParams.get("category");
+  const category  = req.nextUrl.searchParams.get("category");
+  const warehouse = (req.nextUrl.searchParams.get("warehouse") ?? "CN").toUpperCase();
+
   if (!category) {
     const cats = [...new Set(SEED_MAP.map((e) => e.category))];
     return Response.json({ categories: cats });
@@ -119,6 +126,8 @@ export async function GET(req: NextRequest) {
   const entries = SEED_MAP.filter((e) => e.category === category);
   if (!entries.length) return Response.json({ error: "Categoría no encontrada" }, { status: 404 });
 
+  const multiplier = WAREHOUSE_MULTIPLIER[warehouse] ?? 3.0;
+
   const results = await Promise.allSettled(
     entries.map(async (entry) => {
       const data = await cjGet("/product/list", {
@@ -126,7 +135,7 @@ export async function GET(req: NextRequest) {
         pageNum: "1",
         pageSize: "20",
         sort: "BESTSELLING",
-        warehouseCountryCode: "CL",
+        warehouseCountryCode: warehouse,
       });
 
       const list: {
@@ -142,7 +151,7 @@ export async function GET(req: NextRequest) {
       );
 
       const products: SeedProduct[] = filtered.map((p) => {
-        const price = Math.round(p.sellPrice * USD_CLP * 3 / 100) * 100;
+        const price = Math.round(p.sellPrice * USD_CLP * multiplier / 100) * 100;
         const marketCLP = Math.round((p.marketPrice ?? 0) * USD_CLP / 100) * 100;
         const original_price = marketCLP > price ? marketCLP : Math.round(price * 1.35 / 100) * 100;
         return {
