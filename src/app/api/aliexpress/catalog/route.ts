@@ -10,17 +10,34 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
-  // Probe affiliate: prueba aliexpress.affiliate.product.query
-  if (probe === "affiliate") {
-    const data = await aeCall("aliexpress.affiliate.product.query", {
-      keywords: "smart gadget",
+  // Probe ds-search: prueba aliexpress.ds.text.search.product con params correctos
+  if (probe === "ds-search") {
+    const results: Record<string, unknown> = {};
+
+    results["text_search"] = await aeCall("aliexpress.ds.text.search.product", {
+      product_sug: "smart gadget",
+      sort: "SALE_PRICE_ASC",
+      page_no: "1",
+      page_size: "5",
       target_currency: "USD",
       target_language: "EN",
-      tracking_id: "default",
+      ship_to_country: "CL",
+    });
+
+    results["category_list"] = await aeCall("aliexpress.ds.category.get.list", {
+      parent_category_id: "0",
+    });
+
+    results["recommend_feed"] = await aeCall("aliexpress.ds.recommend.feed.get", {
+      feed_name: "BEST_SELLER",
+      country: "CL",
+      language: "es",
+      currency: "USD",
       page_no: "1",
       page_size: "5",
     });
-    return Response.json(data);
+
+    return Response.json(results);
   }
 
   // Probe raw: devuelve datos crudos del primer feed para ver estructura
