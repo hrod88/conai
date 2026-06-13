@@ -10,24 +10,57 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
-  // Modo ping: prueba varios nombres de método hasta encontrar uno válido
+  // Probe feed: prueba valores de feed_name en aliexpress.ds.recommend.feed.get
+  if (probe === "feed") {
+    const feedNames = [
+      "CUSTOMIZED_FOR_BUYER",
+      "BEST_SELLER",
+      "RECOMMENDED",
+      "NEW_ARRIVAL",
+      "DISCOUNT",
+      "TOP_SELLING",
+      "MOST_POPULAR",
+      "HOT_PRODUCTS",
+    ];
+    const results: Record<string, unknown> = {};
+    for (const feed_name of feedNames) {
+      try {
+        const data = await aeCall("aliexpress.ds.recommend.feed.get", {
+          feed_name,
+          country: "CL",
+          language: "es",
+          currency: "CLP",
+          page_no: "1",
+          page_size: "5",
+        });
+        const str = JSON.stringify(data);
+        results[feed_name] = str.includes("error_response") ? JSON.parse(str).error_response?.code : "OK";
+      } catch (err) {
+        results[feed_name] = String(err);
+      }
+    }
+    return Response.json(results);
+  }
+
+  // Probe métodos DS adicionales
   if (probe === "ping") {
     const methods = [
+      "aliexpress.ds.product.get",
+      "aliexpress.ds.image.search.product",
+      "aliexpress.ds.text.search.product",
+      "aliexpress.ds.freight.query",
       "aliexpress.ds.category.get.list",
-      "aliexpress.ds.product.search",
-      "aliexpress.ds.product.list.get",
-      "aliexpress.affiliate.product.query",
-      "aliexpress.affiliate.category.get",
-      "aliexpress.ds.recommend.feed.get",
-      "aliexpress.dropshipping.product.search",
+      "aliexpress.ds.order.create.normal",
     ];
     const results: Record<string, unknown> = {};
     for (const method of methods) {
       try {
-        const data = await aeCall(method, { local_country: "CL", local_language: "es", country: "CL", language: "es", currency: "CLP" });
-        const resp = data as Record<string, unknown>;
-        const isInvalid = JSON.stringify(resp).includes("InvalidApiPath");
-        results[method] = isInvalid ? "InvalidApiPath" : resp;
+        const data = await aeCall(method, { country: "CL", language: "es", currency: "CLP" });
+        const str = JSON.stringify(data);
+        if (str.includes("InvalidApiPath")) results[method] = "InvalidApiPath";
+        else if (str.includes("InsufficientPermission")) results[method] = "InsufficientPermission";
+        else if (str.includes("MissingParameter")) results[method] = "MissingParameter→" + (JSON.parse(str).error_response?.msg ?? "");
+        else results[method] = JSON.parse(str);
       } catch (err) {
         results[method] = String(err);
       }
