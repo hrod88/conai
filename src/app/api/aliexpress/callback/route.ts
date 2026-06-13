@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
     code,
     grant_type: "authorization_code",
     redirect_uri: CALLBACK_URL,
+    sign_method: "md5",
     timestamp,
   };
   params.sign = sign(params, appSecret);
-  params.sign_method = "md5";
 
   const res = await fetch(AE_TOKEN_URL, {
     method: "POST",
