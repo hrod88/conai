@@ -17,7 +17,6 @@ function sign(params: Record<string, string>, secret: string): string {
 
 export async function aeCall(method: string, params: Record<string, string> = {}) {
   const { appKey, appSecret } = getCredentials();
-  const accessToken = process.env.AE_ACCESS_TOKEN;
   const timestamp = Date.now().toString();
 
   const allParams: Record<string, string> = {
@@ -29,7 +28,6 @@ export async function aeCall(method: string, params: Record<string, string> = {}
     v: "2.0",
     sign_method: "md5",
   };
-  if (accessToken) allParams.access_token = accessToken;
   allParams.sign = sign(allParams, appSecret);
 
   const url = new URL(AE_BASE);
