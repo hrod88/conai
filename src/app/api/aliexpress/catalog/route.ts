@@ -10,6 +10,17 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
+  // Probe product: prueba ds.product.get con un product_id real
+  if (probe === "product") {
+    const data = await aeCall("aliexpress.ds.product.get", {
+      product_id: req.nextUrl.searchParams.get("id") ?? "1005010167316120",
+      ship_to_country: "CL",
+      target_currency: "USD",
+      target_language: "EN",
+    });
+    return Response.json(data);
+  }
+
   // Probe ds-search: prueba aliexpress.ds.text.search.product con params correctos
   if (probe === "ds-search") {
     const results: Record<string, unknown> = {};
