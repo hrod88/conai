@@ -28,6 +28,19 @@ export async function GET(req: NextRequest) {
   }
 
   const html = await res.text();
+
+  if (req.nextUrl.searchParams.get("debug") === "1") {
+    return Response.json({
+      htmlLength: html.length,
+      hasRunParams: html.includes("window.runParams"),
+      hasNextData: html.includes("__NEXT_DATA__"),
+      hasOgTitle: html.includes("og:title"),
+      hasAEData: html.includes("__AE_DATA__"),
+      hasPageData: html.includes("window.pageData"),
+      snippet: html.slice(0, 500),
+    });
+  }
+
   const data = extractProductData(html, productId);
   return Response.json(data);
 }
