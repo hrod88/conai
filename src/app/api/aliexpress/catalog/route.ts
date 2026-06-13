@@ -10,13 +10,15 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
-  // Probe product: prueba ds.product.get con un product_id real
+  // Probe product: prueba ds.product.get con un product_id real + access_token
   if (probe === "product") {
+    const accessToken = process.env.AE_ACCESS_TOKEN ?? "";
     const data = await aeCall("aliexpress.ds.product.get", {
       product_id: req.nextUrl.searchParams.get("id") ?? "1005010167316120",
       ship_to_country: "CL",
       target_currency: "USD",
       target_language: "EN",
+      ...(accessToken ? { access_token: accessToken } : {}),
     });
     return Response.json(data);
   }
