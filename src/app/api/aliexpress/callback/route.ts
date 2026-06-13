@@ -26,17 +26,6 @@ export async function GET(req: NextRequest) {
 
   const data = await res.json() as Record<string, unknown>;
 
-  if (!res.ok || data.error) {
-    return Response.json({ error: "Token exchange failed", detail: data }, { status: 500 });
-  }
-
-  // Mostrar el token para copiarlo a .env.local / Vercel
-  return Response.json({
-    ok: true,
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    expires_in: data.expire_time,
-    user_id: data.user_id,
-    instruction: "Copia access_token y agrégalo como AE_ACCESS_TOKEN en .env.local y Vercel",
-  });
+  // Mostrar respuesta cruda para diagnosticar estructura
+  return Response.json({ ok: res.ok, raw: data });
 }
