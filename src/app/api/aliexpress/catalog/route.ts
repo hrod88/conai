@@ -10,6 +10,19 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
+  // Probe raw: devuelve datos crudos del primer feed para ver estructura
+  if (probe === "raw") {
+    const data = await aeCall("aliexpress.ds.recommend.feed.get", {
+      feed_name: "BEST_SELLER",
+      country: "CL",
+      language: "es",
+      currency: "CLP",
+      page_no: "1",
+      page_size: "3",
+    });
+    return Response.json(data);
+  }
+
   // Probe feed: prueba valores de feed_name en aliexpress.ds.recommend.feed.get
   if (probe === "feed") {
     const feedNames = [
