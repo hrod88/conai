@@ -4,9 +4,10 @@ import crypto from "crypto";
 const AE_TOKEN_URL = "https://api-sg.aliexpress.com/rest/auth/token/create";
 const CALLBACK_URL = "https://conai-rho.vercel.app/api/aliexpress/callback";
 
-function sign(params: Record<string, string>, secret: string): string {
+// REST API signature: secret + apiPath + sorted_params + secret
+function signRest(path: string, params: Record<string, string>, secret: string): string {
   const sorted = Object.keys(params).sort();
-  const str = secret + sorted.map(k => k + params[k]).join("") + secret;
+  const str = secret + path + sorted.map(k => k + params[k]).join("") + secret;
   return crypto.createHash("md5").update(str).digest("hex").toUpperCase();
 }
 
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     sign_method: "md5",
     timestamp,
   };
-  params.sign = sign(params, appSecret);
+  params.sign = signRest("/auth/token/create", params, appSecret);
 
   const res = await fetch(AE_TOKEN_URL, {
     method: "POST",
