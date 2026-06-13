@@ -10,17 +10,29 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
-  // Modo ping: verifica que las credenciales y firma funcionan
+  // Modo ping: prueba varios nombres de método hasta encontrar uno válido
   if (probe === "ping") {
-    try {
-      const data = await aeCall("aliexpress.ds.category.get.list", {
-        local_country: "CL",
-        local_language: "es",
-      });
-      return Response.json({ ok: true, data });
-    } catch (err) {
-      return Response.json({ ok: false, error: String(err) }, { status: 500 });
+    const methods = [
+      "aliexpress.ds.category.get.list",
+      "aliexpress.ds.product.search",
+      "aliexpress.ds.product.list.get",
+      "aliexpress.affiliate.product.query",
+      "aliexpress.affiliate.category.get",
+      "aliexpress.ds.recommend.feed.get",
+      "aliexpress.dropshipping.product.search",
+    ];
+    const results: Record<string, unknown> = {};
+    for (const method of methods) {
+      try {
+        const data = await aeCall(method, { local_country: "CL", local_language: "es", country: "CL", language: "es", currency: "CLP" });
+        const resp = data as Record<string, unknown>;
+        const isInvalid = JSON.stringify(resp).includes("InvalidApiPath");
+        results[method] = isInvalid ? "InvalidApiPath" : resp;
+      } catch (err) {
+        results[method] = String(err);
+      }
     }
+    return Response.json(results);
   }
 
   try {
