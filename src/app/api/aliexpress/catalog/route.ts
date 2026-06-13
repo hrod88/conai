@@ -10,6 +10,19 @@ export async function GET(req: NextRequest) {
   const page = req.nextUrl.searchParams.get("page") ?? "1";
   const probe = req.nextUrl.searchParams.get("probe");
 
+  // Probe affiliate: prueba aliexpress.affiliate.product.query
+  if (probe === "affiliate") {
+    const data = await aeCall("aliexpress.affiliate.product.query", {
+      keywords: "smart gadget",
+      target_currency: "USD",
+      target_language: "EN",
+      tracking_id: "default",
+      page_no: "1",
+      page_size: "5",
+    });
+    return Response.json(data);
+  }
+
   // Probe raw: devuelve datos crudos del primer feed para ver estructura
   if (probe === "raw") {
     const data = await aeCall("aliexpress.ds.recommend.feed.get", {
