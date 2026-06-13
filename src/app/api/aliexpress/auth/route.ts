@@ -7,7 +7,7 @@ export async function GET() {
   if ("error" in guard) return guard.error;
 
   const appKey = process.env.AE_APP_KEY!;
-  const callbackUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/aliexpress/callback`;
+  const callbackUrl = "https://conai-rho.vercel.app/api/aliexpress/callback";
 
   const authUrl = new URL("https://api-sg.aliexpress.com/oauth/authorize");
   authUrl.searchParams.set("response_type", "code");
