@@ -220,6 +220,16 @@ export default function AdminClient({
   const [importMinPrice, setImportMinPrice] = useState("");
   const [importMaxPrice, setImportMaxPrice] = useState("");
 
+  // AliExpress — importación manual por URL
+  const [importSource, setImportSource] = useState<"cj" | "ae">("cj");
+  const [aeUrl, setAeUrl]               = useState("");
+  const [aeForm, setAeForm]             = useState({
+    productId: "", title: "", imageUrl: "", price: "", originalPrice: "",
+    category: "gadgets" as Category, subcategory: SUBCATEGORIES.gadgets[0].id, tag: "",
+  });
+  const [aeStatus, setAeStatus]         = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [aeError, setAeError]           = useState("");
+
   // Catálogo seed por categoría
   type SeedProduct = { pid: string; name: string; image: string | null; price: number; original_price: number; category: string; subcategory: string; tag: string; warehouse: string };
   type SeedGroup   = { id: string; label: string; products: SeedProduct[] };
@@ -357,6 +367,50 @@ export default function AdminClient({
       patchForm(cj.pid, { status: "done" });
     } else {
       patchForm(cj.pid, { status: "error", error: json.error });
+    }
+  }
+
+  function handleAeUrl(url: string) {
+    setAeUrl(url);
+    const m = url.match(/\/item\/(\d+)/);
+    if (m) setAeForm((f) => ({ ...f, productId: m[1] }));
+  }
+
+  async function importProductAE() {
+    if (!aeForm.title.trim() || !aeForm.price || !aeForm.imageUrl.trim()) {
+      setAeError("Título, imagen y precio son obligatorios");
+      return;
+    }
+    setAeStatus("loading");
+    setAeError("");
+    const price = Number(aeForm.price);
+    const res = await fetch("/api/admin/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name:           aeForm.title.trim(),
+        description:    aeForm.title.trim(),
+        price,
+        original_price: aeForm.originalPrice ? Number(aeForm.originalPrice) : Math.round(price * 1.35 / 100) * 100,
+        category:       aeForm.category,
+        subcategory:    aeForm.subcategory || null,
+        tag:            aeForm.tag || null,
+        image:          aeForm.imageUrl.trim(),
+        icon:           CAT_ICONS[aeForm.category],
+        cj_pid:         aeForm.productId ? `ae:${aeForm.productId}` : null,
+        stock:          50,
+      }),
+    });
+    const json = await res.json();
+    if (json.ok) {
+      setAeStatus("done");
+      setAeUrl(""); setAeForm({ productId: "", title: "", imageUrl: "", price: "", originalPrice: "", category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, tag: "" });
+      const pr = await fetch("/api/admin/products");
+      const pj = await pr.json();
+      if (Array.isArray(pj)) setProducts(pj);
+    } else {
+      setAeStatus("error");
+      setAeError(json.error ?? "Error al importar");
     }
   }
 
@@ -946,7 +1000,163 @@ export default function AdminClient({
       {tab === "importar" && (
         <div className="flex flex-col gap-4">
 
-          {/* Buscador + filtros */}
+          {/* Toggle fuente */}
+          <div className="flex gap-2">
+            {(["cj", "ae"] as const).map((src) => (
+              <button
+                key={src}
+                onClick={() => setImportSource(src)}
+                className={`px-4 py-2 text-xs font-bold rounded-lg border transition-all ${
+                  importSource === src
+                    ? "bg-indigo-600 border-indigo-600 text-white"
+                    : "border-[var(--border)] text-[var(--text-muted)] hover:border-indigo-400"
+                }`}
+              >
+                {src === "cj" ? "🟠 CJ Dropshipping" : "🔴 AliExpress URL"}
+              </button>
+            ))}
+          </div>
+
+          {/* ── AliExpress import manual ── */}
+          {importSource === "ae" && (
+            <div className="rounded-xl border p-5 flex flex-col gap-4" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+              <div>
+                <p className="text-sm font-bold text-[var(--text)]">Importar desde AliExpress</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">Pega la URL del producto, copia el título e imagen desde AliExpress y guárdalo.</p>
+              </div>
+
+              {/* URL */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">URL de AliExpress</label>
+                <input
+                  value={aeUrl}
+                  onChange={(e) => handleAeUrl(e.target.value)}
+                  placeholder="https://www.aliexpress.com/item/1005010167316120.html"
+                  className="text-sm px-3 py-2.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                  style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                />
+                {aeForm.productId && (
+                  <p className="text-[11px] text-emerald-600 font-semibold">✓ ID detectado: {aeForm.productId} —{" "}
+                    <a href={`https://www.aliexpress.com/item/${aeForm.productId}.html`} target="_blank" rel="noreferrer" className="underline">ver en AliExpress</a>
+                  </p>
+                )}
+              </div>
+
+              {/* Título */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Título del producto</label>
+                <input
+                  value={aeForm.title}
+                  onChange={(e) => setAeForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Copia el nombre desde la página de AliExpress"
+                  className="text-sm px-3 py-2.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                  style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                />
+              </div>
+
+              {/* Imagen */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">URL de imagen principal</label>
+                <input
+                  value={aeForm.imageUrl}
+                  onChange={(e) => setAeForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                  placeholder="Clic derecho → copiar dirección de imagen en AliExpress"
+                  className="text-sm px-3 py-2.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                  style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                />
+                {aeForm.imageUrl && (
+                  <img src={aeForm.imageUrl} alt="" className="w-24 h-24 rounded-lg object-cover mt-1 border" style={{ borderColor: "var(--border)" }} />
+                )}
+              </div>
+
+              {/* Precio */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Precio CLP $</label>
+                  <input
+                    type="number"
+                    value={aeForm.price}
+                    onChange={(e) => setAeForm((f) => ({ ...f, price: e.target.value }))}
+                    placeholder="29990"
+                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Precio original $ (tachado)</label>
+                  <input
+                    type="number"
+                    value={aeForm.originalPrice}
+                    onChange={(e) => setAeForm((f) => ({ ...f, originalPrice: e.target.value }))}
+                    placeholder="Auto +35%"
+                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  />
+                </div>
+              </div>
+
+              {/* Categoría + subcategoría + etiqueta */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Categoría</label>
+                  <select
+                    value={aeForm.category}
+                    onChange={(e) => {
+                      const cat = e.target.value as Category;
+                      setAeForm((f) => ({ ...f, category: cat, subcategory: SUBCATEGORIES[cat][0].id }));
+                    }}
+                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400 capitalize"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  >
+                    {ALL_CATEGORIES.map((c) => <option key={c} value={c}>{CAT_ICONS[c]} {c}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Subcategoría</label>
+                  <select
+                    value={aeForm.subcategory}
+                    onChange={(e) => setAeForm((f) => ({ ...f, subcategory: e.target.value }))}
+                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  >
+                    {SUBCATEGORIES[aeForm.category].map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Etiqueta</label>
+                  <select
+                    value={aeForm.tag}
+                    onChange={(e) => setAeForm((f) => ({ ...f, tag: e.target.value }))}
+                    className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  >
+                    {tagOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {/* Error */}
+              {aeError && <p className="text-sm text-red-500">{aeError}</p>}
+
+              {/* Botón */}
+              {aeStatus === "done" ? (
+                <div className="py-3 text-center text-sm font-bold text-emerald-600 bg-emerald-50 rounded-xl border border-emerald-200">
+                  ✅ Producto importado correctamente
+                </div>
+              ) : (
+                <button
+                  onClick={importProductAE}
+                  disabled={aeStatus === "loading"}
+                  className="w-full py-3 text-sm font-bold rounded-xl bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                >
+                  {aeStatus === "loading" ? "Importando..." : "Importar a mi tienda →"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── CJ search (existing) ── */}
+          <div className="flex flex-col gap-4" style={{ display: importSource !== "cj" ? "none" : "flex" }}>
           <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
             <div className="flex gap-2">
               <input
@@ -1214,6 +1424,7 @@ export default function AdminClient({
               <p className="text-xs text-[var(--text-muted)] mt-1">Se guardará en tu tienda con imagen, precio y categoría</p>
             </div>
           )}
+          </div>
         </div>
       )}
 
