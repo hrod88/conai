@@ -414,6 +414,7 @@ export default function AdminClient({
         subcategory:    aeForm.subcategory || null,
         tag:            aeForm.tag || null,
         image:          proxiedUrls[0],
+        images:         proxiedUrls,
         icon:           CAT_ICONS[aeForm.category],
         cj_pid:         aeForm.productId ? `ae:${aeForm.productId}` : null,
         stock:          50,
@@ -1142,7 +1143,11 @@ export default function AdminClient({
                     type="number"
                     value={aeForm.originalPrice}
                     onChange={(e) => setAeForm((f) => ({ ...f, originalPrice: e.target.value }))}
-                    placeholder="Auto +35%"
+                    placeholder={
+                      aeForm.price
+                        ? `$${(Math.round(Number(aeForm.price) * 1.35 / 100) * 100).toLocaleString("es-CL")} (Auto +35%)`
+                        : "Auto +35%"
+                    }
                     className="text-sm px-3 py-2 rounded-lg border focus:outline-none focus:border-indigo-400"
                     style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
                   />

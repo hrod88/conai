@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
     subcategory?: string | null;
     tag: string | null;
     image: string;
+    images?: string[] | null;
     icon: string;
     cj_pid: string;
     stock?: number;
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
     subcategory:    body.subcategory || null,
     tag:            body.tag || null,
     image:       body.image || null,
+    images:      body.images?.length ? body.images : null,
     icon:        body.icon || "📦",
     cj_pid:      body.cj_pid || null,
     stock:       body.stock ?? 50,
