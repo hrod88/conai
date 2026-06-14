@@ -223,8 +223,9 @@ export default function AdminClient({
   // AliExpress — importación manual por URL
   const [importSource, setImportSource] = useState<"cj" | "ae">("cj");
   const [aeUrl, setAeUrl]               = useState("");
+  const [aeImageInput, setAeImageInput] = useState("");
   const [aeForm, setAeForm]             = useState({
-    productId: "", title: "", imageUrl: "", price: "", originalPrice: "",
+    productId: "", title: "", imageUrls: [] as string[], price: "", originalPrice: "",
     category: "gadgets" as Category, subcategory: SUBCATEGORIES.gadgets[0].id, tag: "",
   });
   const [aeStatus, setAeStatus]         = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -377,12 +378,29 @@ export default function AdminClient({
   }
 
   async function importProductAE() {
-    if (!aeForm.title.trim() || !aeForm.price || !aeForm.imageUrl.trim()) {
-      setAeError("Título, imagen y precio son obligatorios");
+    if (!aeForm.title.trim() || !aeForm.price || aeForm.imageUrls.length === 0) {
+      setAeError("Título, al menos una imagen y precio son obligatorios");
       return;
     }
     setAeStatus("loading");
     setAeError("");
+
+    // Subir todas las imágenes a Supabase Storage via proxy
+    const proxiedUrls: string[] = [];
+    for (const rawUrl of aeForm.imageUrls) {
+      try {
+        const r = await fetch("/api/image-proxy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: rawUrl }),
+        });
+        const j = await r.json() as { ok?: boolean; url?: string };
+        proxiedUrls.push(j.ok && j.url ? j.url : rawUrl);
+      } catch {
+        proxiedUrls.push(rawUrl);
+      }
+    }
+
     const price = Number(aeForm.price);
     const res = await fetch("/api/admin/products", {
       method: "POST",
@@ -395,7 +413,7 @@ export default function AdminClient({
         category:       aeForm.category,
         subcategory:    aeForm.subcategory || null,
         tag:            aeForm.tag || null,
-        image:          aeForm.imageUrl.trim(),
+        image:          proxiedUrls[0],
         icon:           CAT_ICONS[aeForm.category],
         cj_pid:         aeForm.productId ? `ae:${aeForm.productId}` : null,
         stock:          50,
@@ -404,7 +422,9 @@ export default function AdminClient({
     const json = await res.json();
     if (json.ok) {
       setAeStatus("done");
-      setAeUrl(""); setAeForm({ productId: "", title: "", imageUrl: "", price: "", originalPrice: "", category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, tag: "" });
+      setAeUrl("");
+      setAeImageInput("");
+      setAeForm({ productId: "", title: "", imageUrls: [], price: "", originalPrice: "", category: "gadgets", subcategory: SUBCATEGORIES.gadgets[0].id, tag: "" });
       const pr = await fetch("/api/admin/products");
       const pj = await pr.json();
       if (Array.isArray(pj)) setProducts(pj);
@@ -1054,18 +1074,52 @@ export default function AdminClient({
                 />
               </div>
 
-              {/* Imagen */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">URL de imagen principal</label>
-                <input
-                  value={aeForm.imageUrl}
-                  onChange={(e) => setAeForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                  placeholder="Clic derecho → copiar dirección de imagen en AliExpress"
-                  className="text-sm px-3 py-2.5 rounded-lg border focus:outline-none focus:border-indigo-400"
-                  style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
-                />
-                {aeForm.imageUrl && (
-                  <img src={aeForm.imageUrl} alt="" className="w-24 h-24 rounded-lg object-cover mt-1 border" style={{ borderColor: "var(--border)" }} />
+              {/* Imágenes */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">URLs de imagen</label>
+                <div className="flex gap-2">
+                  <input
+                    value={aeImageInput}
+                    onChange={(e) => setAeImageInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && aeImageInput.trim()) {
+                        setAeForm((f) => ({ ...f, imageUrls: [...f.imageUrls, aeImageInput.trim()] }));
+                        setAeImageInput("");
+                      }
+                    }}
+                    placeholder="Clic derecho → copiar dirección de imagen en AliExpress"
+                    className="flex-1 text-sm px-3 py-2.5 rounded-lg border focus:outline-none focus:border-indigo-400"
+                    style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text)" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (aeImageInput.trim()) {
+                        setAeForm((f) => ({ ...f, imageUrls: [...f.imageUrls, aeImageInput.trim()] }));
+                        setAeImageInput("");
+                      }
+                    }}
+                    className="px-4 py-2.5 rounded-lg bg-red-500 text-white font-bold text-lg hover:bg-red-600 flex-shrink-0 leading-none"
+                  >
+                    +
+                  </button>
+                </div>
+                {aeForm.imageUrls.length > 0 && (
+                  <div className="flex gap-3 flex-wrap mt-1">
+                    {aeForm.imageUrls.map((url, i) => (
+                      <div key={i} className="relative flex-shrink-0 flex flex-col items-center gap-0.5">
+                        <img src={url} alt="" className="w-20 h-20 rounded-lg object-cover border" style={{ borderColor: "var(--border)" }} />
+                        <button
+                          type="button"
+                          onClick={() => setAeForm((f) => ({ ...f, imageUrls: f.imageUrls.filter((_, j) => j !== i) }))}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                        <span className="text-[9px] text-[var(--text-muted)]">img{i + 1}</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 
