@@ -27,7 +27,7 @@ const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
     { id: "glucometro", label: "Glucómetros" },
     { id: "termometro", label: "Termómetros Smart" },
     { id: "oximetro",   label: "Oxímetros" },
-    { id: "masaje",     label: "Masajeadores Terapéuticos" },
+    { id: "masaje",     label: "Masajeadores" },
   ],
   belleza: [
     { id: "piel",    label: "Cuidado de Piel IA" },
@@ -100,9 +100,9 @@ const SUBCATEGORIES: Record<Category, { id: string; label: string }[]> = {
 };
 
 const priceRanges = [
-  { value: "low",  label: "Menos de $100" },
-  { value: "mid",  label: "$100 – $400" },
-  { value: "high", label: "Más de $400" },
+  { value: "low",  label: "Menos de $100", short: "< $100" },
+  { value: "mid",  label: "$100 – $400",   short: "$100–$400" },
+  { value: "high", label: "Más de $400",   short: "> $400" },
 ];
 
 type SortOption = "relevance" | "price_asc" | "price_desc" | "rating";
@@ -120,42 +120,43 @@ interface Props {
 }
 
 export default function ProductsClient({ products, initialCategory }: Props) {
-  const [activeCategories, setActiveCategories] = useState<Category[]>(
-    initialCategory ? [initialCategory] : []
-  );
-  const [activePrices, setActivePrices]             = useState<string[]>([]);
-  const [activeTags, setActiveTags]                 = useState<string[]>([]);
-  const [scrollCat, setScrollCat]                   = useState<Category | null>(initialCategory);
-  const [catProgress, setCatProgress]               = useState(0);
-  const [drillCategory, setDrillCategory]           = useState<Category | null>(initialCategory ?? null);
-  const [activeSubcategory, setActiveSubcategory]   = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen]               = useState(false);
-  const [isMobile, setIsMobile]                     = useState(false);
-  const [catOpen, setCatOpen]                       = useState(true);
-  const [priceOpen, setPriceOpen]                   = useState(true);
-  const [tagsOpen, setTagsOpen]                     = useState(true);
-  const [expandedCats, setExpandedCats]             = useState<Set<Category>>(
-    initialCategory ? new Set([initialCategory]) : new Set()
-  );
-  const [hoveredSubcategory, setHoveredSubcategory]   = useState<string | null>(null);
-  const [previewSubcategory, setPreviewSubcategory]   = useState<string | null>(null);
-  const [hoverDrillCategory, setHoverDrillCategory]   = useState<Category | null>(null);
-  const [filterSheetOpen, setFilterSheetOpen]       = useState(false);
-  const [sortSheetOpen, setSortSheetOpen]           = useState(false);
-  const [sortBy, setSortBy]                         = useState<SortOption>("relevance");
+  const [panelHoveredCat, setPanelHoveredCat]   = useState<Category | null>(null);
+  const [drillCategory, setDrillCategory]         = useState<Category | null>(initialCategory ?? null);
+  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+  const [previewSubcategory, setPreviewSubcategory] = useState<string | null>(null);
+  const [activePrices, setActivePrices]           = useState<string[]>([]);
+  const [activeTags, setActiveTags]               = useState<string[]>([]);
+  const [sortBy, setSortBy]                       = useState<SortOption>("relevance");
+  const [isMobile, setIsMobile]                   = useState(false);
+  const [filterSheetOpen, setFilterSheetOpen]     = useState(false);
+  const [sortSheetOpen, setSortSheetOpen]         = useState(false);
 
-  const scrollRef         = useRef<HTMLDivElement>(null);
-  const sectionRefs       = useRef<Record<string, HTMLDivElement | null>>({});
-  const isMounted         = useRef(false);
-  const outerContainerRef = useRef<HTMLDivElement>(null);
-  const topBarRef         = useRef<HTMLDivElement>(null);
-  const [toggleTopPx, setToggleTopPx] = useState<number>(9);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Col 2 displays subcategories of this category (defaults to first if nothing active)
+  const col2Cat: Category = panelHoveredCat || drillCategory || categories[0].value;
+  const col2CatMeta = categories.find((c) => c.value === col2Cat)!;
+
+  // Effective filters — hover takes priority over permanent selection
+  const filterCat    = panelHoveredCat || drillCategory;
+  const filterSubcat = previewSubcategory || activeSubcategory;
+
+  // First product image per subcategory → circular thumbnails in col 2
+  const subcatImages = useMemo(() => {
+    const map: Record<string, string | undefined> = {};
+    for (const cat of categories) {
+      for (const sub of SUBCATEGORIES[cat.value]) {
+        const p = products.find((pr) => pr.subcategory === sub.id && pr.image);
+        map[sub.id] = p?.image ?? undefined;
+      }
+    }
+    return map;
+  }, [products]);
 
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
-      if (activeCategories.length > 0 && !activeCategories.includes(p.category as Category)) return false;
-      const effectiveSubcat = previewSubcategory ?? activeSubcategory;
-      if (effectiveSubcat && p.subcategory !== effectiveSubcat) return false;
+      if (filterCat    && p.category    !== filterCat)    return false;
+      if (filterSubcat && p.subcategory !== filterSubcat) return false;
       if (activePrices.length > 0) {
         const inRange =
           (activePrices.includes("low")  && p.price < 100) ||
@@ -170,322 +171,171 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     if (sortBy === "price_desc") result = [...result].sort((a, b) => b.price - a.price);
     if (sortBy === "rating")     result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return result;
-  }, [products, activeCategories, activePrices, activeTags, activeSubcategory, previewSubcategory, sortBy]);
+  }, [products, panelHoveredCat, drillCategory, previewSubcategory, activeSubcategory, activePrices, activeTags, sortBy]);
 
   const grouped = useMemo(() => {
     return categories
-      .map((cat) => ({
-        ...cat,
-        items: filtered.filter((p) => p.category === cat.value),
-      }))
+      .map((cat) => ({ ...cat, items: filtered.filter((p) => p.category === cat.value) }))
       .filter((g) => g.items.length > 0);
   }, [filtered]);
 
   useEffect(() => {
-    const measure = () => {
-      if (!topBarRef.current || !outerContainerRef.current) return;
-      const barRect  = topBarRef.current.getBoundingClientRect();
-      const cRect    = outerContainerRef.current.getBoundingClientRect();
-      const barBottom = Math.round(barRect.bottom - cRect.top);
-      setToggleTopPx(barBottom - 12);
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
-
-  useEffect(() => {
     const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
-    if (!mobile) setSidebarOpen(true);
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
   useEffect(() => {
-    if (!isMounted.current) { isMounted.current = true; return; }
     scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
-  }, [activeCategories]);
-
-  useEffect(() => {
-    if (!initialCategory) return;
-    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
-  }, [initialCategory]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    function onScroll() {
-      const scrollTop       = container!.scrollTop;
-      const containerHeight = container!.clientHeight;
-      let activeCat: Category | null = null;
-      for (const cat of categories) {
-        const el = sectionRefs.current[cat.value];
-        if (!el) continue;
-        if (el.offsetTop - 80 <= scrollTop) activeCat = cat.value;
-      }
-      setScrollCat(activeCat);
-      const activeEl = activeCat ? sectionRefs.current[activeCat] : null;
-      if (activeEl) {
-        const top        = activeEl.offsetTop;
-        const height     = activeEl.offsetHeight;
-        const scrollable = Math.max(1, height - containerHeight + 80);
-        const progress   = Math.max(0, Math.min(100, ((scrollTop - top + 80) / scrollable) * 100));
-        setCatProgress(progress);
-      }
-    }
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll);
-  }, [grouped]);
-
-  function scrollToCategory(catValue: Category) {
-    const el        = sectionRefs.current[catValue];
-    const container = scrollRef.current;
-    if (!el || !container) return;
-    container.scrollTo({ top: el.offsetTop - 8, behavior: "smooth" });
-  }
+  }, [drillCategory, activeSubcategory]);
 
   function handleCatClick(val: Category) {
     if (drillCategory === val) {
       setDrillCategory(null);
-      setActiveCategories([]);
       setActiveSubcategory(null);
     } else {
       setDrillCategory(val);
-      setActiveCategories([val]);
       setActiveSubcategory(null);
     }
   }
 
+  function handleSubcatClick(catVal: Category, subId: string) {
+    if (activeSubcategory === subId && drillCategory === catVal) {
+      setActiveSubcategory(null);
+      setDrillCategory(null);
+    } else {
+      setActiveSubcategory(subId);
+      setDrillCategory(catVal);
+    }
+  }
+
   function togglePrice(val: string) {
-    setActivePrices((prev) =>
-      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
-    );
+    setActivePrices((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]);
   }
 
   function toggleTag(val: string) {
-    setActiveTags((prev) =>
-      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
-    );
+    setActiveTags((prev) => prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]);
   }
 
   function clearFilters() {
-    setActiveCategories([]);
-    setActivePrices([]);
-    setActiveTags([]);
     setDrillCategory(null);
     setActiveSubcategory(null);
+    setActivePrices([]);
+    setActiveTags([]);
   }
 
-  const navDrillCategory = hoverDrillCategory || drillCategory;
-  const drillCatMeta     = navDrillCategory ? categories.find((c) => c.value === navDrillCategory) : null;
-  const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
   const activeFilterCount = activePrices.length + activeTags.length;
 
   return (
-    <div ref={outerContainerRef} className="flex h-[calc(100vh-64px)] overflow-hidden relative">
-      {/* Mobile backdrop (sidebar) */}
-      {isMobile && sidebarOpen && (
-        <div
-          className="absolute inset-0 z-20 bg-black/40"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
 
-      {/* Sidebar */}
+      {/* ══ DESKTOP: Left panel (Col 1 + Col 2) ══ */}
       <div
-        className={isMobile ? "absolute inset-y-0 left-0 z-30 overflow-hidden" : "flex-shrink-0 overflow-hidden"}
-        style={isMobile
-          ? { transform: sidebarOpen ? "translateX(0)" : "translateX(-176px)", transition: "transform 200ms ease" }
-          : { width: sidebarOpen ? "176px" : "0px", transition: "width 200ms ease" }
-        }
+        className="hidden md:flex flex-shrink-0"
+        onMouseLeave={() => {
+          setPanelHoveredCat(null);
+          setPreviewSubcategory(null);
+        }}
       >
-        <aside
-          className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
+        {/* Col 1 — Category list */}
+        <div
+          className="w-36 flex-shrink-0 border-r overflow-y-auto flex flex-col py-2"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-          onMouseLeave={() => {
-            setHoveredSubcategory(null);
-            setPreviewSubcategory(null);
-            setHoverDrillCategory(null);
-          }}
         >
-          <div>
-            <button
-              onClick={() => setCatOpen((v) => !v)}
-              className="flex items-center gap-1.5 w-full mb-2"
-            >
-              <span className="text-[var(--text-muted)] text-[18px] leading-none"
-                style={{ transform: catOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Categorías</p>
-            </button>
-            {catOpen && categories.map((c) => {
-              const count      = products.filter((p) => p.category === c.value).length;
-              const active     = activeCategories.includes(c.value);
-              const isExpanded = expandedCats.has(c.value);
+          <p className="text-[9px] font-black tracking-widest text-[var(--text-muted)] uppercase px-4 pb-2 pt-1">
+            Categorías
+          </p>
+          {categories.map((c) => {
+            const isHighlighted = col2Cat === c.value;
+            const isActive      = drillCategory === c.value;
+            return (
+              <button
+                key={c.value}
+                onMouseEnter={() => setPanelHoveredCat(c.value)}
+                onClick={() => handleCatClick(c.value)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-[12px] font-medium transition-colors ${
+                  isHighlighted
+                    ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold"
+                    : "text-[var(--text-muted)] hover:bg-[var(--surface-alt)] hover:text-[var(--text)]"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-sm leading-none flex-shrink-0">{c.icon}</span>
+                  <span className="truncate">{c.label}</span>
+                </span>
+                <span className={`text-xs flex-shrink-0 ml-1 ${isActive ? "text-indigo-400" : "text-[var(--text-muted)]"}`}>›</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Col 2 — Subcategory grid with circular images */}
+        <div
+          className="w-64 flex-shrink-0 border-r overflow-y-auto p-4"
+          style={{ background: "var(--bg)", borderColor: "var(--border)" }}
+        >
+          <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-1.5">
+            <span>{col2CatMeta.icon}</span>
+            <span>{col2CatMeta.label}</span>
+          </p>
+          <div className="grid grid-cols-3 gap-x-1 gap-y-5">
+            {SUBCATEGORIES[col2Cat].map((sub) => {
+              const img      = subcatImages[sub.id];
+              const count    = products.filter((p) => p.category === col2Cat && p.subcategory === sub.id).length;
+              const isActive = activeSubcategory === sub.id && drillCategory === col2Cat;
+              const isPrev   = previewSubcategory === sub.id;
               return (
-                <div key={c.value}>
-                  <div className="flex items-center gap-1 mb-1.5">
-                    <button
-                      onClick={() => {
-                        const next = new Set(expandedCats);
-                        if (next.has(c.value)) next.delete(c.value); else next.add(c.value);
-                        setExpandedCats(next);
-                      }}
-                      className="flex-shrink-0 w-4 flex items-center justify-center text-[var(--text-muted)] hover:text-indigo-500"
-                    >
-                      <span className="text-[14px] leading-none inline-block"
-                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-                    </button>
-                    <label className="flex items-center justify-between flex-1 cursor-pointer group">
-                      <span className="flex items-center gap-1.5 text-[12px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          onChange={() => {
-                            if (active) {
-                              setActiveCategories([]);
-                              setDrillCategory(null);
-                              setActiveSubcategory(null);
-                            } else {
-                              setActiveCategories([c.value]);
-                              setDrillCategory(c.value);
-                              setActiveSubcategory(null);
-                              setExpandedCats((prev) => { const n = new Set(prev); n.add(c.value); return n; });
-                            }
-                          }}
-                          className="accent-indigo-600 w-3 h-3"
-                        />
-                        {c.label}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                          active
-                            ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
-                            : "text-[var(--text-muted)]"
-                        }`}
-                        style={!active ? { background: "var(--surface-alt)" } : {}}
+                <button
+                  key={sub.id}
+                  onMouseEnter={() => setPreviewSubcategory(sub.id)}
+                  onClick={() => handleSubcatClick(col2Cat, sub.id)}
+                  className="flex flex-col items-center gap-1 group"
+                >
+                  <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-all duration-150 ${
+                    isActive
+                      ? "border-indigo-500 shadow-md shadow-indigo-200 dark:shadow-indigo-900/40"
+                      : isPrev
+                        ? "border-indigo-300 scale-105"
+                        : "border-[var(--border)] group-hover:border-indigo-300 group-hover:scale-105"
+                  }`}>
+                    {img ? (
+                      <img src={img} alt={sub.label} className="w-full h-full object-cover" />
+                    ) : (
+                      <div
+                        className="w-full h-full flex items-center justify-center text-xl"
+                        style={{ background: "var(--surface-alt)" }}
                       >
-                        {count}
-                      </span>
-                    </label>
+                        {col2CatMeta.icon}
+                      </div>
+                    )}
                   </div>
-                  {isExpanded && (
-                    <div className="ml-4 mb-1.5">
-                      {SUBCATEGORIES[c.value].map((sub) => {
-                        const subCount  = products.filter((p) => p.category === c.value && p.subcategory === sub.id).length;
-                        const subActive = activeSubcategory === sub.id && drillCategory === c.value;
-                        return (
-                          <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group"
-                            onMouseEnter={() => {
-                              setHoveredSubcategory(sub.id);
-                              setPreviewSubcategory(sub.id);
-                              setHoverDrillCategory(c.value);
-                            }}>
-                            <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
-                              <input
-                                type="checkbox"
-                                checked={subActive}
-                                onChange={() => {
-                                  if (subActive) {
-                                    setActiveSubcategory(null);
-                                    setDrillCategory(null);
-                                    setActiveCategories([]);
-                                  } else {
-                                    setActiveSubcategory(sub.id);
-                                    setDrillCategory(c.value);
-                                    setActiveCategories([c.value]);
-                                  }
-                                }}
-                                className="accent-indigo-600 w-3 h-3"
-                              />
-                              {sub.label}
-                            </span>
-                            <span className="text-[10px] text-[var(--text-muted)]">{subCount}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
+                  <span className={`text-[9px] text-center leading-tight transition-colors px-0.5 ${
+                    isActive
+                      ? "text-indigo-600 dark:text-indigo-400 font-bold"
+                      : "text-[var(--text-muted)] group-hover:text-[var(--text)]"
+                  }`}>
+                    {sub.label}
+                  </span>
+                  {count > 0 && (
+                    <span className="text-[8px] text-[var(--text-muted)]">{count}</span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
-
-          <hr style={{ borderColor: "var(--border)" }} />
-
-          <div>
-            <button onClick={() => setPriceOpen((v) => !v)} className="flex items-center gap-1.5 w-full mb-2">
-              <span className="text-[var(--text-muted)] text-[18px] leading-none"
-                style={{ transform: priceOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Precio</p>
-            </button>
-            {priceOpen && priceRanges.map((r) => (
-              <label key={r.value} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={activePrices.includes(r.value)}
-                  onChange={() => togglePrice(r.value)}
-                  className="accent-indigo-600 w-3 h-3"
-                />
-                <span className="text-[12px] text-[var(--text-muted)] font-medium">{r.label}</span>
-              </label>
-            ))}
-          </div>
-
-          <hr style={{ borderColor: "var(--border)" }} />
-
-          <div>
-            <button onClick={() => setTagsOpen((v) => !v)} className="flex items-center gap-1.5 w-full mb-2">
-              <span className="text-[var(--text-muted)] text-[18px] leading-none"
-                style={{ transform: tagsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 200ms" }}>›</span>
-              <p className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">Destacados</p>
-            </button>
-            {tagsOpen && ["bestseller", "nuevo", "descuento"].map((tag) => (
-              <label key={tag} className="flex items-center gap-1.5 mb-1.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={activeTags.includes(tag)}
-                  onChange={() => toggleTag(tag)}
-                  className="accent-indigo-600 w-3 h-3"
-                />
-                <span className="text-[12px] text-[var(--text-muted)] capitalize font-medium">{tag}</span>
-              </label>
-            ))}
-          </div>
-
-          <hr style={{ borderColor: "var(--border)" }} />
-
-          <button
-            onClick={clearFilters}
-            className="text-[11px] font-semibold text-[var(--text-muted)] hover:text-indigo-500 border rounded-lg py-1.5 transition-colors"
-            style={{ borderColor: "var(--border)" }}
-          >
-            Limpiar filtros
-          </button>
-        </aside>
+        </div>
       </div>
 
-      {/* Toggle sidebar — solo desktop */}
-      {!isMobile && (
-        <button
-          onClick={() => setSidebarOpen((v) => !v)}
-          className="absolute z-30 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[13px] font-bold shadow-lg border-2 border-white dark:border-gray-900"
-          style={{ left: sidebarOpen ? "164px" : "0px", top: `${toggleTopPx}px`, transition: "left 200ms ease" }}
-        >
-          {sidebarOpen ? "‹" : "›"}
-        </button>
-      )}
-
-      {/* Grid principal */}
+      {/* ══ Col 3 (desktop) / Main area (mobile) ══ */}
       <div className="flex-1 flex flex-col overflow-hidden">
 
-        {/* ── Barra móvil: pills de categorías + filtros ── */}
+        {/* ── Mobile top bar ── */}
         <div
           className="md:hidden flex flex-col border-b"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
         >
-          {/* Fila 1: pills de categorías */}
           <div
             className="flex gap-2 overflow-x-auto px-3 pt-2.5 pb-1.5"
             style={{ scrollbarWidth: "none" } as React.CSSProperties}
@@ -493,16 +343,16 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             <button
               onClick={clearFilters}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
-                activeCategories.length === 0
+                !drillCategory
                   ? "bg-indigo-600 text-white border-indigo-600"
                   : "border-[var(--border)] text-[var(--text-muted)]"
               }`}
-              style={activeCategories.length > 0 ? { background: "var(--bg)" } : {}}
+              style={drillCategory ? { background: "var(--bg)" } : {}}
             >
               Todo
             </button>
             {categories.map((c) => {
-              const active = activeCategories.includes(c.value);
+              const active = drillCategory === c.value;
               return (
                 <button
                   key={c.value}
@@ -521,7 +371,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             })}
           </div>
 
-          {/* Fila 2: subcategorías (cuando hay categoría seleccionada) */}
           {drillCategory && (
             <div
               className="flex gap-2 overflow-x-auto px-3 pb-1.5"
@@ -547,21 +396,18 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             </div>
           )}
 
-          {/* Fila 3: botones Ordenar + Filtros */}
           <div className="flex gap-2 px-3 pb-2.5 pt-1">
             <button
               onClick={() => setSortSheetOpen(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border"
               style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
             >
               ↕ Ordenar
-              {sortBy !== "relevance" && (
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block" />
-              )}
+              {sortBy !== "relevance" && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block" />}
             </button>
             <button
               onClick={() => setFilterSheetOpen(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border"
               style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
             >
               ⚙️ Filtros
@@ -574,106 +420,100 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           </div>
         </div>
 
-        {/* ── Barra desktop: categorías ↔ subcategorías animadas ── */}
-        <div ref={topBarRef} className="hidden md:flex flex-col" style={{ background: "var(--surface)" }}>
-          <div className="flex items-center gap-3 px-4 pt-2 pb-1">
-            <div className="relative overflow-hidden flex-1 h-8">
-
-              {/* Capa 1 — Categorías */}
-              <div
-                className="absolute inset-0 flex items-center overflow-x-auto"
-                style={{ opacity: navDrillCategory ? 0 : 1, pointerEvents: navDrillCategory ? "none" : "auto" }}
-              >
-                <div className="flex items-center justify-center gap-6 min-w-full w-max mx-auto">
-                  {categories.map((c) => {
-                    const active = activeCategories.includes(c.value);
-                    return (
-                      <button
-                        key={c.value}
-                        onClick={() => handleCatClick(c.value)}
-                        className={`flex-shrink-0 text-[13px] transition-colors ${
-                          active
-                            ? "font-bold text-indigo-600 dark:text-indigo-400"
-                            : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-                        }`}
-                      >
-                        {c.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Capa 2 — Subcategorías */}
-              <div
-                className="absolute inset-0 flex items-center"
-                style={{ opacity: navDrillCategory ? 1 : 0, pointerEvents: navDrillCategory ? "auto" : "none" }}
-              >
-                {/* Pill categoría — fijo a la izquierda */}
+        {/* ── Desktop col 3 top bar ── */}
+        <div
+          className="hidden md:flex items-center gap-2 px-4 py-2 border-b flex-wrap"
+          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+        >
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <button
+              onClick={() => drillCategory && handleCatClick(drillCategory)}
+              className="text-[13px] font-bold text-[var(--text)] hover:text-indigo-500 transition-colors"
+            >
+              {drillCategory ? categories.find((c) => c.value === drillCategory)?.label : "Todos"}
+            </button>
+            {activeSubcategory && drillCategory && (
+              <>
+                <span className="text-[var(--text-muted)] flex-shrink-0">›</span>
                 <button
-                  onClick={() => drillCategory && handleCatClick(drillCategory)}
-                  className="relative z-10 flex-shrink-0 text-[13px] font-bold text-white bg-indigo-600 dark:bg-indigo-500 px-2.5 py-0.5 rounded-full"
+                  onClick={() => setActiveSubcategory(null)}
+                  className="text-[13px] font-medium text-[var(--text-muted)] hover:text-indigo-500 transition-colors truncate"
                 >
-                  {drillCatMeta?.label}
+                  {SUBCATEGORIES[drillCategory]?.find((s) => s.id === activeSubcategory)?.label}
                 </button>
-                {/* Subcategorías — centradas en toda la barra */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="flex items-center gap-5 pointer-events-auto">
-                    {navDrillCategory && SUBCATEGORIES[navDrillCategory].map((sub) => (
-                      <button
-                        key={sub.id}
-                        onClick={() => setActiveSubcategory(sub.id)}
-                        className={`flex-shrink-0 text-[13px] transition-colors ${
-                          (hoveredSubcategory ?? activeSubcategory) === sub.id
-                            ? "font-bold text-indigo-600 dark:text-indigo-400"
-                            : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-                        }`}
-                      >
-                        {sub.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
+            <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0">
+              · {filtered.length} producto{filtered.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
-          {/* Barra de progreso por categoría */}
-          <div className="flex h-[3px]">
-            {categories.map((c, i) => {
-              const isPast    = i < scrollCatIndex;
-              const isCurrent = c.value === scrollCat;
-              return (
-                <button
-                  key={c.value}
-                  onClick={() => scrollToCategory(c.value)}
-                  className="flex-1 relative overflow-hidden"
-                  style={{ background: "var(--border)" }}
-                >
-                  {isPast && <div className="absolute inset-0 bg-indigo-500" />}
-                  {isCurrent && (
-                    <div
-                      className="absolute inset-y-0 left-0"
-                      style={{
-                        width: `${catProgress}%`,
-                        background: "linear-gradient(90deg, #6366f1, #38bdf8)",
-                        transition: "width 0.1s linear",
-                      }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          {/* Sort */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="text-[12px] border rounded-lg px-2.5 py-1.5 outline-none cursor-pointer flex-shrink-0"
+            style={{ background: "var(--surface-alt)", borderColor: "var(--border)", color: "var(--text-muted)" }}
+          >
+            {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+
+          {/* Price chips */}
+          {priceRanges.map((r) => {
+            const on = activePrices.includes(r.value);
+            return (
+              <button
+                key={r.value}
+                onClick={() => togglePrice(r.value)}
+                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                  on ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
+                }`}
+                style={!on ? { background: "var(--bg)" } : {}}
+              >
+                {r.short}
+              </button>
+            );
+          })}
+
+          {/* Tag chips */}
+          {[
+            { value: "bestseller", label: "⭐ Top" },
+            { value: "nuevo",      label: "🆕 Nuevo" },
+            { value: "descuento",  label: "💲 Oferta" },
+          ].map((t) => {
+            const on = activeTags.includes(t.value);
+            return (
+              <button
+                key={t.value}
+                onClick={() => toggleTag(t.value)}
+                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                  on ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
+                }`}
+                style={!on ? { background: "var(--bg)" } : {}}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+
+          {(drillCategory || activeSubcategory || activePrices.length > 0 || activeTags.length > 0) && (
+            <button
+              onClick={clearFilters}
+              className="flex-shrink-0 text-[11px] text-indigo-500 font-semibold hover:underline"
+            >
+              Limpiar
+            </button>
+          )}
         </div>
 
-        {/* Productos */}
+        {/* Product grid */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto p-3"
+          className="flex-1 overflow-y-auto p-3 md:p-4"
           style={{ background: "var(--bg)" }}
         >
-          {grouped.length === 0 ? (
+          {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-[var(--text-muted)]">
               <span className="text-5xl">🔍</span>
               <p className="text-sm font-semibold">Sin resultados</p>
@@ -681,13 +521,18 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                 Limpiar filtros
               </button>
             </div>
+          ) : filterCat ? (
+            /* Category selected/hovered → flat grid */
+            <div
+              className="grid gap-3 auto-rows-fr"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))" }}
+            >
+              {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
           ) : (
+            /* No category → grouped by category */
             grouped.map((group) => (
-              <div
-                key={group.value}
-                ref={(el) => { sectionRefs.current[group.value] = el; }}
-                className="mb-8"
-              >
+              <div key={group.value} className="mb-8">
                 <div
                   className="flex items-center gap-2 mb-3 pb-2 border-b"
                   style={{ borderColor: "var(--border)" }}
@@ -703,10 +548,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                     {group.items.length}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 auto-rows-fr">
-                  {group.items.map((p) => (
-                    <ProductCard key={p.id} product={p} />
-                  ))}
+                <div
+                  className="grid gap-3 auto-rows-fr"
+                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))" }}
+                >
+                  {group.items.map((p) => <ProductCard key={p.id} product={p} />)}
                 </div>
               </div>
             ))
@@ -717,23 +563,16 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* ── Bottom Sheet: Filtros (móvil) ── */}
       {filterSheetOpen && isMobile && (
         <>
-          <div
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={() => setFilterSheetOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setFilterSheetOpen(false)} />
           <div
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl max-h-[85vh] flex flex-col"
             style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}
           >
-            {/* Handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full" style={{ background: "var(--border)" }} />
             </div>
-
             <div className="overflow-y-auto px-5 pb-8 pt-2">
               <h3 className="text-base font-black text-[var(--text)] mb-5">Filtros</h3>
-
-              {/* Precio */}
               <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-3">Precio</p>
               <div className="flex flex-wrap gap-2 mb-6">
                 {priceRanges.map((r) => {
@@ -743,9 +582,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       key={r.value}
                       onClick={() => togglePrice(r.value)}
                       className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-colors ${
-                        active
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-[var(--border)] text-[var(--text-muted)]"
+                        active ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
                       }`}
                       style={!active ? { background: "var(--surface)" } : {}}
                     >
@@ -754,14 +591,12 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                   );
                 })}
               </div>
-
-              {/* Destacados */}
               <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-3">Destacados</p>
               <div className="flex flex-wrap gap-2 mb-8">
                 {[
                   { value: "bestseller", label: "⭐ Bestseller" },
                   { value: "nuevo",      label: "🆕 Nuevo" },
-                  { value: "descuento",  label: "🔥 Descuento" },
+                  { value: "descuento",  label: "💲 Descuento" },
                 ].map((tag) => {
                   const active = activeTags.includes(tag.value);
                   return (
@@ -769,9 +604,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       key={tag.value}
                       onClick={() => toggleTag(tag.value)}
                       className={`px-4 py-2 rounded-full text-[13px] font-bold border transition-colors ${
-                        active
-                          ? "bg-indigo-600 text-white border-indigo-600"
-                          : "border-[var(--border)] text-[var(--text-muted)]"
+                        active ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
                       }`}
                       style={!active ? { background: "var(--surface)" } : {}}
                     >
@@ -780,12 +613,10 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                   );
                 })}
               </div>
-
-              {/* Acciones */}
               <div className="flex gap-3">
                 <button
                   onClick={() => { clearFilters(); setFilterSheetOpen(false); }}
-                  className="flex-1 py-3 rounded-2xl border text-sm font-bold transition-colors"
+                  className="flex-1 py-3 rounded-2xl border text-sm font-bold"
                   style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text-muted)" }}
                 >
                   Limpiar
@@ -805,10 +636,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* ── Bottom Sheet: Ordenar (móvil) ── */}
       {sortSheetOpen && isMobile && (
         <>
-          <div
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={() => setSortSheetOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setSortSheetOpen(false)} />
           <div
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
             style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}
