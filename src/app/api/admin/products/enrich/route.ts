@@ -35,7 +35,12 @@ export async function POST() {
         if (imageSet.length > 0) update.images = imageSet;
       }
       if (!product.description_images?.length) {
-        const detailImgs: string[] = d.productDetailImage ?? d.productImages ?? [];
+        const raw = d.productDetailImage ?? d.productImages ?? [];
+        const detailImgs: string[] = Array.isArray(raw)
+          ? raw
+          : typeof raw === "string" && raw.trim()
+            ? raw.split(/[\n,]+/).map((s: string) => s.trim()).filter(Boolean)
+            : [];
         if (detailImgs.length > 0) update.description_images = detailImgs;
       }
       if (!product.specifications) {

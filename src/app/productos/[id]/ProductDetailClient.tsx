@@ -307,7 +307,7 @@ export default function ProductDetailClient({
         {tab === "descripcion" && (
           <div className="flex flex-col gap-4">
             {/* Texto colapsable */}
-            {product.description && product.description !== product.name && (
+            {product.description && product.description.length > 10 && (
               <div>
                 <div className={`relative overflow-hidden ${descExpanded ? "" : "max-h-24"}`}>
                   <p className="text-[var(--text-muted)] leading-relaxed text-sm">{product.description}</p>
