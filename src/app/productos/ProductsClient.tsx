@@ -417,69 +417,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           </div>
         </div>
 
-        {/* ── Desktop col 3 top bar ── */}
-        <div
-          className="hidden md:flex items-center gap-2 px-4 py-2 border-b flex-wrap"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-        >
-          {/* Sort */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="text-[12px] border rounded-lg px-2.5 py-1.5 outline-none cursor-pointer flex-shrink-0"
-            style={{ background: "var(--surface-alt)", borderColor: "var(--border)", color: "var(--text-muted)" }}
-          >
-            {sortOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-
-          {/* Price chips */}
-          {priceRanges.map((r) => {
-            const on = activePrices.includes(r.value);
-            return (
-              <button
-                key={r.value}
-                onClick={() => togglePrice(r.value)}
-                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                  on ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
-                }`}
-                style={!on ? { background: "var(--bg)" } : {}}
-              >
-                {r.short}
-              </button>
-            );
-          })}
-
-          {/* Tag chips */}
-          {[
-            { value: "bestseller", label: "⭐ Top" },
-            { value: "nuevo",      label: "🆕 Nuevo" },
-            { value: "descuento",  label: "💲 Oferta" },
-          ].map((t) => {
-            const on = activeTags.includes(t.value);
-            return (
-              <button
-                key={t.value}
-                onClick={() => toggleTag(t.value)}
-                className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                  on ? "bg-indigo-600 text-white border-indigo-600" : "border-[var(--border)] text-[var(--text-muted)]"
-                }`}
-                style={!on ? { background: "var(--bg)" } : {}}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-
-          {(drillCategory || activeSubcategory || activePrices.length > 0 || activeTags.length > 0) && (
-            <button
-              onClick={clearFilters}
-              className="flex-shrink-0 text-[11px] text-indigo-500 font-semibold hover:underline"
-            >
-              Limpiar
-            </button>
-          )}
-        </div>
-
         {/* Product grid */}
         <div
           ref={scrollRef}
