@@ -6,7 +6,7 @@ import { useToastStore } from "@/store/toast";
 import type { Product } from "@/types";
 import type { ReviewRow } from "./page";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductCard from "@/components/products/ProductCard";
 
 const tagStyles: Record<string, string> = {
@@ -240,7 +240,19 @@ export default function ProductDetailClient({
   const activeImg = allImages[activeIndex] ?? null;
   const [zoomed, setZoomed] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxOpen(false);
+      if (e.key === "ArrowRight") setActiveIndex((i) => Math.min(i + 1, allImages.length - 1));
+      if (e.key === "ArrowLeft") setActiveIndex((i) => Math.max(i - 1, 0));
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxOpen, allImages.length]);
 
   function handleTouchStart(e: React.TouchEvent) {
     setTouchStart(e.touches[0].clientX);
@@ -662,8 +674,8 @@ export default function ProductDetailClient({
               )}
               {/* Imagen principal */}
               <div
-                className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0"
-                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)", cursor: zoomed ? "zoom-out" : "zoom-in" }}
+                className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0 relative"
+                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)", cursor: "zoom-in" }}
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -675,6 +687,7 @@ export default function ProductDetailClient({
                   setZoomed(false);
                   setZoomOrigin("50% 50%");
                 }}
+                onClick={() => activeImg && setLightboxOpen(true)}
               >
                 {activeImg ? (
                   <img
@@ -689,6 +702,15 @@ export default function ProductDetailClient({
                   />
                 ) : (
                   <span className="text-8xl animate-float">{product.icon}</span>
+                )}
+                {/* Ícono lupa */}
+                {activeImg && !zoomed && (
+                  <div className="absolute bottom-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center pointer-events-none">
+                    <svg width="14" height="14" viewBox="0 0 20 20" fill="white">
+                      <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
+                    </svg>
+                    <span className="absolute text-white text-[8px] font-black leading-none" style={{ marginTop: "-1px" }}>+</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -832,6 +854,50 @@ export default function ProductDetailClient({
         </div>
 
       </div>
+
+      {/* Lightbox */}
+      {lightboxOpen && activeImg && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Botón cerrar */}
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-xl transition-colors"
+            onClick={() => setLightboxOpen(false)}
+          >
+            ✕
+          </button>
+
+          {/* Imagen grande */}
+          <img
+            src={activeImg}
+            alt={product.name}
+            className="max-w-3xl max-h-[80vh] w-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Miniaturas */}
+          {allImages.length > 1 && (
+            <div
+              className="flex gap-2 mt-4 px-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {allImages.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveIndex(i)}
+                  className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                    activeIndex === i ? "border-indigo-400" : "border-white/20 opacity-50 hover:opacity-100"
+                  }`}
+                >
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 }
