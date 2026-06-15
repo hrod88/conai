@@ -422,30 +422,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           className="hidden md:flex items-center gap-2 px-4 py-2 border-b flex-wrap"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
         >
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <button
-              onClick={() => drillCategory && handleCatClick(drillCategory)}
-              className="text-[13px] font-bold text-[var(--text)] hover:text-indigo-500 transition-colors"
-            >
-              {drillCategory ? categories.find((c) => c.value === drillCategory)?.label : "Todos"}
-            </button>
-            {activeSubcategory && drillCategory && (
-              <>
-                <span className="text-[var(--text-muted)] flex-shrink-0">›</span>
-                <button
-                  onClick={() => setActiveSubcategory(null)}
-                  className="text-[13px] font-medium text-[var(--text-muted)] hover:text-indigo-500 transition-colors truncate"
-                >
-                  {SUBCATEGORIES[drillCategory]?.find((s) => s.id === activeSubcategory)?.label}
-                </button>
-              </>
-            )}
-            <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0">
-              · {filtered.length} producto{filtered.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-
           {/* Sort */}
           <select
             value={sortBy}
