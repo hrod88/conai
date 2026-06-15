@@ -273,14 +273,13 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
         {/* Col 2 — Subcategory grid with circular images */}
         <div
-          className="w-64 flex-shrink-0 overflow-y-auto p-4"
-          style={{ background: "var(--bg)" }}
+          className="w-64 flex-shrink-0 overflow-y-auto pt-2 px-4 pb-4"
+          style={{ background: "var(--bg)", boxShadow: "1px 0 0 var(--border)" }}
         >
-          <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-1.5">
-            <span>{col2CatMeta.icon}</span>
-            <span>{col2CatMeta.label}</span>
+          <p className="text-[9px] font-black tracking-widest text-[var(--text-muted)] uppercase pb-2 pt-1">
+            {col2CatMeta.label}
           </p>
-          <div className="grid grid-cols-3 gap-x-1 gap-y-5">
+          <div className="grid grid-cols-3 gap-x-1 gap-y-4">
             {SUBCATEGORIES[col2Cat].map((sub) => {
               const img      = subcatImages[sub.id];
               const count    = products.filter((p) => p.category === col2Cat && p.subcategory === sub.id).length;
@@ -304,11 +303,9 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                       <img src={img} alt={sub.label} className="w-full h-full object-cover" />
                     ) : (
                       <div
-                        className="w-full h-full flex items-center justify-center text-xl"
+                        className="w-full h-full"
                         style={{ background: "var(--surface-alt)" }}
-                      >
-                        {col2CatMeta.icon}
-                      </div>
+                      />
                     )}
                   </div>
                   <span className={`text-[9px] text-center leading-tight transition-colors px-0.5 ${
