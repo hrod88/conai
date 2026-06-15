@@ -1,6 +1,22 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-guard";
+import { cjGet } from "@/lib/cj";
 import { NextRequest } from "next/server";
+
+function extractImgsFromHtml(html: string): string[] {
+  const urls: string[] = [];
+  const re = /<img[^>]+src=["']([^"']+)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    const src = m[1].trim();
+    if (src.startsWith("http")) urls.push(src);
+  }
+  return urls;
+}
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s{2,}/g, " ").trim();
+}
 
 export async function POST(req: NextRequest) {
   const guard = await requireAdmin();
@@ -48,6 +64,63 @@ export async function POST(req: NextRequest) {
   }).select("id").single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });
+
+  // Auto-enrich desde CJ: imágenes, descripción e specs en el momento de importar
+  if (body.cj_pid && !body.cj_pid.startsWith("ae:")) {
+    try {
+      const cjData = await cjGet("/product/query", { pid: body.cj_pid });
+      const d = cjData?.data ?? {};
+      const update: Record<string, unknown> = {};
+
+      // Galería de imágenes
+      if (!body.images?.length) {
+        const raw = d.productImageSet ?? [];
+        const imageSet: string[] = Array.isArray(raw)
+          ? raw
+          : typeof raw === "string" && raw.trim()
+            ? raw.split(/[\n,]+/).map((s: string) => s.trim()).filter(Boolean)
+            : [];
+        if (imageSet.length > 0) update.images = imageSet;
+      }
+
+      // Descripción: extraer texto del HTML de CJ
+      const cjDescRaw: string = d.description ?? "";
+      const cjDescText = cjDescRaw.includes("<") ? stripHtml(cjDescRaw) : cjDescRaw;
+      if (cjDescText && cjDescText.length > 10) {
+        update.description = cjDescText;
+      }
+
+      // Imágenes de descripción (estilo AliExpress)
+      let detailImgs: string[] = [];
+      const rawDetail = d.productDetailImage ?? d.productDetailImages ?? d.detailImage ?? null;
+      if (rawDetail) {
+        detailImgs = Array.isArray(rawDetail)
+          ? rawDetail
+          : typeof rawDetail === "string" && rawDetail.trim()
+            ? rawDetail.split(/[\n,]+/).map((s: string) => s.trim()).filter((s: string) => s.startsWith("http"))
+            : [];
+      }
+      if (detailImgs.length === 0 && cjDescRaw) {
+        detailImgs = extractImgsFromHtml(cjDescRaw);
+      }
+      if (detailImgs.length > 0) update.description_images = detailImgs;
+
+      // Especificaciones
+      const attrs: Array<{ key: string; value: string }> = (d.productAttributes ?? []).map(
+        (a: { nameEn?: string; valueEn?: string; name?: string; value?: string }) => ({
+          key: a.nameEn ?? a.name ?? "",
+          value: a.valueEn ?? a.value ?? "",
+        })
+      ).filter((a: { key: string; value: string }) => a.key && a.value);
+      if (attrs.length > 0) update.specifications = attrs;
+
+      if (Object.keys(update).length > 0) {
+        await admin.from("products").update(update).eq("id", data.id);
+      }
+    } catch {
+      // No fallar el import si CJ falla
+    }
+  }
 
   return Response.json({ ok: true, id: data.id });
 }
