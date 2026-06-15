@@ -328,13 +328,13 @@ export default function ProductDetailClient({
               <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">🤖 Análisis IA conAI</p>
               <p className="text-sm text-[var(--text)] leading-relaxed">
                 Basado en miles de reseñas y comparativas, este producto destaca por su <strong>relación calidad-precio</strong> dentro de la categoría {product.category}.
-                Nuestro algoritmo le asigna un <strong>Score IA de {((product.rating ?? 4.5) * 20).toFixed(0)}/100</strong>.
+                Nuestro algoritmo le asigna un <strong>Score IA de {((product.rating || 4.5) * 20).toFixed(0)}/100</strong>.
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Calidad", pct: Math.round((product.rating ?? 4.5) * 20) },
-                { label: "Valor", pct: Math.min(95, Math.round(92 - product.price / 20)) },
+                { label: "Calidad", pct: Math.round((product.rating || 4.5) * 20) },
+                { label: "Valor", pct: Math.max(30, Math.min(95, Math.round(92 - product.price / 200))) },
                 { label: "Durabilidad", pct: 88 },
                 { label: "Soporte", pct: 94 },
               ].map((m) => (
