@@ -135,7 +135,9 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [priceOpen, setPriceOpen]                   = useState(true);
   const [tagsOpen, setTagsOpen]                     = useState(true);
   const [expandedCats, setExpandedCats]             = useState<Set<Category>>(new Set());
-  const [hoveredSubcategory, setHoveredSubcategory] = useState<string | null>(null);
+  const [hoveredSubcategory, setHoveredSubcategory]   = useState<string | null>(null);
+  const [previewSubcategory, setPreviewSubcategory]   = useState<string | null>(null);
+  const [hoverDrillCategory, setHoverDrillCategory]   = useState<Category | null>(null);
   const [filterSheetOpen, setFilterSheetOpen]       = useState(false);
   const [sortSheetOpen, setSortSheetOpen]           = useState(false);
   const [sortBy, setSortBy]                         = useState<SortOption>("relevance");
@@ -150,7 +152,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
       if (activeCategories.length > 0 && !activeCategories.includes(p.category as Category)) return false;
-      if (activeSubcategory && p.subcategory !== activeSubcategory) return false;
+      const effectiveSubcat = previewSubcategory ?? activeSubcategory;
+      if (effectiveSubcat && p.subcategory !== effectiveSubcat) return false;
       if (activePrices.length > 0) {
         const inRange =
           (activePrices.includes("low")  && p.price < 100) ||
@@ -273,7 +276,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     setActiveSubcategory(null);
   }
 
-  const drillCatMeta   = drillCategory ? categories.find((c) => c.value === drillCategory) : null;
+  const navDrillCategory = drillCategory || hoverDrillCategory;
+  const drillCatMeta     = navDrillCategory ? categories.find((c) => c.value === navDrillCategory) : null;
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
   const activeFilterCount = activePrices.length + activeTags.length;
 
@@ -298,7 +302,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
         <aside
           className="w-44 h-full border-r overflow-y-auto p-3 flex flex-col gap-2"
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-          onMouseLeave={() => setHoveredSubcategory(null)}
+          onMouseLeave={() => {
+            setHoveredSubcategory(null);
+            setPreviewSubcategory(null);
+            setHoverDrillCategory(null);
+          }}
         >
           <div>
             <button
@@ -367,7 +375,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                         const subActive = activeSubcategory === sub.id && drillCategory === c.value;
                         return (
                           <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group"
-                            onMouseEnter={() => setHoveredSubcategory(sub.id)}>
+                            onMouseEnter={() => {
+                              setHoveredSubcategory(sub.id);
+                              setPreviewSubcategory(sub.id);
+                              setHoverDrillCategory(c.value);
+                            }}>
                             <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
                               <input
                                 type="checkbox"
@@ -568,7 +580,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               {/* Capa 1 — Categorías */}
               <div
                 className="absolute inset-0 flex items-center overflow-x-auto"
-                style={{ opacity: drillCategory ? 0 : 1, pointerEvents: drillCategory ? "none" : "auto" }}
+                style={{ opacity: navDrillCategory ? 0 : 1, pointerEvents: navDrillCategory ? "none" : "auto" }}
               >
                 <div className="flex items-center justify-center gap-6 min-w-full w-max mx-auto">
                   {categories.map((c) => {
@@ -593,11 +605,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               {/* Capa 2 — Subcategorías */}
               <div
                 className="absolute inset-0 flex items-center"
-                style={{ opacity: drillCategory ? 1 : 0, pointerEvents: drillCategory ? "auto" : "none" }}
+                style={{ opacity: navDrillCategory ? 1 : 0, pointerEvents: navDrillCategory ? "auto" : "none" }}
               >
                 {/* Pill categoría — fijo a la izquierda */}
                 <button
-                  onClick={() => handleCatClick(drillCategory!)}
+                  onClick={() => drillCategory && handleCatClick(drillCategory)}
                   className="relative z-10 flex-shrink-0 text-[13px] font-bold text-white bg-indigo-600 dark:bg-indigo-500 px-2.5 py-0.5 rounded-full"
                 >
                   {drillCatMeta?.label}
@@ -605,7 +617,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                 {/* Subcategorías — centradas en toda la barra */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="flex items-center gap-5 pointer-events-auto">
-                    {drillCategory && SUBCATEGORIES[drillCategory].map((sub) => (
+                    {navDrillCategory && SUBCATEGORIES[navDrillCategory].map((sub) => (
                       <button
                         key={sub.id}
                         onClick={() => setActiveSubcategory(sub.id)}
