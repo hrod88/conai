@@ -241,8 +241,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       >
         {/* Col 1 — Category list */}
         <div
-          className="w-36 flex-shrink-0 border-r overflow-y-auto flex flex-col py-2"
-          style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          className="w-36 flex-shrink-0 overflow-y-auto flex flex-col py-2"
+          style={{ background: "var(--surface)" }}
         >
           <p className="text-[9px] font-black tracking-widest text-[var(--text-muted)] uppercase px-4 pb-2 pt-1">
             Categorías
@@ -273,8 +273,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
         {/* Col 2 — Subcategory grid with circular images */}
         <div
-          className="w-64 flex-shrink-0 border-r overflow-y-auto p-4"
-          style={{ background: "var(--bg)", borderColor: "var(--border)" }}
+          className="w-64 flex-shrink-0 overflow-y-auto p-4"
+          style={{ background: "var(--bg)" }}
         >
           <p className="text-[10px] font-black tracking-widest text-[var(--text-muted)] uppercase mb-4 flex items-center gap-1.5">
             <span>{col2CatMeta.icon}</span>
