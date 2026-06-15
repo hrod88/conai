@@ -93,8 +93,8 @@ export async function POST() {
         }
 
         // 2. Si no hay campo dedicado, extraer del HTML de descripción
-        if (detailImgs.length === 0 && cjDesc) {
-          detailImgs = extractImgsFromHtml(cjDesc);
+        if (detailImgs.length === 0 && cjDescRaw) {
+          detailImgs = extractImgsFromHtml(cjDescRaw);
         }
 
         if (detailImgs.length > 0) update.description_images = detailImgs;
