@@ -858,7 +858,7 @@ export default function ProductDetailClient({
       {/* Lightbox */}
       {lightboxOpen && activeImg && (
         <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/85"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85"
           onClick={() => setLightboxOpen(false)}
         >
           {/* Botón cerrar */}
@@ -869,33 +869,38 @@ export default function ProductDetailClient({
             ✕
           </button>
 
-          {/* Imagen grande */}
-          <img
-            src={activeImg}
-            alt={product.name}
-            className="max-w-3xl max-h-[80vh] w-full object-contain"
+          {/* Miniaturas izquierda + imagen */}
+          <div
+            className="flex items-center gap-3 px-6"
             onClick={(e) => e.stopPropagation()}
-          />
+          >
+            {/* Miniaturas columna vertical */}
+            {allImages.length > 1 && (
+              <div
+                className="flex flex-col gap-2 overflow-y-auto max-h-[90vh] flex-shrink-0"
+                style={{ scrollbarWidth: "none" } as React.CSSProperties}
+              >
+                {allImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveIndex(i)}
+                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      activeIndex === i ? "border-indigo-400" : "border-white/20 opacity-50 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
 
-          {/* Miniaturas */}
-          {allImages.length > 1 && (
-            <div
-              className="flex gap-2 mt-4 px-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {allImages.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveIndex(i)}
-                  className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
-                    activeIndex === i ? "border-indigo-400" : "border-white/20 opacity-50 hover:opacity-100"
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Imagen grande */}
+            <img
+              src={activeImg}
+              alt={product.name}
+              className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain"
+            />
+          </div>
         </div>
       )}
     </>
