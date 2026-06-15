@@ -527,32 +527,13 @@ export default function ProductsClient({ products, initialCategory }: Props) {
               {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           ) : (
-            /* No category → grouped by category */
-            grouped.map((group) => (
-              <div key={group.value} className="mb-8">
-                <div
-                  className="flex items-center gap-2 mb-3 pb-2 border-b"
-                  style={{ borderColor: "var(--border)" }}
-                >
-                  <span className="text-lg">{group.icon}</span>
-                  <h2 className="text-sm font-black text-[var(--text)] uppercase tracking-wide">
-                    {group.label}
-                  </h2>
-                  <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: "var(--surface-alt)", color: "var(--text-muted)" }}
-                  >
-                    {group.items.length}
-                  </span>
-                </div>
-                <div
-                  className="grid gap-3 auto-rows-fr"
-                  style={{ gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))" }}
-                >
-                  {group.items.map((p) => <ProductCard key={p.id} product={p} />)}
-                </div>
-              </div>
-            ))
+            /* No category → flat grid */
+            <div
+              className="grid gap-3 auto-rows-fr"
+              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(148px, 1fr))" }}
+            >
+              {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
           )}
         </div>
       </div>
