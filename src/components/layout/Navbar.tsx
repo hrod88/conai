@@ -297,8 +297,7 @@ export default function Navbar() {
 
           {/* Col 1 — logo (desktop) */}
           <div
-            className="hidden md:flex w-36 flex-shrink-0 items-center px-4 h-full border-r"
-            style={{ borderColor: "var(--border)" }}
+            className="hidden md:flex w-36 flex-shrink-0 items-center px-4 h-full"
           >
             <Link href="/" className="text-xl font-black gradient-text">
               conAI
@@ -307,8 +306,7 @@ export default function Navbar() {
 
           {/* Col 2 — buscador (desktop) */}
           <div
-            className="hidden md:flex w-64 flex-shrink-0 items-center px-3 h-full border-r"
-            style={{ borderColor: "var(--border)" }}
+            className="hidden md:flex w-64 flex-shrink-0 items-center px-3 h-full"
           >
             <button
               onClick={toggleSearch}
