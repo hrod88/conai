@@ -238,6 +238,8 @@ export default function ProductDetailClient({
   ];
   const [activeIndex, setActiveIndex] = useState(0);
   const activeImg = allImages[activeIndex] ?? null;
+  const [zoomed, setZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
   function handleTouchStart(e: React.TouchEvent) {
@@ -660,14 +662,30 @@ export default function ProductDetailClient({
               )}
               {/* Imagen principal */}
               <div
-                className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0 cursor-zoom-in"
-                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
+                className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)", cursor: zoomed ? "zoom-out" : "zoom-in" }}
+                onMouseMove={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                  setZoomOrigin(`${x}% ${y}%`);
+                  setZoomed(true);
+                }}
+                onMouseLeave={() => {
+                  setZoomed(false);
+                  setZoomOrigin("50% 50%");
+                }}
               >
                 {activeImg ? (
                   <img
                     src={activeImg}
                     alt={product.name}
-                    className="w-full h-full object-contain p-4 transition-transform duration-300 ease-out hover:scale-150"
+                    className="w-full h-full object-contain p-4"
+                    style={{
+                      transform: zoomed ? "scale(2.2)" : "scale(1)",
+                      transformOrigin: zoomOrigin,
+                      transition: zoomed ? "transform-origin 0ms" : "transform 300ms ease-out",
+                    }}
                   />
                 ) : (
                   <span className="text-8xl animate-float">{product.icon}</span>
