@@ -17,50 +17,6 @@ const links = [
   { href: "/contacto", label: "Contacto" },
 ];
 
-const searchTerms = [
-  "smartwatches",
-  "auriculares ANC",
-  "cámaras de seguridad",
-  "relojes ECG",
-  "depilación IPL",
-  "robots del hogar",
-  "GPS para mascotas",
-  "lámparas inteligentes",
-  "trackers de fitness",
-  "proyectores smart",
-  "glucómetros",
-  "parlantes inteligentes",
-];
-
-function AnimatedSearchPlaceholder() {
-  const [idx, setIdx] = useState(0);
-  const [out, setOut] = useState(false);
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setOut(true);
-      setTimeout(() => {
-        setIdx((i) => (i + 1) % searchTerms.length);
-        setOut(false);
-      }, 250);
-    }, 2800);
-    return () => clearInterval(t);
-  }, []);
-
-  return (
-    <span
-      className="text-xs text-left whitespace-nowrap overflow-hidden"
-      style={{
-        display: "inline-block",
-        opacity: out ? 0 : 1,
-        transform: out ? "translateY(-5px)" : "translateY(0px)",
-        transition: "opacity 250ms, transform 250ms",
-      }}
-    >
-      Buscar {searchTerms[idx]}...
-    </span>
-  );
-}
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -316,7 +272,7 @@ export default function Navbar() {
               <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
                 <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
               </svg>
-              <AnimatedSearchPlaceholder />
+              <span className="text-xs">Buscar...</span>
             </button>
           </div>
 
@@ -347,7 +303,7 @@ export default function Navbar() {
             <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
             </svg>
-            <AnimatedSearchPlaceholder />
+            <span className="text-xs">Buscar...</span>
           </button>
 
           {/* Links — centro */}
