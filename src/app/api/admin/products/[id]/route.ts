@@ -10,7 +10,18 @@ export async function PATCH(
   if ("error" in guard) return guard.error;
 
   const { id } = await params;
-  const body = await req.json() as { stock?: number; tag?: string | null; price?: number; cj_pid?: string; active?: boolean; category?: string; subcategory?: string | null };
+  const body = await req.json() as {
+    stock?: number;
+    tag?: string | null;
+    price?: number;
+    cj_pid?: string;
+    active?: boolean;
+    category?: string;
+    subcategory?: string | null;
+    description?: string;
+    description_images?: string[] | null;
+    specifications?: Array<{ key: string; value: string }> | null;
+  };
 
   const update: Record<string, unknown> = {};
   if (body.stock !== undefined) update.stock = Math.max(0, Number(body.stock));
@@ -20,6 +31,9 @@ export async function PATCH(
   if (body.active !== undefined) update.active = body.active;
   if (body.category !== undefined) update.category = body.category;
   if ("subcategory" in body) update.subcategory = body.subcategory ?? null;
+  if (body.description !== undefined) update.description = body.description;
+  if ("description_images" in body) update.description_images = body.description_images ?? null;
+  if ("specifications" in body) update.specifications = body.specifications ?? null;
 
   if (Object.keys(update).length === 0) {
     return Response.json({ error: "Sin campos para actualizar" }, { status: 400 });

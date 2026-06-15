@@ -32,8 +32,19 @@ export interface Product {
   warehouse?: string | null;
   active?: boolean;
   images?: string[] | null;
+  description_images?: string[] | null;
+  specifications?: Array<{ key: string; value: string }> | null;
   created_at: string;
 }
+
+export type QuestionRow = {
+  id: string;
+  user_id: string | null;
+  user_email: string | null;
+  question: string;
+  answer: string | null;
+  created_at: string;
+};
 
 export interface CartItem {
   product: Product;

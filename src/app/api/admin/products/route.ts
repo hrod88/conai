@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
     tag: string | null;
     image: string;
     images?: string[] | null;
+    description_images?: string[] | null;
+    specifications?: Array<{ key: string; value: string }> | null;
     icon: string;
     cj_pid: string;
     stock?: number;
@@ -27,20 +29,22 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
   const { data, error } = await admin.from("products").insert({
-    name:           body.name,
-    description:    body.description || body.name,
-    price:          Number(body.price),
-    original_price: body.original_price ?? null,
-    category:       body.category,
-    subcategory:    body.subcategory || null,
-    tag:            body.tag || null,
-    image:       body.image || null,
-    images:      body.images?.length ? body.images : null,
-    icon:        body.icon || "📦",
-    cj_pid:      body.cj_pid || null,
-    stock:       body.stock ?? 50,
-    rating:      0,
-    review_count: 0,
+    name:               body.name,
+    description:        body.description || body.name,
+    price:              Number(body.price),
+    original_price:     body.original_price ?? null,
+    category:           body.category,
+    subcategory:        body.subcategory || null,
+    tag:                body.tag || null,
+    image:              body.image || null,
+    images:             body.images?.length ? body.images : null,
+    description_images: body.description_images?.length ? body.description_images : null,
+    specifications:     body.specifications?.length ? body.specifications : null,
+    icon:               body.icon || "📦",
+    cj_pid:             body.cj_pid || null,
+    stock:              body.stock ?? 50,
+    rating:             0,
+    review_count:       0,
   }).select("id").single();
 
   if (error) return Response.json({ error: error.message }, { status: 500 });

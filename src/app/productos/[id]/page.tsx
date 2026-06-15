@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "./ProductDetailClient";
-import type { Product } from "@/types";
+import type { Product, QuestionRow } from "@/types";
 import type { Metadata } from "next";
 
 const categoryLabels: Record<string, string> = {
@@ -81,7 +81,8 @@ export default async function ProductoDetallePage({
 
   if (!product) notFound();
 
-  const [{ data: relatedRaw }, { data: reviewsRaw }] = await Promise.all([
+  const adminClient = createAdminClient();
+  const [{ data: relatedRaw }, { data: reviewsRaw }, { data: questionsRaw }] = await Promise.all([
     supabase
       .from("products")
       .select("*")
@@ -93,30 +94,39 @@ export default async function ProductoDetallePage({
       .select("id, user_id, rating, comment, created_at")
       .eq("product_id", id)
       .order("created_at", { ascending: false }),
+    adminClient
+      .from("product_questions")
+      .select("id, user_id, user_email, question, answer, created_at")
+      .eq("product_id", id)
+      .order("created_at", { ascending: true }),
   ]);
 
   const related: Product[] = (relatedRaw as Product[]) ?? [];
 
-  // Obtener emails de los reviewers via auth (solo los IDs que tenemos)
-  // Como no tenemos acceso directo a auth.users desde el cliente, usamos el email
-  // guardado en user_metadata o mostramos la primera letra del user_id como avatar
   const reviews: ReviewRow[] = (reviewsRaw ?? []).map((r) => ({
     ...r,
     user_email: (user && r.user_id === user.id) ? (user.email ?? "Tú") : "Usuario",
   }));
 
+  const questions: QuestionRow[] = (questionsRaw ?? []) as QuestionRow[];
+
   const userHasReviewed = user
     ? reviews.some((r) => r.user_id === user.id)
     : false;
+
+  const adminEmails = (process.env.ADMIN_EMAIL ?? "").split(",").map((e) => e.trim());
+  const isAdmin = !!user && adminEmails.includes(user.email ?? "");
 
   return (
     <ProductDetailClient
       product={product as Product}
       related={related}
       reviews={reviews}
+      questions={questions}
       userId={user?.id ?? null}
       userEmail={user?.email ?? null}
       userHasReviewed={userHasReviewed}
+      isAdmin={isAdmin}
     />
   );
 }

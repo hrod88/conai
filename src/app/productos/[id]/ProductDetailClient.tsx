@@ -3,7 +3,7 @@
 import { useCartStore } from "@/store/cart";
 import { useFavoritesStore } from "@/store/favorites";
 import { useToastStore } from "@/store/toast";
-import type { Product } from "@/types";
+import type { Product, QuestionRow } from "@/types";
 import type { ReviewRow } from "./page";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -76,44 +76,6 @@ const categorySpecs: Record<string, [string, string][]> = {
   ],
 };
 
-const categoryFAQ: Record<string, [string, string][]> = {
-  salud: [
-    ["¿Qué tan preciso es el monitor cardíaco?", "Nuestros dispositivos usan sensores ópticos de última generación con una precisión del 99% comparada con equipos clínicos en pruebas independientes."],
-    ["¿Se puede usar en la ducha?", "Sí, todos nuestros wearables de salud tienen resistencia 5 ATM (50 metros de profundidad), son perfectos para natación y ducha."],
-    ["¿Con qué apps es compatible?", "Compatible con Apple Health, Google Fit, Samsung Health y nuestra app conAI exclusiva con análisis de tendencias impulsado por IA."],
-    ["¿Cuánto demora la carga?", "La carga magnética completa toma entre 60 y 90 minutos. Incluye cargador en la caja."],
-  ],
-  belleza: [
-    ["¿Es seguro para todo tipo de piel?", "Sí, todos nuestros dispositivos están dermatológicamente testados y son seguros para pieles sensibles, mixtas y grasas."],
-    ["¿Cuántas veces a la semana se recomienda usar?", "Para mejores resultados, se recomienda usar 3–4 veces por semana durante 10–15 minutos por sesión."],
-    ["¿Cuándo se notan los resultados?", "La mayoría de usuarios reporta mejoras visibles en textura e hidratación desde la segunda semana de uso consistente."],
-    ["¿Incluye productos de skincare?", "El dispositivo viene solo. Es compatible con cualquier sérum o crema de tu preferencia, potenciando su absorción."],
-  ],
-  hogar: [
-    ["¿Es compatible con Alexa y Google Home?", "Sí, todos nuestros dispositivos de hogar inteligente son compatibles con Amazon Alexa, Google Home y Apple HomeKit."],
-    ["¿Se puede controlar desde fuera de casa?", "Absolutamente. Con nuestra app puedes controlar y monitorear todo desde cualquier parte del mundo con conexión a internet."],
-    ["¿Funciona con el voltaje de Chile (220V)?", "Todos nuestros productos vienen configurados para 220V monofásico, el estándar de Chile. No necesitas adaptadores."],
-    ["¿Qué pasa si hay un corte de luz?", "Los dispositivos guardan sus configuraciones en memoria interna. Al volver la energía, retoman su estado anterior automáticamente."],
-  ],
-  wearables: [
-    ["¿Tiene GPS integrado?", "Sí, incluye GPS de alta precisión con actualización cada segundo, ideal para running, ciclismo y actividades outdoor."],
-    ["¿Es compatible con mi teléfono?", "Compatible con iPhone (iOS 14 o superior) y todos los Android 10 o superior. La app conAI es gratuita en App Store y Google Play."],
-    ["¿Cuántos días de batería tiene?", "En modo smartwatch normal: hasta 14 días. Con GPS activo y siempre encendido: 2–3 días. Se carga en 90 minutos."],
-    ["¿Puedo pagar con NFC?", "Sí, tiene NFC integrado y es compatible con Apple Pay, Google Pay y tarjetas de débito/crédito configuradas en tu teléfono."],
-  ],
-  mascotas: [
-    ["¿Funciona para perros y gatos?", "Sí, es compatible con mascotas de 2 kg o más. Viene con collar ajustable de talla única adaptable."],
-    ["¿Tiene cobertura en todo Chile?", "Usa la red de telefonía 4G LTE para cobertura nacional. En sectores rurales puede depender de la cobertura del operador local."],
-    ["¿Hay costo mensual adicional?", "El plan básico de GPS incluye 12 meses gratis. Luego, el plan es de $4.990/mes con almacenamiento de historial incluido."],
-    ["¿Cuánto tiempo dura la batería?", "3 a 5 días con actualización GPS cada 30 segundos. En modo ahorro llega a 10 días. Se carga vía USB-C en 2 horas."],
-  ],
-  gadgets: [
-    ["¿Incluye garantía de fábrica?", "Todos nuestros gadgets incluyen 12 meses de garantía del importador oficial en Chile. Cubre defectos de fabricación."],
-    ["¿Cuánto demora el envío?", "Despachamos en 24–48 horas hábiles. El tiempo de entrega es 3–7 días hábiles a todo Chile vía Chilexpress o Starken."],
-    ["¿Puedo pedir soporte técnico?", "Sí, ofrecemos soporte técnico por WhatsApp, email y videollamada. Horario: lunes a viernes 9:00–18:00."],
-    ["¿Son originales o copias?", "Todos nuestros productos son 100% originales, comprados directamente de fabricantes certificados. No vendemos réplicas."],
-  ],
-};
 
 type Tab = "descripcion" | "specs" | "resenas" | "faq";
 
@@ -213,16 +175,20 @@ export default function ProductDetailClient({
   product,
   related = [],
   reviews: initialReviews = [],
+  questions: initialQuestions = [],
   userId,
   userEmail,
   userHasReviewed: initialHasReviewed = false,
+  isAdmin = false,
 }: {
   product: Product;
   related?: Product[];
   reviews?: ReviewRow[];
+  questions?: QuestionRow[];
   userId?: string | null;
   userEmail?: string | null;
   userHasReviewed?: boolean;
+  isAdmin?: boolean;
 }) {
   const add = useCartStore((s) => s.add);
   const { toggle, isFavorite } = useFavoritesStore();
@@ -282,7 +248,51 @@ export default function ProductDetailClient({
   }
 
   const specs = categorySpecs[product.category] ?? categorySpecs.gadgets;
-  const faqs = categoryFAQ[product.category] ?? categoryFAQ.gadgets;
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [imgsExpanded, setImgsExpanded] = useState(false);
+  const [localQuestions, setLocalQuestions] = useState<QuestionRow[]>(initialQuestions);
+  const [questionText, setQuestionText] = useState("");
+  const [submittingQ, setSubmittingQ] = useState(false);
+  const [questionError, setQuestionError] = useState<string | null>(null);
+  const [answerInputs, setAnswerInputs] = useState<Record<string, string>>({});
+  const [submittingAnswer, setSubmittingAnswer] = useState<string | null>(null);
+
+  async function handleQuestion(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!questionText.trim()) return;
+    setSubmittingQ(true);
+    setQuestionError(null);
+    const res = await fetch("/api/questions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ product_id: product.id, question: questionText.trim() }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setLocalQuestions((prev) => [...prev, data.question]);
+      setQuestionText("");
+    } else {
+      const data = await res.json();
+      setQuestionError(data.error ?? "Error al enviar la pregunta");
+    }
+    setSubmittingQ(false);
+  }
+
+  async function handleAnswer(questionId: string) {
+    const answer = answerInputs[questionId]?.trim();
+    if (!answer) return;
+    setSubmittingAnswer(questionId);
+    const res = await fetch(`/api/admin/questions/${questionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ answer }),
+    });
+    if (res.ok) {
+      setLocalQuestions((prev) => prev.map((q) => q.id === questionId ? { ...q, answer } : q));
+      setAnswerInputs((prev) => ({ ...prev, [questionId]: "" }));
+    }
+    setSubmittingAnswer(null);
+  }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "descripcion", label: "Descripción" },
@@ -296,7 +306,24 @@ export default function ProductDetailClient({
       <>
         {tab === "descripcion" && (
           <div className="flex flex-col gap-4">
-            <p className="text-[var(--text-muted)] leading-relaxed">{product.description}</p>
+            {/* Texto colapsable */}
+            {product.description && product.description !== product.name && (
+              <div>
+                <div className={`relative overflow-hidden ${descExpanded ? "" : "max-h-24"}`}>
+                  <p className="text-[var(--text-muted)] leading-relaxed text-sm">{product.description}</p>
+                  {!descExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+                      style={{ background: "linear-gradient(to top, var(--surface), transparent)" }} />
+                  )}
+                </div>
+                <button onClick={() => setDescExpanded((v) => !v)}
+                  className="text-xs font-bold text-indigo-500 hover:text-indigo-700 mt-1">
+                  {descExpanded ? "Ver menos ↑" : "Ver más ↓"}
+                </button>
+              </div>
+            )}
+
+            {/* Análisis IA */}
             <div className="bg-gradient-to-r from-indigo-50 to-sky-50 dark:from-indigo-900/20 dark:to-sky-900/20 rounded-xl p-4 border border-indigo-100 dark:border-indigo-800">
               <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">🤖 Análisis IA conAI</p>
               <p className="text-sm text-[var(--text)] leading-relaxed">
@@ -317,6 +344,35 @@ export default function ProductDetailClient({
                 </div>
               ))}
             </div>
+
+            {/* Imágenes de descripción — estilo AliExpress */}
+            {product.description_images && product.description_images.length > 0 && (
+              <div>
+                <div className={`relative overflow-hidden ${imgsExpanded ? "" : "max-h-[500px]"}`}>
+                  {product.description_images.map((img, i) => (
+                    <img key={i} src={img} alt="" className="w-full block" />
+                  ))}
+                  {!imgsExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center pb-3 pointer-events-none"
+                      style={{ background: "linear-gradient(to top, var(--surface), transparent)" }}>
+                      <button
+                        className="pointer-events-auto px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm"
+                        style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+                        onClick={() => setImgsExpanded(true)}
+                      >
+                        Ver descripción completa ↓
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {imgsExpanded && (
+                  <button onClick={() => setImgsExpanded(false)}
+                    className="w-full text-center text-xs font-bold text-indigo-500 hover:text-indigo-700 py-2 mt-1">
+                    Ver menos ↑
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -324,10 +380,13 @@ export default function ProductDetailClient({
           <div className="overflow-hidden rounded-xl border" style={{ borderColor: "var(--border)" }}>
             <table className="w-full text-sm">
               <tbody>
-                {specs.map(([key, val], i) => (
-                  <tr key={key} style={{ background: i % 2 === 0 ? "var(--surface-alt)" : "transparent" }}>
-                    <td className="px-4 py-3 font-bold text-[var(--text)] w-40 border-r" style={{ borderColor: "var(--border)" }}>{key}</td>
-                    <td className="px-4 py-3 text-[var(--text-muted)]">{val}</td>
+                {(product.specifications && product.specifications.length > 0
+                  ? product.specifications
+                  : specs.map(([key, val]) => ({ key, value: val }))
+                ).map((row, i) => (
+                  <tr key={i} style={{ background: i % 2 === 0 ? "var(--surface-alt)" : "transparent" }}>
+                    <td className="px-4 py-3 font-bold text-[var(--text)] w-40 border-r" style={{ borderColor: "var(--border)" }}>{row.key}</td>
+                    <td className="px-4 py-3 text-[var(--text-muted)]">{row.value}</td>
                   </tr>
                 ))}
               </tbody>
@@ -432,10 +491,86 @@ export default function ProductDetailClient({
         )}
 
         {tab === "faq" && (
-          <div className="flex flex-col gap-3">
-            {faqs.map(([q, a], i) => (
-              <FAQItem key={i} question={q} answer={a} />
-            ))}
+          <div className="flex flex-col gap-4">
+            {/* Formulario para preguntar */}
+            {userId ? (
+              <form onSubmit={handleQuestion} className="flex flex-col gap-2">
+                <textarea
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  placeholder="¿Tienes alguna pregunta sobre este producto?"
+                  rows={2}
+                  maxLength={300}
+                  className="w-full px-3 py-2 rounded-lg border text-sm bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500 transition-colors resize-none"
+                  style={{ borderColor: "var(--border)" }}
+                />
+                {questionError && <p className="text-xs text-red-500 font-semibold">{questionError}</p>}
+                <button
+                  type="submit"
+                  disabled={submittingQ || !questionText.trim()}
+                  className="self-end px-5 py-2 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-full text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {submittingQ ? "Enviando..." : "Preguntar"}
+                </button>
+              </form>
+            ) : (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl border text-sm"
+                style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}>
+                <span>❓</span>
+                <span className="text-[var(--text-muted)]">
+                  <Link href="/login" className="text-indigo-500 font-bold hover:underline">Inicia sesión</Link> para hacer una pregunta
+                </span>
+              </div>
+            )}
+
+            {/* Lista de preguntas */}
+            {localQuestions.length === 0 ? (
+              <div className="text-center py-8 text-[var(--text-muted)]">
+                <span className="text-4xl block mb-2">❓</span>
+                <p className="text-sm">Sé el primero en hacer una pregunta</p>
+              </div>
+            ) : (
+              localQuestions.map((q) => (
+                <div key={q.id} className="border rounded-xl p-4" style={{ borderColor: "var(--border)" }}>
+                  <div className="flex items-start gap-2 mb-2">
+                    <span className="text-indigo-400 font-black text-lg flex-shrink-0">Q</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-[var(--text)]">{q.question}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                        {new Date(q.created_at).toLocaleDateString("es-CL", { day: "numeric", month: "long", year: "numeric" })}
+                      </p>
+                    </div>
+                  </div>
+                  {q.answer ? (
+                    <div className="ml-5 pl-3 border-l-2 border-indigo-300">
+                      <p className="text-[10px] font-bold text-indigo-500 mb-1">✓ Respuesta del vendedor</p>
+                      <p className="text-sm text-[var(--text-muted)]">{q.answer}</p>
+                    </div>
+                  ) : isAdmin ? (
+                    <div className="ml-5 flex gap-2 mt-2">
+                      <input
+                        value={answerInputs[q.id] ?? ""}
+                        onChange={(e) => setAnswerInputs((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                        placeholder="Escribe una respuesta..."
+                        className="flex-1 text-sm px-3 py-1.5 rounded-lg border bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-indigo-500"
+                        style={{ borderColor: "var(--border)" }}
+                      />
+                      <button
+                        onClick={() => handleAnswer(q.id)}
+                        disabled={submittingAnswer === q.id || !answerInputs[q.id]?.trim()}
+                        className="text-xs font-bold px-3 py-1.5 bg-indigo-500 text-white rounded-lg disabled:opacity-50 hover:bg-indigo-600 transition-colors"
+                      >
+                        {submittingAnswer === q.id ? "..." : "Responder"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="ml-5 pl-3 border-l-2 mt-2" style={{ borderColor: "var(--border)" }}>
+                      <p className="text-xs text-[var(--text-muted)] italic">Sin respuesta aún</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         )}
       </>
@@ -907,26 +1042,3 @@ export default function ProductDetailClient({
   );
 }
 
-function FAQItem({ question, answer }: { question: string; answer: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border rounded-xl overflow-hidden transition-colors" style={{ borderColor: "var(--border)" }}>
-      <button
-        className="w-full flex items-center justify-between p-4 text-left text-sm font-bold text-[var(--text)] hover:bg-[var(--surface-alt)] transition-colors"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <span>{question}</span>
-        <span className="text-[var(--text-muted)] ml-3 flex-shrink-0 transition-transform duration-200"
-          style={{ transform: open ? "rotate(180deg)" : "rotate(0)" }}>
-          ▾
-        </span>
-      </button>
-      {open && (
-        <div className="px-4 pb-4 text-sm text-[var(--text-muted)] leading-relaxed border-t animate-slide-up"
-          style={{ borderColor: "var(--border)" }}>
-          {answer}
-        </div>
-      )}
-    </div>
-  );
-}
