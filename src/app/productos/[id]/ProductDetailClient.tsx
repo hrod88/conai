@@ -641,24 +641,15 @@ export default function ProductDetailClient({
           <div className="rounded-2xl border p-8 flex flex-row gap-8 mb-6"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
             {/* Image + thumbnails */}
-            <div className="flex flex-col gap-2 w-52 flex-shrink-0">
-              <div
-                className="flex items-center justify-center w-full h-52 rounded-2xl overflow-hidden"
-                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
-              >
-                {activeImg ? (
-                  <img src={activeImg} alt={product.name} className="w-full h-full object-contain p-4" />
-                ) : (
-                  <span className="text-8xl animate-float">{product.icon}</span>
-                )}
-              </div>
+            <div className="flex flex-row gap-3 flex-shrink-0">
+              {/* Thumbnails — columna vertical izquierda */}
               {allImages.length > 1 && (
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex flex-col gap-1.5 overflow-y-auto max-h-64" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
                   {allImages.slice(0, 8).map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveIndex(i)}
-                      className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
                         activeIndex === i ? "border-indigo-500" : "border-transparent opacity-60 hover:opacity-100"
                       }`}
                     >
@@ -667,6 +658,21 @@ export default function ProductDetailClient({
                   ))}
                 </div>
               )}
+              {/* Imagen principal */}
+              <div
+                className="flex items-center justify-center w-52 h-52 rounded-2xl overflow-hidden flex-shrink-0"
+                style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
+              >
+                {activeImg ? (
+                  <img
+                    src={activeImg}
+                    alt={product.name}
+                    className="w-full h-full object-contain p-4 transition-opacity duration-200"
+                  />
+                ) : (
+                  <span className="text-8xl animate-float">{product.icon}</span>
+                )}
+              </div>
             </div>
 
             {/* Info */}
