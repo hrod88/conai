@@ -592,29 +592,33 @@ export default function ProductsClient({ products, initialCategory }: Props) {
 
               {/* Capa 2 — Subcategorías */}
               <div
-                className="absolute inset-0 flex items-center overflow-x-auto"
+                className="absolute inset-0 flex items-center"
                 style={{ opacity: drillCategory ? 1 : 0, pointerEvents: drillCategory ? "auto" : "none" }}
               >
-                <div className="flex items-center gap-5 w-max px-1">
-                  <button
-                    onClick={() => handleCatClick(drillCategory!)}
-                    className="flex-shrink-0 text-[13px] font-bold text-white bg-indigo-600 dark:bg-indigo-500 px-2.5 py-0.5 rounded-full"
-                  >
-                    {drillCatMeta?.label}
-                  </button>
-                  {drillCategory && SUBCATEGORIES[drillCategory].map((sub) => (
-                    <button
-                      key={sub.id}
-                      onClick={() => setActiveSubcategory(sub.id)}
-                      className={`flex-shrink-0 text-[13px] transition-colors ${
-                        (hoveredSubcategory ?? activeSubcategory) === sub.id
-                          ? "font-bold text-indigo-600 dark:text-indigo-400"
-                          : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
-                      }`}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
+                {/* Pill categoría — fijo a la izquierda */}
+                <button
+                  onClick={() => handleCatClick(drillCategory!)}
+                  className="relative z-10 flex-shrink-0 text-[13px] font-bold text-white bg-indigo-600 dark:bg-indigo-500 px-2.5 py-0.5 rounded-full"
+                >
+                  {drillCatMeta?.label}
+                </button>
+                {/* Subcategorías — centradas en toda la barra */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="flex items-center gap-5 pointer-events-auto">
+                    {drillCategory && SUBCATEGORIES[drillCategory].map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => setActiveSubcategory(sub.id)}
+                        className={`flex-shrink-0 text-[13px] transition-colors ${
+                          (hoveredSubcategory ?? activeSubcategory) === sub.id
+                            ? "font-bold text-indigo-600 dark:text-indigo-400"
+                            : "font-medium text-[var(--text-muted)] hover:text-[var(--text)]"
+                        }`}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
