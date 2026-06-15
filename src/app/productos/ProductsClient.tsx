@@ -134,7 +134,9 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [catOpen, setCatOpen]                       = useState(true);
   const [priceOpen, setPriceOpen]                   = useState(true);
   const [tagsOpen, setTagsOpen]                     = useState(true);
-  const [expandedCats, setExpandedCats]             = useState<Set<Category>>(new Set());
+  const [expandedCats, setExpandedCats]             = useState<Set<Category>>(
+    initialCategory ? new Set([initialCategory]) : new Set()
+  );
   const [hoveredSubcategory, setHoveredSubcategory]   = useState<string | null>(null);
   const [previewSubcategory, setPreviewSubcategory]   = useState<string | null>(null);
   const [hoverDrillCategory, setHoverDrillCategory]   = useState<Category | null>(null);
@@ -276,7 +278,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     setActiveSubcategory(null);
   }
 
-  const navDrillCategory = drillCategory || hoverDrillCategory;
+  const navDrillCategory = hoverDrillCategory || drillCategory;
   const drillCatMeta     = navDrillCategory ? categories.find((c) => c.value === navDrillCategory) : null;
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
   const activeFilterCount = activePrices.length + activeTags.length;
