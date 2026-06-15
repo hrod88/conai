@@ -660,14 +660,14 @@ export default function ProductDetailClient({
               )}
               {/* Imagen principal */}
               <div
-                className="flex items-center justify-center w-52 h-52 rounded-2xl overflow-hidden flex-shrink-0"
+                className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0 cursor-zoom-in"
                 style={{ background: "linear-gradient(135deg, #eef2ff, #e0f2fe)" }}
               >
                 {activeImg ? (
                   <img
                     src={activeImg}
                     alt={product.name}
-                    className="w-full h-full object-contain p-4 transition-opacity duration-200"
+                    className="w-full h-full object-contain p-4 transition-transform duration-300 ease-out hover:scale-150"
                   />
                 ) : (
                   <span className="text-8xl animate-float">{product.icon}</span>
