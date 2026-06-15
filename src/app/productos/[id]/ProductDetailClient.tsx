@@ -79,6 +79,16 @@ const categorySpecs: Record<string, [string, string][]> = {
 
 type Tab = "descripcion" | "specs" | "resenas" | "faq";
 
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<iframe[^>]*>[\s\S]*?<\/iframe>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, "")
+    .replace(/javascript:/gi, "")
+    .replace(/\sstyle\s*=\s*["'][^"']*["']/gi, "");
+}
+
 function ReviewForm({
   productId,
   userEmail,
@@ -306,21 +316,60 @@ export default function ProductDetailClient({
       <>
         {tab === "descripcion" && (
           <div className="flex flex-col gap-4">
-            {/* Texto colapsable */}
-            {product.description && product.description.length > 10 && (
-              <div>
-                <div className={`relative overflow-hidden ${descExpanded ? "" : "max-h-24"}`}>
-                  <p className="text-[var(--text-muted)] leading-relaxed text-sm">{product.description}</p>
-                  {!descExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
-                      style={{ background: "linear-gradient(to top, var(--surface), transparent)" }} />
-                  )}
-                </div>
-                <button onClick={() => setDescExpanded((v) => !v)}
-                  className="text-xs font-bold text-indigo-500 hover:text-indigo-700 mt-1">
-                  {descExpanded ? "Ver menos ↑" : "Ver más ↓"}
-                </button>
-              </div>
+
+            {/* HTML de CJ renderizado — texto + imágenes intercaladas, estilo AliExpress */}
+            {product.description_html ? (
+              <div
+                className="[&_img]:w-full [&_img]:block [&_img]:my-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-[var(--text-muted)] [&_p]:my-2 [&_div]:text-sm [&_span]:text-sm [&_span]:text-[var(--text-muted)] [&_br]:hidden [&_*:empty]:hidden"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description_html) }}
+              />
+            ) : (
+              <>
+                {/* Fallback: texto plano colapsable */}
+                {product.description && product.description.length > 10 && (
+                  <div>
+                    <div className={`relative overflow-hidden ${descExpanded ? "" : "max-h-24"}`}>
+                      <p className="text-[var(--text-muted)] leading-relaxed text-sm">{product.description}</p>
+                      {!descExpanded && (
+                        <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none"
+                          style={{ background: "linear-gradient(to top, var(--surface), transparent)" }} />
+                      )}
+                    </div>
+                    <button onClick={() => setDescExpanded((v) => !v)}
+                      className="text-xs font-bold text-indigo-500 hover:text-indigo-700 mt-1">
+                      {descExpanded ? "Ver menos ↑" : "Ver más ↓"}
+                    </button>
+                  </div>
+                )}
+                {/* Imágenes apiladas fallback */}
+                {product.description_images && product.description_images.length > 0 && (
+                  <div>
+                    <div className={`relative overflow-hidden ${imgsExpanded ? "" : "max-h-[500px]"}`}>
+                      {product.description_images.map((img, i) => (
+                        <img key={i} src={img} alt="" className="w-full block" />
+                      ))}
+                      {!imgsExpanded && (
+                        <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center pb-3 pointer-events-none"
+                          style={{ background: "linear-gradient(to top, var(--surface), transparent)" }}>
+                          <button
+                            className="pointer-events-auto px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm"
+                            style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
+                            onClick={() => setImgsExpanded(true)}
+                          >
+                            Ver descripción completa ↓
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {imgsExpanded && (
+                      <button onClick={() => setImgsExpanded(false)}
+                        className="w-full text-center text-xs font-bold text-indigo-500 hover:text-indigo-700 py-2 mt-1">
+                        Ver menos ↑
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
             )}
 
             {/* Análisis IA */}
@@ -344,35 +393,6 @@ export default function ProductDetailClient({
                 </div>
               ))}
             </div>
-
-            {/* Imágenes de descripción — estilo AliExpress */}
-            {product.description_images && product.description_images.length > 0 && (
-              <div>
-                <div className={`relative overflow-hidden ${imgsExpanded ? "" : "max-h-[500px]"}`}>
-                  {product.description_images.map((img, i) => (
-                    <img key={i} src={img} alt="" className="w-full block" />
-                  ))}
-                  {!imgsExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-24 flex items-end justify-center pb-3 pointer-events-none"
-                      style={{ background: "linear-gradient(to top, var(--surface), transparent)" }}>
-                      <button
-                        className="pointer-events-auto px-4 py-1.5 rounded-full text-sm font-bold border shadow-sm"
-                        style={{ background: "var(--surface)", borderColor: "var(--border)", color: "var(--text)" }}
-                        onClick={() => setImgsExpanded(true)}
-                      >
-                        Ver descripción completa ↓
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {imgsExpanded && (
-                  <button onClick={() => setImgsExpanded(false)}
-                    className="w-full text-center text-xs font-bold text-indigo-500 hover:text-indigo-700 py-2 mt-1">
-                    Ver menos ↑
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         )}
 

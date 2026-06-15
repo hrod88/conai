@@ -4,6 +4,26 @@ import { requireAdmin } from "@/lib/admin-guard";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+async function translateToSpanish(text: string): Promise<string> {
+  if (!text || text.length < 20) return text;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 4000))}&langpair=en|es`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timer);
+    const data = await res.json() as { responseData?: { translatedText?: string }; responseStatus?: number };
+    if (data.responseStatus !== 200) return text;
+    const t = data?.responseData?.translatedText ?? "";
+    if (!t || t.includes("MYMEMORY WARNING") || t.length < 10) return text;
+    return t;
+  } catch {
+    return text;
+  }
+}
+
 function extractImgsFromHtml(html: string): string[] {
   const urls: string[] = [];
   const re = /<img[^>]+src=["']([^"']+)["']/gi;
@@ -27,7 +47,7 @@ export async function POST() {
 
   const { data: products, error } = await admin
     .from("products")
-    .select("id, cj_pid, name, description, images, description_images, specifications")
+    .select("id, cj_pid, name, description, images, description_images, specifications, description_html")
     .not("cj_pid", "is", null)
     .not("cj_pid", "like", "ae:%");
 
@@ -42,6 +62,7 @@ export async function POST() {
     images?: string[] | null;
     description_images?: string[] | null;
     specifications?: unknown;
+    description_html?: string | null;
   };
 
   const toEnrich = (products as ProductRow[]).filter(
@@ -50,6 +71,7 @@ export async function POST() {
       !p.description_images?.length ||
       !p.specifications ||
       !p.description ||
+      !p.description_html ||
       p.description === p.name
   );
 
@@ -71,11 +93,13 @@ export async function POST() {
         if (imageSet.length > 0) update.images = imageSet;
       }
 
-      // Descripción: extraer texto limpio del HTML de CJ
+      // Descripción: guardar HTML original + traducir texto al español
       const cjDescRaw: string = d.description ?? "";
+      if (cjDescRaw && !product.description_html) update.description_html = cjDescRaw;
       const cjDescText = cjDescRaw.includes("<") ? stripHtml(cjDescRaw) : cjDescRaw;
       if (cjDescText && cjDescText.length > 20 && (!product.description || product.description === product.name)) {
-        update.description = cjDescText;
+        const translated = await translateToSpanish(cjDescText);
+        update.description = translated;
       }
 
       // Imágenes de descripción: extraídas del HTML

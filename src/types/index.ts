@@ -34,6 +34,7 @@ export interface Product {
   images?: string[] | null;
   description_images?: string[] | null;
   specifications?: Array<{ key: string; value: string }> | null;
+  description_html?: string | null;
   created_at: string;
 }
 

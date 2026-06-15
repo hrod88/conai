@@ -83,8 +83,9 @@ export async function POST(req: NextRequest) {
         if (imageSet.length > 0) update.images = imageSet;
       }
 
-      // Descripción: extraer texto del HTML de CJ
+      // Descripción: guardar HTML original + extraer texto
       const cjDescRaw: string = d.description ?? "";
+      if (cjDescRaw) update.description_html = cjDescRaw;
       const cjDescText = cjDescRaw.includes("<") ? stripHtml(cjDescRaw) : cjDescRaw;
       if (cjDescText && cjDescText.length > 10) {
         update.description = cjDescText;
