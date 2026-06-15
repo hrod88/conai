@@ -136,6 +136,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [tagsOpen, setTagsOpen]                     = useState(true);
   const [expandedCats, setExpandedCats]             = useState<Set<Category>>(new Set());
   const [hoveredSubcategory, setHoveredSubcategory]   = useState<string | null>(null);
+  const [previewSubcategory, setPreviewSubcategory]   = useState<string | null>(null);
+  const [hoverDrillCategory, setHoverDrillCategory]   = useState<Category | null>(null);
   const [filterSheetOpen, setFilterSheetOpen]       = useState(false);
   const [sortSheetOpen, setSortSheetOpen]           = useState(false);
   const [sortBy, setSortBy]                         = useState<SortOption>("relevance");
@@ -150,7 +152,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
       if (activeCategories.length > 0 && !activeCategories.includes(p.category as Category)) return false;
-      if (activeSubcategory && p.subcategory !== activeSubcategory) return false;
+      const effectiveSubcat = previewSubcategory ?? activeSubcategory;
+      if (effectiveSubcat && p.subcategory !== effectiveSubcat) return false;
       if (activePrices.length > 0) {
         const inRange =
           (activePrices.includes("low")  && p.price < 100) ||
@@ -165,7 +168,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     if (sortBy === "price_desc") result = [...result].sort((a, b) => b.price - a.price);
     if (sortBy === "rating")     result = [...result].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return result;
-  }, [products, activeCategories, activePrices, activeTags, activeSubcategory, sortBy]);
+  }, [products, activeCategories, activePrices, activeTags, activeSubcategory, previewSubcategory, sortBy]);
 
   const grouped = useMemo(() => {
     return categories
@@ -273,7 +276,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
     setActiveSubcategory(null);
   }
 
-  const navDrillCategory = drillCategory;
+  const navDrillCategory = drillCategory || hoverDrillCategory;
   const drillCatMeta     = navDrillCategory ? categories.find((c) => c.value === navDrillCategory) : null;
   const scrollCatIndex = scrollCat ? categories.findIndex((c) => c.value === scrollCat) : -1;
   const activeFilterCount = activePrices.length + activeTags.length;
@@ -301,6 +304,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           onMouseLeave={() => {
             setHoveredSubcategory(null);
+            setPreviewSubcategory(null);
+            setHoverDrillCategory(null);
           }}
         >
           <div>
@@ -372,6 +377,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                           <label key={sub.id} className="flex items-center justify-between mb-1 cursor-pointer group"
                             onMouseEnter={() => {
                               setHoveredSubcategory(sub.id);
+                              setPreviewSubcategory(sub.id);
+                              setHoverDrillCategory(c.value);
                             }}>
                             <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)] font-medium group-hover:text-indigo-500">
                               <input
