@@ -321,9 +321,9 @@ export default function Navbar() {
           </div>
 
           {/* Col 3 — links + acciones (desktop) / acciones (mobile) */}
-          <div className="flex flex-1 items-center overflow-hidden">
+          <div className="flex flex-1 items-center overflow-hidden pr-4">
             <div className="flex-1 md:hidden" />
-            <div className="hidden md:flex items-center gap-0.5 px-4 flex-1">
+            <div className="hidden md:flex items-center gap-0.5 px-4 flex-1 justify-center">
               {navLinks}
             </div>
             {actions}
