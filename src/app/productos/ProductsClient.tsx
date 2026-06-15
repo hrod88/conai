@@ -3,7 +3,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import type { Product, Category } from "@/types";
 import ProductCard from "@/components/products/ProductCard";
-import { useSearchStore } from "@/store/search";
 
 const categories: { value: Category; label: string; icon: string }[] = [
   { value: "salud",       label: "Salud",            icon: "❤️" },
@@ -132,7 +131,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [filterSheetOpen, setFilterSheetOpen]     = useState(false);
   const [sortSheetOpen, setSortSheetOpen]         = useState(false);
 
-  const { toggle: toggleSearch } = useSearchStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Col 2 displays subcategories of this category (defaults to first if nothing active)
@@ -231,50 +229,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const activeFilterCount = activePrices.length + activeTags.length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden">
-
-      {/* ══ DESKTOP: fila header (conAI + búsqueda) ══ */}
-      <div
-        className="hidden md:flex flex-shrink-0 border-b items-center"
-        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-      >
-        {/* Col 1 header — logo */}
-        <div
-          className="w-36 flex-shrink-0 flex items-center px-4 h-12 border-r"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <span className="text-xl font-black gradient-text">conAI</span>
-        </div>
-
-        {/* Col 2 header — búsqueda */}
-        <div
-          className="w-64 flex-shrink-0 flex items-center px-3 h-12 border-r"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <button
-            onClick={toggleSearch}
-            className="w-full flex items-center gap-2 h-8 px-3 rounded-full border text-sm font-medium transition-colors"
-            style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
-            </svg>
-            <span className="text-xs flex-1 text-left">Buscar...</span>
-            <kbd
-              className="text-[10px] px-1.5 py-0.5 rounded border"
-              style={{ borderColor: "var(--border)", background: "var(--bg)", color: "var(--text-muted)" }}
-            >
-              Ctrl K
-            </kbd>
-          </button>
-        </div>
-
-        {/* Col 3 header — vacío */}
-        <div className="flex-1" />
-      </div>
-
-      {/* ══ Contenido principal (3 columnas) ══ */}
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
 
       {/* ══ DESKTOP: Left panel (Col 1 + Col 2) ══ */}
       <div
@@ -604,8 +559,6 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           )}
         </div>
       </div>
-
-      </div>{/* ══ fin contenido principal ══ */}
 
       {/* ── Bottom Sheet: Filtros (móvil) ── */}
       {filterSheetOpen && isMobile && (
