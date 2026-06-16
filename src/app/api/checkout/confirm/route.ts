@@ -1,13 +1,14 @@
+
 import { WebpayPlus, Options, IntegrationCommerceCodes, IntegrationApiKeys, Environment } from "transbank-sdk";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/email";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
-
+ 
 // Usa producción SOLO si activas explícitamente la variable.
 // Mientras desarrollas/pruebas, déjala sin definir y usará el modo integración de Transbank.
 const isProduction = process.env.TRANSBANK_PRODUCTION === "true";
-
+ 
 const tx = new WebpayPlus.Transaction(
   new Options(
     isProduction
@@ -19,15 +20,21 @@ const tx = new WebpayPlus.Transaction(
     isProduction ? Environment.Production : Environment.Integration
   )
 );
-
+ 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token_ws");
   if (!token) redirect("/pago/error?reason=no_token");
-
+ 
+  // Decidimos a dónde redirigir DESPUÉS del try/catch.
+  // (redirect() lanza una excepción interna de Next.js; si va dentro del
+  //  try, el catch la confunde con un error. Por eso guardamos el destino
+  //  en una variable y redirigimos al final, fuera del try/catch.)
+  let destino = "/pago/error?reason=server_error";
+ 
   try {
     const response = await tx.commit(token!);
     const admin = createAdminClient();
-
+ 
     if (response.response_code === 0) {
       const { data: order } = await admin
         .from("orders")
@@ -35,17 +42,17 @@ export async function GET(req: NextRequest) {
         .eq("transbank_token", token)
         .select()
         .single();
-
+ 
       if (order) {
         type ItemRow = { product_id: string; quantity: number; unit_price: number; products: { name: string }[] };
         const { data: items } = await admin
           .from("order_items")
           .select("product_id, quantity, unit_price, products(name)")
           .eq("order_id", order.id) as { data: ItemRow[] | null };
-
+ 
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-
+ 
         // Descontar stock de forma ATÓMICA (arregla condición de carrera)
         const sinStock: string[] = [];
         if (items) {
@@ -61,7 +68,7 @@ export async function GET(req: NextRequest) {
             })
           );
         }
-
+ 
         if (sinStock.length > 0) {
           console.error(
             `Orden ${order.id}: items sin stock al confirmar -> ${sinStock.join(", ")}`
@@ -71,7 +78,7 @@ export async function GET(req: NextRequest) {
             .update({ status: "paid", stock_issue: true })
             .eq("id", order.id);
         }
-
+ 
         if (order.coupon_code) {
           const { data: coupon } = await admin
             .from("coupons")
@@ -85,7 +92,7 @@ export async function GET(req: NextRequest) {
               .eq("code", order.coupon_code);
           }
         }
-
+ 
         if (user?.email && items) {
           await sendOrderConfirmation({
             to: user.email,
@@ -99,27 +106,33 @@ export async function GET(req: NextRequest) {
           }).catch(() => {});
         }
       }
-
-      redirect(`/pago/exito?token=${token}`);
+ 
+      // Pago aprobado: destino = éxito
+      destino = `/pago/exito?token=${token}`;
     } else {
+      // Pago rechazado por el banco
       await admin
         .from("orders")
         .update({ status: "pending" })
         .eq("transbank_token", token);
-
-      redirect("/pago/error?reason=rejected");
+ 
+      destino = "/pago/error?reason=rejected";
     }
   } catch (err) {
     console.error("Confirm error:", err);
-    redirect("/pago/error?reason=server_error");
+    destino = "/pago/error?reason=server_error";
   }
+ 
+  // El redirect va AQUÍ, fuera del try/catch, para que Next.js lo procese
+  // como una redirección normal y no como un error.
+  redirect(destino);
 }
-
+ 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const token = formData.get("token_ws") as string | null;
   if (!token) redirect("/pago/error?reason=no_token");
-
+ 
   const url = new URL(`${process.env.NEXT_PUBLIC_BASE_URL}/api/checkout/confirm`);
   url.searchParams.set("token_ws", token!);
   return Response.redirect(url.toString());
