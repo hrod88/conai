@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { Product } from "@/types";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -172,7 +173,9 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
           {/* Imagen o ícono centrado verticalmente */}
           <div className="flex-1 flex items-center justify-center min-h-0">
             {product.image ? (
-              <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain" />
+              <div className="relative w-full h-full">
+                <Image src={product.image} alt={product.name} fill sizes="(max-width: 768px) 50vw, 200px" className="object-contain" />
+              </div>
             ) : (
               <span className="text-5xl select-none">{product.icon}</span>
             )}
@@ -206,8 +209,8 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
       {size === "medium" && (
         <div className="flex flex-col gap-1.5 p-3 flex-1">
           {product.image ? (
-            <div className="w-full h-20 rounded-md overflow-hidden bg-gray-50 flex items-center justify-center flex-shrink-0">
-              <img src={product.image} alt={product.name} className="max-h-full max-w-full object-contain p-1" />
+            <div className="relative w-full h-20 rounded-md overflow-hidden bg-gray-50 flex-shrink-0">
+              <Image src={product.image} alt={product.name} fill sizes="(max-width: 768px) 33vw, 150px" className="object-contain p-1" />
             </div>
           ) : (
             <span className="text-3xl select-none leading-none">{product.icon}</span>
