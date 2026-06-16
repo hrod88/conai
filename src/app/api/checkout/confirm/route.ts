@@ -35,30 +35,41 @@ export async function GET(req: NextRequest) {
         .single();
 
       if (order) {
-        type ItemRow = { product_id: string; quantity: number; unit_price: number; products: { name: string; stock: number }[] };
+        type ItemRow = { product_id: string; quantity: number; unit_price: number; products: { name: string }[] };
         const { data: items } = await admin
           .from("order_items")
-          .select("product_id, quantity, unit_price, products(name, stock)")
+          .select("product_id, quantity, unit_price, products(name)")
           .eq("order_id", order.id) as { data: ItemRow[] | null };
 
-        // Obtener email del usuario autenticado si existe
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
 
-        // Descontar stock de cada producto comprado
+        // Descontar stock de forma ATÓMICA (arregla condición de carrera)
+        const sinStock: string[] = [];
         if (items) {
           await Promise.all(
-            items.map((item) => {
-              const currentStock = item.products[0]?.stock ?? 0;
-              return admin
-                .from("products")
-                .update({ stock: Math.max(0, currentStock - item.quantity) })
-                .eq("id", item.product_id);
+            items.map(async (item) => {
+              const { data: ok, error } = await admin.rpc("decrement_stock", {
+                p_product_id: item.product_id,
+                p_quantity: item.quantity,
+              });
+              if (error || ok === false) {
+                sinStock.push(item.products?.[0]?.name ?? item.product_id);
+              }
             })
           );
         }
 
-        // Incrementar uses_count del cupón si se usó uno
+        if (sinStock.length > 0) {
+          console.error(
+            `Orden ${order.id}: items sin stock al confirmar -> ${sinStock.join(", ")}`
+          );
+          await admin
+            .from("orders")
+            .update({ status: "paid", stock_issue: true })
+            .eq("id", order.id);
+        }
+
         if (order.coupon_code) {
           const { data: coupon } = await admin
             .from("coupons")
@@ -79,7 +90,7 @@ export async function GET(req: NextRequest) {
             orderId: order.id,
             total: order.total,
             items: items.map((i) => ({
-              name: i.products[0]?.name ?? "Producto",
+              name: i.products?.[0]?.name ?? "Producto",
               quantity: i.quantity,
               unit_price: i.unit_price,
             })),
