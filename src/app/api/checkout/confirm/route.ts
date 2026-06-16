@@ -4,7 +4,9 @@ import { sendOrderConfirmation } from "@/lib/email";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 
-const isProduction = process.env.NODE_ENV === "production";
+// Usa producción SOLO si activas explícitamente la variable.
+// Mientras desarrollas/pruebas, déjala sin definir y usará el modo integración de Transbank.
+const isProduction = process.env.TRANSBANK_PRODUCTION === "true";
 
 const tx = new WebpayPlus.Transaction(
   new Options(
