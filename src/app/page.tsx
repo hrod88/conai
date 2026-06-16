@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import HeroSlider from "@/components/home/HeroSlider";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
@@ -194,8 +195,8 @@ export default async function HomePage() {
                 >
                   <div className="relative">
                     {p.image ? (
-                      <div className="w-full h-20 rounded-xl bg-white/60 flex items-center justify-center overflow-hidden">
-                        <img src={p.image} alt={p.name} className="max-h-full max-w-full object-contain p-1" />
+                      <div className="relative w-full h-20 rounded-xl bg-white/60 overflow-hidden">
+                        <Image src={p.image} alt={p.name} fill sizes="144px" className="object-contain p-1" />
                       </div>
                     ) : (
                       <div className="w-full h-20 rounded-xl bg-white/60 flex items-center justify-center">
@@ -233,8 +234,8 @@ export default async function HomePage() {
                 >
                   <div className="relative mb-1">
                     {p.image ? (
-                      <div className="w-full h-24 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
-                        <img src={p.image} alt={p.name} className="max-h-full max-w-full object-contain p-1" />
+                      <div className="relative w-full h-24 rounded-lg bg-gray-50 overflow-hidden">
+                        <Image src={p.image} alt={p.name} fill sizes="(max-width: 1024px) 33vw, 180px" className="object-contain p-1" />
                       </div>
                     ) : (
                       <div className="w-full h-24 rounded-lg bg-gray-50 flex items-center justify-center">
@@ -374,3 +375,4 @@ export default async function HomePage() {
     </>
   );
 }
+
