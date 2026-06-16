@@ -77,6 +77,7 @@ export default function Navbar() {
       {/* Search mobile */}
       <button
         onClick={toggleSearch}
+        aria-label="Buscar"
         className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
       >
@@ -91,6 +92,7 @@ export default function Navbar() {
         className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
         title="Favoritos"
+        aria-label="Favoritos"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill={favCount > 0 ? "#ef4444" : "none"} stroke={favCount > 0 ? "#ef4444" : "var(--text-muted)"} strokeWidth="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -108,6 +110,7 @@ export default function Navbar() {
         className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
         title="Carrito"
+        aria-label="Carrito"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
@@ -126,6 +129,7 @@ export default function Navbar() {
       <button
         onClick={toggleTheme}
         title="Cambiar tema"
+        aria-label="Cambiar tema claro u oscuro"
         className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none"
         style={{ background: theme === "dark" ? "#6366f1" : "#d1d5db" }}
       >
@@ -143,6 +147,7 @@ export default function Navbar() {
             className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:border-indigo-400"
             style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
             title="Mis pedidos"
+            aria-label="Mis pedidos"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
               <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
