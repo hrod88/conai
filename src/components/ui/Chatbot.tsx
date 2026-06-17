@@ -14,56 +14,6 @@ const INITIAL: Message = {
   text: "¡Hola! Soy conAI, tu asistente inteligente 🤖 ¿En qué te puedo ayudar hoy? Puedo orientarte sobre productos, envíos, pagos y más.",
 };
 
-function getResponse(text: string): string {
-  const t = text.toLowerCase();
-  if (/hola|hi|buenas|saludos/.test(t))
-    return "¡Hola! Me alegra tenerte aquí 😊 ¿Estás buscando algún producto en especial o tienes alguna consulta?";
-  if (/envío|envio|despacho|llega|entrega|shipping/.test(t))
-    return "🚚 Tenemos **envío gratis** a todo Chile en compras sobre $30.000. Trabajamos con Chilexpress y Starken. El tiempo estimado es de 3 a 7 días hábiles.";
-  if (/devolu|garantía|garantia|cambio|reembolso/.test(t))
-    return "✅ Ofrecemos **30 días de garantía de devolución** sin preguntas. Si el producto no cumple tus expectativas, coordinamos el retiro a domicilio sin costo.";
-  if (/pago|pagar|tarjeta|débito|credito|transbank|webpay/.test(t))
-    return "🔒 Aceptamos tarjetas de **débito y crédito** a través de Transbank WebPay Plus. Es 100% seguro y los datos de tu tarjeta nunca se almacenan en nuestros servidores.";
-  if (/precio|costo|valor|cuánto|cuanto|barato|caro/.test(t))
-    return "💰 Nuestros productos van desde $19.990 hasta $899.990. ¿Tienes un presupuesto específico? Dime el rango y te ayudo a encontrar la mejor opción.";
-  if (/salud|smartwatch|cardiaco|corazón|oxígeno|oxigeno|presión|presion/.test(t))
-    return "❤️ Nuestra categoría de **Salud** incluye smartwatches con monitor cardíaco, sensor SpO2, temperatura corporal y GPS. Son perfectos para mantenerte al tanto de tu bienestar. ¿Quieres ver la selección? → /productos?cat=salud";
-  if (/belleza|facial|piel|skin|masaje|led|anti/.test(t))
-    return "✨ En **Belleza Tech** tenemos dispositivos de LED fotónico, masajeadores faciales ultrasónicos y espejos inteligentes con IA. Tecnología de spa en tu hogar. → /productos?cat=belleza";
-  if (/hogar|casa|robot|aspirador|aspiradora|cámara|camara|termostato|smart home/.test(t))
-    return "🏠 Para el **Hogar Inteligente** contamos con robots aspiradores con mapeo IA, cámaras de seguridad con detección facial, y termostatos inteligentes compatibles con Alexa y Google. → /productos?cat=hogar";
-  if (/mascota|perro|gato|pet|gps mascota|collar/.test(t))
-    return "🐾 ¡Queremos a tus mascotas! Tenemos GPS en tiempo real, cámaras para monitorearlas mientras trabajas, y alimentadores automáticos con IA. → /productos?cat=mascotas";
-  if (/gadget|dron|drone|impresora|proyector|parlante|altavoz/.test(t))
-    return "🤖 En **Gadgets** encontrarás drones con cámara 4K, impresoras 3D para el hogar, proyectores portátiles y altavoces inteligentes. ¡Tecnología de otro nivel! → /productos?cat=gadgets";
-  if (/wearable|reloj|anillo|gafa|gafas|auricular|auriculares/.test(t))
-    return "⌚ Los **Wearables** incluyen smartwatches de última generación, anillos inteligentes, gafas AR y auriculares con cancelación de ruido activa con IA. → /productos?cat=wearables";
-  if (/audio|parlante|altavoz|auricular|audífono|audifonos|bluetooth|sonido|música|musica/.test(t))
-    return "🎧 En **Audio Inteligente** encontrarás auriculares con IA, parlantes Bluetooth premium, altavoces inteligentes compatibles con Alexa y Google, y más. → /productos?cat=audio";
-  if (/oficina|teclado|monitor|escritorio|silla|ergon|trabajo|productividad/.test(t))
-    return "💼 En **Oficina Tech** tenemos teclados mecánicos, monitores ergonómicos, accesorios de productividad con IA y todo para hacer tu espacio de trabajo más inteligente. → /productos?cat=oficina";
-  if (/juguete|niño|niños|bebe|bebé|bebés|infantil|educativo/.test(t))
-    return "🧸 En **Juguetes & Bebés** encontrarás juguetes educativos con tecnología, robótica para niños, y accesorios inteligentes para los más pequeños. → /productos?cat=juguetes";
-  if (/deporte|deportes|outdoor|exterior|fitness|running|ciclismo|ejercicio/.test(t))
-    return "⚽ En **Deportes & Outdoor** tenemos accesorios deportivos con tecnología IA, GPS, monitores de actividad y equipamiento para actividades al aire libre. → /productos?cat=deportes";
-  if (/electrónica|electronica|electrónico|electronico|consumo|componente/.test(t))
-    return "🔌 En **Electrónica** encontrarás gadgets, componentes y electrónica de consumo de última generación. → /productos?cat=electronica";
-  if (/teléfono|telefono|celular|smartphone|accesorio.*movil|funda|cargador|cable/.test(t))
-    return "📱 En **Teléfonos & Accesorios** tenemos fundas, cargadores inalámbricos, accesorios para smartphones y todo para sacarle el máximo a tu celular. → /productos?cat=telefonos";
-  if (/mejor|recomienda|recomendación|popularito|popular|bestseller/.test(t))
-    return "⭐ Nuestros productos más populares esta semana son el **Monitor de Salud Pro X** (Salud), el **Robot Aspirador Láser** (Hogar) y el **Dron 4K Plegable** (Gadgets). ¿Te interesa alguno?";
-  if (/gracias|thank|perfecto|excelente|genial/.test(t))
-    return "¡Con gusto! 😊 Si tienes más consultas, aquí estaré. ¡Que disfrutes tu compra en conAI!";
-  if (/adios|chao|bye|hasta luego/.test(t))
-    return "¡Hasta luego! 👋 Fue un placer ayudarte. Recuerda que puedes volver cuando quieras.";
-  const fallbacks = [
-    "Entiendo tu consulta. Te recomiendo explorar nuestro catálogo o escribirnos a contacto@conai.cl 📧 para atención personalizada.",
-    "Mmm, déjame pensar... 🤔 Para esa consulta específica, te sugiero contactar a nuestro equipo en contacto@conai.cl, te responderán en menos de 24 horas.",
-    "¡Buena pregunta! Puedo ayudarte mejor si me dices: ¿buscas un producto de salud, belleza, hogar, mascotas, gadgets, wearables, audio o oficina?",
-  ];
-  return fallbacks[Math.floor(Math.random() * fallbacks.length)];
-}
-
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([INITIAL]);
@@ -75,23 +25,52 @@ export default function Chatbot() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  function send() {
+  async function send() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || typing) return;
+
     const userMsg: Message = { id: Date.now().toString(), role: "user", text };
-    setMessages((m) => [...m, userMsg]);
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setInput("");
     setTyping(true);
-    const delay = 800 + Math.random() * 600;
-    setTimeout(() => {
+
+    try {
+      // Convertir el historial al formato que espera la API (user/assistant)
+      const apiMessages = nextMessages
+        .filter((m) => m.id !== "init")
+        .map((m) => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.text,
+        }));
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+
+      const data = await res.json();
+      const reply =
+        data?.reply ??
+        "Disculpa, no pude responder en este momento. Intenta de nuevo o escríbenos a contacto@conai.cl";
+
+      setMessages((m) => [
+        ...m,
+        { id: (Date.now() + 1).toString(), role: "bot", text: reply },
+      ]);
+    } catch {
+      setMessages((m) => [
+        ...m,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "bot",
+          text: "Disculpa, tuve un problema de conexión. Intenta de nuevo en un momento. 🙏",
+        },
+      ]);
+    } finally {
       setTyping(false);
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "bot",
-        text: getResponse(text),
-      };
-      setMessages((m) => [...m, botMsg]);
-    }, delay);
+    }
   }
 
   return (
@@ -135,7 +114,7 @@ export default function Chatbot() {
                 className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-snug ${
+                  className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-snug whitespace-pre-wrap ${
                     m.role === "user"
                       ? "bg-indigo-600 text-white rounded-br-sm"
                       : "bg-gray-100 dark:bg-[#111827] text-[var(--text)] rounded-bl-sm"
@@ -175,7 +154,7 @@ export default function Chatbot() {
             />
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() || typing}
               className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center disabled:opacity-40 hover:bg-indigo-700 transition-colors"
             >
               ↑
