@@ -32,6 +32,11 @@ export default function ProductCard({ product }: Props) {
   const showToast = useToastStore((s) => s.show);
   const fav = isFavorite(product.id);
 
+  const hasDiscount = product.original_price && product.original_price > product.price;
+  const discountPct = hasDiscount
+    ? Math.round((1 - product.price / (product.original_price as number)) * 100)
+    : 0;
+
   function handleAdd(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -85,8 +90,11 @@ export default function ProductCard({ product }: Props) {
         </div>
       </div>
 
-      {/* Name */}
-      <p className="font-bold text-[13px] text-[var(--text)] leading-tight line-clamp-2 flex-1">
+      {/* Name — 2 líneas, altura reservada para que las tarjetas queden parejas */}
+      <p
+        className="font-bold text-[12.5px] text-[var(--text)] leading-[1.25] line-clamp-2 min-h-[2.5em]"
+        title={product.name}
+      >
         {product.name}
       </p>
 
@@ -101,20 +109,20 @@ export default function ProductCard({ product }: Props) {
         </div>
       )}
 
-      {/* Price */}
+      {/* Price — precio tachado arriba, y abajo precio actual + descuento JUNTOS (nunca saltan) */}
       <div className="mt-auto pt-1.5 border-t" style={{ borderColor: "var(--border)" }}>
-        <div className="flex items-baseline gap-1.5 flex-wrap">
-          {product.original_price && product.original_price > product.price && (
-            <span className="text-[11px] text-[var(--text-muted)] line-through">
-              ${Number(product.original_price).toLocaleString("es-CL")}
-            </span>
-          )}
-          <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">
+        {hasDiscount && (
+          <span className="block text-[11px] text-[var(--text-muted)] line-through leading-none mb-0.5">
+            ${Number(product.original_price).toLocaleString("es-CL")}
+          </span>
+        )}
+        <div className="flex items-center gap-2">
+          <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-base leading-none">
             ${Number(product.price).toLocaleString("es-CL")}
           </span>
-          {product.original_price && product.original_price > product.price && (
-            <span className="text-[10px] font-bold text-emerald-600">
-              -{Math.round((1 - product.price / product.original_price) * 100)}%
+          {hasDiscount && (
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md leading-none">
+              -{discountPct}%
             </span>
           )}
         </div>
