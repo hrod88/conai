@@ -240,7 +240,7 @@ export default function Navbar() {
   const bigSearch = (
     <button
       onClick={toggleSearch}
-      className="hidden md:flex flex-1 items-center gap-3 h-11 px-5 rounded-full border transition-colors hover:border-indigo-400"
+      className="hidden md:flex flex-1 max-w-md items-center gap-3 h-11 px-5 rounded-full border transition-colors hover:border-indigo-400"
       style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
     >
       <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
@@ -260,20 +260,19 @@ export default function Navbar() {
         WebkitBackdropFilter: "blur(14px)",
       }}
     >
-      {/* ── DESKTOP: dos filas (buscador grande arriba + links centrados abajo) ── */}
+      {/* ── DESKTOP: una sola fila (logo + buscador + links + acciones) ── */}
       <div className="hidden md:block max-w-6xl mx-auto px-4 md:px-6">
-        {/* Fila 1: logo + buscador grande + acciones */}
         <nav className="flex items-center gap-4 h-16">
           <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0">
             conAI
           </Link>
           {bigSearch}
+          {/* Links a la derecha del buscador */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {navLinks}
+          </div>
           {actions}
         </nav>
-        {/* Fila 2: links centrados */}
-        <div className="flex items-center justify-center gap-1 pb-2 -mt-1">
-          {navLinks}
-        </div>
       </div>
 
       {/* ── MÓVIL: se mantiene igual que antes (sin cambios) ── */}
