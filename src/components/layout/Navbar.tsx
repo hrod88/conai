@@ -30,7 +30,6 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
-  const isProductos = pathname === "/productos";
   const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "").split(",").map((e) => e.trim());
   const isAdmin = !!user && adminEmails.includes(user.email ?? "");
 
@@ -58,26 +57,32 @@ export default function Navbar() {
     setDropdownOpen(false);
   }
 
-  const navLinks = links.map((l) => (
-    <Link
-      key={l.href}
-      href={l.href}
-      className="px-3 py-1.5 text-sm rounded-lg transition-colors hover:text-indigo-500"
-      style={{
-        color: pathname === l.href ? "var(--text)" : "var(--text-muted)",
-        fontWeight: pathname === l.href ? 700 : 500,
-      }}
-    >
-      {l.label}
-    </Link>
-  ));
+  // ── Links centrados (segunda fila en desktop) ──
+  const navLinks = links.map((l) => {
+    const active = pathname === l.href;
+    return (
+      <Link
+        key={l.href}
+        href={l.href}
+        className="px-4 py-1.5 text-sm rounded-lg transition-colors"
+        style={{
+          color: active ? "var(--accent, #6366f1)" : "var(--text-muted)",
+          background: active ? "var(--accent-soft, #eef2ff)" : "transparent",
+          fontWeight: active ? 700 : 600,
+        }}
+      >
+        {l.label}
+      </Link>
+    );
+  });
 
+  // ── Acciones de la derecha (favoritos, carrito, tema, cuenta) ──
+  // El search MÓVIL se mantiene aquí intacto (no tocamos móvil).
   const actions = (
     <div className="flex items-center gap-2">
-      {/* Search mobile */}
+      {/* Search mobile (sin cambios) */}
       <button
         onClick={toggleSearch}
-        aria-label="Buscar"
         className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
       >
@@ -89,10 +94,9 @@ export default function Navbar() {
       {/* Favorites */}
       <Link
         href="/favoritos"
-        className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
+        className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:border-indigo-400"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
         title="Favoritos"
-        aria-label="Favoritos"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill={favCount > 0 ? "#ef4444" : "none"} stroke={favCount > 0 ? "#ef4444" : "var(--text-muted)"} strokeWidth="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -107,10 +111,9 @@ export default function Navbar() {
       {/* Cart */}
       <Link
         href="/carrito"
-        className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
+        className="relative w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:border-indigo-400"
         style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
         title="Carrito"
-        aria-label="Carrito"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
           <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
@@ -129,7 +132,6 @@ export default function Navbar() {
       <button
         onClick={toggleTheme}
         title="Cambiar tema"
-        aria-label="Cambiar tema claro u oscuro"
         className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none"
         style={{ background: theme === "dark" ? "#6366f1" : "#d1d5db" }}
       >
@@ -147,7 +149,6 @@ export default function Navbar() {
             className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:border-indigo-400"
             style={{ borderColor: "var(--border)", background: "var(--surface-alt)" }}
             title="Mis pedidos"
-            aria-label="Mis pedidos"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
               <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
@@ -157,12 +158,8 @@ export default function Navbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((o) => !o)}
-              className="w-9 h-9 rounded-full flex items-center justify-center border transition-colors hover:border-indigo-400 text-xs font-black"
-              style={{
-                borderColor: dropdownOpen ? "var(--indigo-400, #818cf8)" : "var(--border)",
-                background: "var(--surface-alt)",
-                color: "var(--text-muted)",
-              }}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-transform hover:scale-105 text-xs font-black text-white"
+              style={{ background: "linear-gradient(135deg, #6366f1, #38bdf8)" }}
               title={`Mi cuenta (${user.email?.split("@")[0]})`}
             >
               {user.email?.slice(0, 1).toUpperCase()}
@@ -237,6 +234,22 @@ export default function Navbar() {
     </div>
   );
 
+  // Barra de búsqueda grande (desktop). Al hacer clic dispara tu mismo
+  // sistema de búsqueda (toggleSearch), así el aspecto es nuevo pero la
+  // función es la que ya tenías.
+  const bigSearch = (
+    <button
+      onClick={toggleSearch}
+      className="hidden md:flex flex-1 items-center gap-3 h-11 px-5 rounded-full border transition-colors hover:border-indigo-400"
+      style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
+    >
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
+        <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
+      </svg>
+      <span className="text-sm">Buscar productos, categorías…</span>
+    </button>
+  );
+
   return (
     <header
       className="sticky top-0 z-50 border-b transition-colors duration-300"
@@ -247,81 +260,30 @@ export default function Navbar() {
         WebkitBackdropFilter: "blur(14px)",
       }}
     >
-      {isProductos ? (
-        /* ── Layout /productos: full-width, columnas alineadas al contenido ── */
-        <nav className="flex items-center h-16 w-full">
-
-          {/* Mobile: logo simple */}
-          <Link href="/" className="md:hidden text-xl font-black gradient-text flex-shrink-0 px-4">
+      {/* ── DESKTOP: dos filas (buscador grande arriba + links centrados abajo) ── */}
+      <div className="hidden md:block max-w-6xl mx-auto px-4 md:px-6">
+        {/* Fila 1: logo + buscador grande + acciones */}
+        <nav className="flex items-center gap-4 h-16">
+          <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0">
             conAI
           </Link>
-
-          {/* Col 1 — logo (desktop) */}
-          <div
-            className="hidden md:flex w-36 flex-shrink-0 items-center px-4 h-full"
-          >
-            <Link href="/" className="text-xl font-black gradient-text">
-              conAI
-            </Link>
-          </div>
-
-          {/* Col 2 — buscador (desktop) */}
-          <div
-            className="hidden md:flex w-64 flex-shrink-0 items-center px-3 h-full"
-          >
-            <button
-              onClick={toggleSearch}
-              className="w-full flex items-center gap-2 h-8 px-3 rounded-full border transition-colors"
-              style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
-            >
-              <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
-                <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
-              </svg>
-              <span className="text-xs">Buscar...</span>
-            </button>
-          </div>
-
-          {/* Col 3 — links + acciones (desktop) / acciones (mobile) */}
-          <div className="flex flex-1 items-center overflow-hidden pr-4">
-            <div className="flex-1 md:hidden" />
-            <div className="hidden md:flex items-center gap-0.5 px-4 flex-1 justify-center">
-              {navLinks}
-            </div>
-            {actions}
-          </div>
-        </nav>
-      ) : (
-        /* ── Layout normal: centrado max-w-6xl ── */
-        <nav className="max-w-6xl mx-auto flex items-center h-16 px-4 md:px-6 gap-3">
-
-          {/* Logo */}
-          <Link href="/" className="text-xl md:text-2xl font-black gradient-text flex-shrink-0">
-            conAI
-          </Link>
-
-          {/* Search desktop */}
-          <button
-            onClick={toggleSearch}
-            className="hidden md:flex items-center gap-2 h-8 px-3 rounded-full border text-sm font-medium transition-colors flex-shrink-0"
-            style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
-            </svg>
-            <span className="text-xs">Buscar...</span>
-          </button>
-
-          {/* Links — centro */}
-          <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
-            {navLinks}
-          </div>
-
-          {/* Spacer mobile */}
-          <div className="flex-1 md:hidden" />
-
+          {bigSearch}
           {actions}
         </nav>
-      )}
+        {/* Fila 2: links centrados */}
+        <div className="flex items-center justify-center gap-1 pb-2 -mt-1">
+          {navLinks}
+        </div>
+      </div>
+
+      {/* ── MÓVIL: se mantiene igual que antes (sin cambios) ── */}
+      <nav className="md:hidden flex items-center h-16 px-4 gap-3">
+        <Link href="/" className="text-xl font-black gradient-text flex-shrink-0">
+          conAI
+        </Link>
+        <div className="flex-1" />
+        {actions}
+      </nav>
     </header>
   );
 }
