@@ -91,11 +91,11 @@ export default function ProductCard({ product }: Props) {
       </p>
 
       {/* Rating */}
-      {product.rating && (
+      {(product.rating ?? 0) > 0 && (
         <div className="flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
           <span className="text-amber-400">★</span>
-          <span className="font-semibold">{product.rating.toFixed(1)}</span>
-          {product.review_count && (
+          <span className="font-semibold">{(product.rating ?? 0).toFixed(1)}</span>
+          {(product.review_count ?? 0) > 0 && (
             <span className="text-[10px]">({product.review_count})</span>
           )}
         </div>
