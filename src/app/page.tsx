@@ -8,18 +8,18 @@ import type { Product } from "@/types";
 export const dynamic = "force-dynamic";
 
 const categories = [
-  { value: "salud",       label: "Salud",       icon: "❤️", desc: "Smartwatches, anillos y sensores",        count: 30, from: "#3b82f6", to: "#6366f1" },
-  { value: "belleza",     label: "Belleza",      icon: "✨", desc: "Dispositivos faciales con IA",            count: 24, from: "#a855f7", to: "#ec4899" },
-  { value: "hogar",       label: "Hogar",        icon: "🏠", desc: "Robots, cámaras y termostatos",           count: 32, from: "#3b82f6", to: "#10b981" },
-  { value: "wearables",   label: "Wearables",    icon: "⌚", desc: "Relojes, gafas y accesorios IA",          count: 18, from: "#f59e0b", to: "#ef4444" },
-  { value: "mascotas",    label: "Mascotas",     icon: "🐾", desc: "GPS, cámaras y alimentadores",            count: 15, from: "#10b981", to: "#0ea5e9" },
-  { value: "gadgets",     label: "Gadgets",      icon: "🤖", desc: "Drones, impresoras 3D y más",             count: 40, from: "#10b981", to: "#0ea5e9" },
-  { value: "audio",       label: "Audio",        icon: "🎧", desc: "Auriculares, parlantes y altavoces IA",   count: 50, from: "#f97316", to: "#eab308" },
-  { value: "oficina",     label: "Oficina",      icon: "💼", desc: "Teclados, monitores y accesorios IA",     count: 50, from: "#8b5cf6", to: "#06b6d4" },
-  { value: "juguetes",    label: "Juguetes",     icon: "🧸", desc: "Juguetes educativos y tecnológicos",      count: 50, from: "#f43f5e", to: "#fb923c" },
-  { value: "deportes",    label: "Deportes",     icon: "⚽", desc: "Accesorios deportivos con tecnología IA", count: 50, from: "#22c55e", to: "#0ea5e9" },
-  { value: "electronica", label: "Electrónica",  icon: "🔌", desc: "Gadgets y electrónica de consumo",        count: 50, from: "#64748b", to: "#6366f1" },
-  { value: "telefonos",   label: "Teléfonos",    icon: "📱", desc: "Accesorios y periféricos para smartphones",count: 50, from: "#0ea5e9", to: "#6366f1" },
+  { value: "salud",       label: "Salud",       icon: "❤️", desc: "Smartwatches, anillos y sensores",        from: "#3b82f6", to: "#6366f1" },
+  { value: "belleza",     label: "Belleza",      icon: "✨", desc: "Dispositivos faciales con IA",            from: "#a855f7", to: "#ec4899" },
+  { value: "hogar",       label: "Hogar",        icon: "🏠", desc: "Robots, cámaras y termostatos",           from: "#3b82f6", to: "#10b981" },
+  { value: "wearables",   label: "Wearables",    icon: "⌚", desc: "Relojes, gafas y accesorios IA",          from: "#f59e0b", to: "#ef4444" },
+  { value: "mascotas",    label: "Mascotas",     icon: "🐾", desc: "GPS, cámaras y alimentadores",            from: "#10b981", to: "#0ea5e9" },
+  { value: "gadgets",     label: "Gadgets",      icon: "🤖", desc: "Drones, impresoras 3D y más",             from: "#10b981", to: "#0ea5e9" },
+  { value: "audio",       label: "Audio",        icon: "🎧", desc: "Auriculares, parlantes y altavoces IA",   from: "#f97316", to: "#eab308" },
+  { value: "oficina",     label: "Oficina",      icon: "💼", desc: "Teclados, monitores y accesorios IA",     from: "#8b5cf6", to: "#06b6d4" },
+  { value: "juguetes",    label: "Juguetes",     icon: "🧸", desc: "Juguetes educativos y tecnológicos",      from: "#f43f5e", to: "#fb923c" },
+  { value: "deportes",    label: "Deportes",     icon: "⚽", desc: "Accesorios deportivos con tecnología IA", from: "#22c55e", to: "#0ea5e9" },
+  { value: "electronica", label: "Electrónica",  icon: "🔌", desc: "Gadgets y electrónica de consumo",        from: "#64748b", to: "#6366f1" },
+  { value: "telefonos",   label: "Teléfonos",    icon: "📱", desc: "Accesorios y periféricos para smartphones",from: "#0ea5e9", to: "#6366f1" },
 ];
 
 const benefits = [
@@ -29,10 +29,12 @@ const benefits = [
   { icon: "🤖", title: "Soporte IA 24/7",    desc: "Asistente inteligente disponible siempre. Equipo humano de lunes a viernes." },
 ];
 
-const testimonials = [
-  { name: "Valentina R.", city: "Santiago",     rating: 5, text: "Llegó en 2 días y el producto es increíble. El smartwatch superó todas mis expectativas, lo recomiendo 100%.", avatar: "V" },
-  { name: "Carlos M.",    city: "Viña del Mar", rating: 5, text: "Compré el robot aspirador y transformó mi rutina. Excelente atención al cliente cuando tuve dudas de instalación.", avatar: "C" },
-  { name: "Daniela F.",   city: "Concepción",   rating: 5, text: "La máscara LED llegó perfectamente embalada. Ya noto resultados después de 2 semanas de uso consistente.", avatar: "D" },
+// Señales de confianza reales (reemplazan los testimonios inventados).
+// Todo aquí es verdadero y verificable en el proyecto: no inventamos clientes.
+const trustSignals = [
+  { icon: "🔒", title: "Pago protegido por Transbank", desc: "Procesamos con WebPay Plus, el estándar bancario de Chile. No guardamos los datos de tu tarjeta." },
+  { icon: "📦", title: "Despacho a todo Chile",        desc: "Enviamos con Chilexpress y Starken a cualquier región. Seguimiento de tu pedido incluido." },
+  { icon: "↩️", title: "30 días para devolver",        desc: "Si el producto no te convence, lo retiramos a domicilio sin costo y te devolvemos tu dinero." },
 ];
 
 const tagStyles: Record<string, { label: string; color: string; bg: string }> = {
@@ -60,12 +62,19 @@ export default async function HomePage() {
   const supabase = await createClient();
 
   type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & { category: string };
+  type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
 
+  // Una sola consulta trae todos los bestsellers con su categoría.
+  // Antes esto eran 12 consultas secuenciales (una por categoría, en un bucle for):
+  // la página esperaba 12 viajes a la base, uno tras otro. Ahora es 1 viaje y
+  // elegimos en memoria el mejor por categoría. Más rápido y más simple.
   const [
     { data: bestsellersRaw },
     { data: discountsRaw },
     { data: newRaw },
     { data: featuredRaw },
+    { data: trendingRaw },
+    { data: totalProductsCount },
   ] = await Promise.all([
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
@@ -75,6 +84,12 @@ export default async function HomePage() {
       .neq("active", false).eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).order("rating", { ascending: false }).limit(4),
+    // Todos los bestsellers con su categoría, ordenados por popularidad.
+    // De aquí sacamos el mejor de cada categoría en memoria (abajo).
+    supabase.from("products").select("id, name, price, icon, image, tag, category")
+      .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }),
+    // Conteo real de productos activos, para la sección de stats (sin traer filas).
+    supabase.from("products").select("id", { count: "exact", head: true }).neq("active", false),
   ]);
 
   const heroData = {
@@ -84,20 +99,21 @@ export default async function HomePage() {
     featured:    (featuredRaw    ?? []) as HeroProduct[],
   };
 
+  // Elegimos el mejor bestseller por categoría, en memoria (1 por categoría).
   const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
-  type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
+  const trendingAll = (trendingRaw ?? []) as TrendingProduct[];
+  const seen = new Set<string>();
   const trendingProducts: TrendingProduct[] = [];
   for (const cat of allCats) {
-    const { data } = await supabase
-      .from("products")
-      .select("id, name, price, icon, image, tag, category")
-      .neq("active", false)
-      .eq("category", cat)
-      .eq("tag", "bestseller")
-      .order("review_count", { ascending: false })
-      .limit(1);
-    if (data?.[0]) trendingProducts.push(data[0] as TrendingProduct);
+    const match = trendingAll.find((p) => p.category === cat && !seen.has(p.id));
+    if (match) {
+      seen.add(match.id);
+      trendingProducts.push(match);
+    }
   }
+
+  // Número real de productos para las stats del hero (en vez del "180+" fijo).
+  const totalProducts = totalProductsCount ?? 0;
 
   return (
     <>
@@ -147,10 +163,6 @@ export default async function HomePage() {
               <div className="relative flex flex-col gap-3">
                 <div className="flex items-start justify-between">
                   <span className="text-3xl">{cat.icon}</span>
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                    style={{ background: `${cat.from}18`, color: cat.from }}>
-                    {cat.count} productos
-                  </span>
                 </div>
                 <div>
                   <p className="font-black text-[var(--text)] text-sm">{cat.label}</p>
@@ -282,12 +294,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Testimonios ─────────────────────────── */}
+      {/* ── Compra con confianza (reemplaza testimonios inventados) ── */}
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="text-center mb-5 md:mb-10">
-            <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Clientes reales</p>
-            <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">Lo que dicen de nosotros</h2>
+            <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Tu compra, segura</p>
+            <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">Compra con confianza</h2>
           </div>
 
           {/* Mobile: scroll horizontal */}
@@ -295,58 +307,30 @@ export default async function HomePage() {
             className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4"
             style={{ scrollbarWidth: "none" } as React.CSSProperties}
           >
-            {testimonials.map((t) => (
+            {trustSignals.map((s) => (
               <div
-                key={t.name}
+                key={s.title}
                 className="flex-shrink-0 w-72 rounded-2xl border p-4 flex flex-col gap-3"
                 style={{ background: "var(--bg)", borderColor: "var(--border)" }}
               >
-                <div className="flex gap-0.5">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <span key={i} className="text-amber-400 text-sm">★</span>
-                  ))}
-                </div>
-                <p className="text-[13px] text-[var(--text-muted)] leading-relaxed flex-1">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-sky-400 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[var(--text)]">{t.name}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">{t.city} · ✓ Verificada</p>
-                  </div>
-                </div>
+                <span className="text-3xl">{s.icon}</span>
+                <p className="text-sm font-bold text-[var(--text)]">{s.title}</p>
+                <p className="text-[13px] text-[var(--text-muted)] leading-relaxed flex-1">{s.desc}</p>
               </div>
             ))}
           </div>
 
           {/* Desktop: grid 3 cols */}
           <div className="hidden md:grid grid-cols-3 gap-5">
-            {testimonials.map((t) => (
+            {trustSignals.map((s) => (
               <div
-                key={t.name}
-                className="rounded-2xl border p-5 flex flex-col gap-4"
+                key={s.title}
+                className="rounded-2xl border p-6 flex flex-col gap-3"
                 style={{ background: "var(--bg)", borderColor: "var(--border)" }}
               >
-                <div className="flex gap-0.5">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <span key={i} className="text-amber-400 text-sm">★</span>
-                  ))}
-                </div>
-                <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1">
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-400 to-sky-400 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-[var(--text)]">{t.name}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">{t.city} · ✓ Compra verificada</p>
-                  </div>
-                </div>
+                <span className="text-3xl">{s.icon}</span>
+                <p className="text-base font-bold text-[var(--text)]">{s.title}</p>
+                <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -355,12 +339,11 @@ export default async function HomePage() {
 
       {/* ── Stats ───────────────────────────────── */}
       <section className="py-10 md:py-14 px-6" style={{ background: "linear-gradient(135deg, #6366f1, #0ea5e9)" }}>
-        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center text-white">
+        <div className="max-w-4xl mx-auto grid grid-cols-3 gap-4 md:gap-6 text-center text-white">
           {[
-            { n: "180+", label: "Productos" },
-            { n: "12K+", label: "Clientes" },
-            { n: "4.8★", label: "Calificación" },
-            { n: "30",   label: "Días garantía" },
+            { n: `${totalProducts}`, label: "Productos disponibles" },
+            { n: "30 días",          label: "Para devolver" },
+            { n: "24/7",             label: "Soporte con IA" },
           ].map((s) => (
             <div key={s.label}>
               <p className="text-2xl md:text-4xl font-black">{s.n}</p>
@@ -375,4 +358,3 @@ export default async function HomePage() {
     </>
   );
 }
-
