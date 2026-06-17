@@ -4,28 +4,10 @@ import HeroSlider from "@/components/home/HeroSlider";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
-import {
-  Heart, Sparkles, House, Watch, PawPrint, Bot, Headphones, Briefcase,
-  ToyBrick, Dumbbell, Plug, Smartphone, Truck, RotateCcw, ShieldCheck, Lock,
-  type LucideIcon,
-} from "lucide-react";
+import { Truck, RotateCcw, ShieldCheck, Lock, Bot, type LucideIcon } from "lucide-react";
+import CategoriesShowcase from "@/components/home/CategoriesShowcase";
 
 export const dynamic = "force-dynamic";
-
-const categories: { value: string; label: string; icon: LucideIcon; desc: string; from: string; to: string }[] = [
-  { value: "salud",       label: "Salud",       icon: Heart,      desc: "Smartwatches, anillos y sensores",        from: "#3b82f6", to: "#6366f1" },
-  { value: "belleza",     label: "Belleza",      icon: Sparkles,   desc: "Dispositivos faciales con IA",            from: "#a855f7", to: "#ec4899" },
-  { value: "hogar",       label: "Hogar",        icon: House,      desc: "Robots, cámaras y termostatos",           from: "#3b82f6", to: "#10b981" },
-  { value: "wearables",   label: "Wearables",    icon: Watch,      desc: "Relojes, gafas y accesorios IA",          from: "#f59e0b", to: "#ef4444" },
-  { value: "mascotas",    label: "Mascotas",     icon: PawPrint,   desc: "GPS, cámaras y alimentadores",            from: "#10b981", to: "#0ea5e9" },
-  { value: "gadgets",     label: "Gadgets",      icon: Bot,        desc: "Drones, impresoras 3D y más",             from: "#10b981", to: "#0ea5e9" },
-  { value: "audio",       label: "Audio",        icon: Headphones, desc: "Auriculares, parlantes y altavoces IA",   from: "#f97316", to: "#eab308" },
-  { value: "oficina",     label: "Oficina",      icon: Briefcase,  desc: "Teclados, monitores y accesorios IA",     from: "#8b5cf6", to: "#06b6d4" },
-  { value: "juguetes",    label: "Juguetes",     icon: ToyBrick,   desc: "Juguetes educativos y tecnológicos",      from: "#f43f5e", to: "#fb923c" },
-  { value: "deportes",    label: "Deportes",     icon: Dumbbell,   desc: "Accesorios deportivos con tecnología IA", from: "#22c55e", to: "#0ea5e9" },
-  { value: "electronica", label: "Electrónica",  icon: Plug,       desc: "Gadgets y electrónica de consumo",        from: "#64748b", to: "#6366f1" },
-  { value: "telefonos",   label: "Teléfonos",    icon: Smartphone, desc: "Accesorios y periféricos para smartphones",from: "#0ea5e9", to: "#6366f1" },
-];
 
 const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: Truck,     title: "Envío gratis",       desc: "En compras sobre $30.000 a todo Chile. Despacho en 24-48 horas hábiles." },
@@ -124,68 +106,8 @@ export default async function HomePage() {
     <>
       <HeroSlider heroData={heroData} />
 
-      {/* ── Categorías ──────────────────────────── */}
-      <section className="py-8 md:py-16 px-4 md:px-6 max-w-6xl mx-auto">
-        {/* Mobile: título compacto */}
-        <div className="flex items-center justify-between mb-3 md:hidden">
-          <h2 className="text-base font-black text-[var(--text)]">Categorías</h2>
-          <Link href="/productos" className="text-xs font-bold text-indigo-500">Ver todas →</Link>
-        </div>
-        {/* Desktop: título centrado */}
-        <div className="hidden md:block text-center mb-10">
-          <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Explora</p>
-          <h2 className="text-3xl font-black text-[var(--text)]">Categorías</h2>
-        </div>
-
-        {/* Mobile: grid íconos 4 cols */}
-        <div className="grid grid-cols-4 gap-2 md:hidden">
-          {categories.map((cat) => (
-            <Link
-              key={cat.value}
-              href={`/productos?cat=${cat.value}`}
-              className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border active:scale-95 transition-all"
-              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-            >
-              <cat.icon size={22} strokeWidth={2} style={{ color: cat.from }} />
-              <span className="text-[9px] font-bold text-center text-[var(--text)] leading-tight line-clamp-2">{cat.label}</span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop: tarjetas grandes 3 cols */}
-        <div className="hidden md:grid grid-cols-3 gap-4">
-          {categories.map((cat) => (
-            <Link
-              key={cat.value}
-              href={`/productos?cat=${cat.value}`}
-              className="group relative rounded-2xl p-5 border transition-all hover:-translate-y-1 hover:shadow-lg overflow-hidden"
-              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-            >
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity"
-                style={{ background: `linear-gradient(135deg, ${cat.from}, ${cat.to})` }}
-              />
-              <div className="relative flex flex-col gap-3">
-                <div className="flex items-start justify-between">
-                  <span
-                    className="inline-flex items-center justify-center w-11 h-11 rounded-xl"
-                    style={{ background: `${cat.from}14` }}
-                  >
-                    <cat.icon size={24} strokeWidth={2} style={{ color: cat.from }} />
-                  </span>
-                </div>
-                <div>
-                  <p className="font-black text-[var(--text)] text-sm">{cat.label}</p>
-                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{cat.desc}</p>
-                </div>
-                <span className="text-[11px] font-bold flex items-center gap-1 transition-all" style={{ color: cat.from }}>
-                  Ver categoría →
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* ── Categorías (nuevo: scroll reveal + tilt 3D + bento) ── */}
+      <CategoriesShowcase />
 
       {/* ── Más vendidos ────────────────────────── */}
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
