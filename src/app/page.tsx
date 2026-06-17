@@ -4,37 +4,42 @@ import HeroSlider from "@/components/home/HeroSlider";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
+import {
+  Heart, Sparkles, House, Watch, PawPrint, Bot, Headphones, Briefcase,
+  ToyBrick, Dumbbell, Plug, Smartphone, Truck, RotateCcw, ShieldCheck, Lock,
+  type LucideIcon,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-const categories = [
-  { value: "salud",       label: "Salud",       icon: "❤️", desc: "Smartwatches, anillos y sensores",        from: "#3b82f6", to: "#6366f1" },
-  { value: "belleza",     label: "Belleza",      icon: "✨", desc: "Dispositivos faciales con IA",            from: "#a855f7", to: "#ec4899" },
-  { value: "hogar",       label: "Hogar",        icon: "🏠", desc: "Robots, cámaras y termostatos",           from: "#3b82f6", to: "#10b981" },
-  { value: "wearables",   label: "Wearables",    icon: "⌚", desc: "Relojes, gafas y accesorios IA",          from: "#f59e0b", to: "#ef4444" },
-  { value: "mascotas",    label: "Mascotas",     icon: "🐾", desc: "GPS, cámaras y alimentadores",            from: "#10b981", to: "#0ea5e9" },
-  { value: "gadgets",     label: "Gadgets",      icon: "🤖", desc: "Drones, impresoras 3D y más",             from: "#10b981", to: "#0ea5e9" },
-  { value: "audio",       label: "Audio",        icon: "🎧", desc: "Auriculares, parlantes y altavoces IA",   from: "#f97316", to: "#eab308" },
-  { value: "oficina",     label: "Oficina",      icon: "💼", desc: "Teclados, monitores y accesorios IA",     from: "#8b5cf6", to: "#06b6d4" },
-  { value: "juguetes",    label: "Juguetes",     icon: "🧸", desc: "Juguetes educativos y tecnológicos",      from: "#f43f5e", to: "#fb923c" },
-  { value: "deportes",    label: "Deportes",     icon: "⚽", desc: "Accesorios deportivos con tecnología IA", from: "#22c55e", to: "#0ea5e9" },
-  { value: "electronica", label: "Electrónica",  icon: "🔌", desc: "Gadgets y electrónica de consumo",        from: "#64748b", to: "#6366f1" },
-  { value: "telefonos",   label: "Teléfonos",    icon: "📱", desc: "Accesorios y periféricos para smartphones",from: "#0ea5e9", to: "#6366f1" },
+const categories: { value: string; label: string; icon: LucideIcon; desc: string; from: string; to: string }[] = [
+  { value: "salud",       label: "Salud",       icon: Heart,      desc: "Smartwatches, anillos y sensores",        from: "#3b82f6", to: "#6366f1" },
+  { value: "belleza",     label: "Belleza",      icon: Sparkles,   desc: "Dispositivos faciales con IA",            from: "#a855f7", to: "#ec4899" },
+  { value: "hogar",       label: "Hogar",        icon: House,      desc: "Robots, cámaras y termostatos",           from: "#3b82f6", to: "#10b981" },
+  { value: "wearables",   label: "Wearables",    icon: Watch,      desc: "Relojes, gafas y accesorios IA",          from: "#f59e0b", to: "#ef4444" },
+  { value: "mascotas",    label: "Mascotas",     icon: PawPrint,   desc: "GPS, cámaras y alimentadores",            from: "#10b981", to: "#0ea5e9" },
+  { value: "gadgets",     label: "Gadgets",      icon: Bot,        desc: "Drones, impresoras 3D y más",             from: "#10b981", to: "#0ea5e9" },
+  { value: "audio",       label: "Audio",        icon: Headphones, desc: "Auriculares, parlantes y altavoces IA",   from: "#f97316", to: "#eab308" },
+  { value: "oficina",     label: "Oficina",      icon: Briefcase,  desc: "Teclados, monitores y accesorios IA",     from: "#8b5cf6", to: "#06b6d4" },
+  { value: "juguetes",    label: "Juguetes",     icon: ToyBrick,   desc: "Juguetes educativos y tecnológicos",      from: "#f43f5e", to: "#fb923c" },
+  { value: "deportes",    label: "Deportes",     icon: Dumbbell,   desc: "Accesorios deportivos con tecnología IA", from: "#22c55e", to: "#0ea5e9" },
+  { value: "electronica", label: "Electrónica",  icon: Plug,       desc: "Gadgets y electrónica de consumo",        from: "#64748b", to: "#6366f1" },
+  { value: "telefonos",   label: "Teléfonos",    icon: Smartphone, desc: "Accesorios y periféricos para smartphones",from: "#0ea5e9", to: "#6366f1" },
 ];
 
-const benefits = [
-  { icon: "🚚", title: "Envío gratis",       desc: "En compras sobre $30.000 a todo Chile. Despacho en 24-48 horas hábiles." },
-  { icon: "↩️", title: "30 días devolución", desc: "Sin preguntas. Si no te convence, lo retiramos a domicilio sin costo." },
-  { icon: "🔒", title: "Pago 100% seguro",   desc: "Transbank WebPay Plus. Tus datos nunca se almacenan en nuestros servidores." },
-  { icon: "🤖", title: "Soporte IA 24/7",    desc: "Asistente inteligente disponible siempre. Equipo humano de lunes a viernes." },
+const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
+  { icon: Truck,     title: "Envío gratis",       desc: "En compras sobre $30.000 a todo Chile. Despacho en 24-48 horas hábiles." },
+  { icon: RotateCcw, title: "30 días devolución", desc: "Sin preguntas. Si no te convence, lo retiramos a domicilio sin costo." },
+  { icon: Lock,      title: "Pago 100% seguro",   desc: "Transbank WebPay Plus. Tus datos nunca se almacenan en nuestros servidores." },
+  { icon: Bot,       title: "Soporte IA 24/7",    desc: "Asistente inteligente disponible siempre. Equipo humano de lunes a viernes." },
 ];
 
 // Señales de confianza reales (reemplazan los testimonios inventados).
 // Todo aquí es verdadero y verificable en el proyecto: no inventamos clientes.
-const trustSignals = [
-  { icon: "🔒", title: "Pago protegido por Transbank", desc: "Procesamos con WebPay Plus, el estándar bancario de Chile. No guardamos los datos de tu tarjeta." },
-  { icon: "📦", title: "Despacho a todo Chile",        desc: "Enviamos con Chilexpress y Starken a cualquier región. Seguimiento de tu pedido incluido." },
-  { icon: "↩️", title: "30 días para devolver",        desc: "Si el producto no te convence, lo retiramos a domicilio sin costo y te devolvemos tu dinero." },
+const trustSignals: { icon: LucideIcon; title: string; desc: string }[] = [
+  { icon: ShieldCheck, title: "Pago protegido por Transbank", desc: "Procesamos con WebPay Plus, el estándar bancario de Chile. No guardamos los datos de tu tarjeta." },
+  { icon: Truck,       title: "Despacho a todo Chile",        desc: "Enviamos con Chilexpress y Starken a cualquier región. Seguimiento de tu pedido incluido." },
+  { icon: RotateCcw,   title: "30 días para devolver",        desc: "Si el producto no te convence, lo retiramos a domicilio sin costo y te devolvemos tu dinero." },
 ];
 
 const tagStyles: Record<string, { label: string; color: string; bg: string }> = {
@@ -141,7 +146,7 @@ export default async function HomePage() {
               className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border active:scale-95 transition-all"
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
-              <span className="text-2xl">{cat.icon}</span>
+              <cat.icon size={22} strokeWidth={2} style={{ color: cat.from }} />
               <span className="text-[9px] font-bold text-center text-[var(--text)] leading-tight line-clamp-2">{cat.label}</span>
             </Link>
           ))}
@@ -162,7 +167,12 @@ export default async function HomePage() {
               />
               <div className="relative flex flex-col gap-3">
                 <div className="flex items-start justify-between">
-                  <span className="text-3xl">{cat.icon}</span>
+                  <span
+                    className="inline-flex items-center justify-center w-11 h-11 rounded-xl"
+                    style={{ background: `${cat.from}14` }}
+                  >
+                    <cat.icon size={24} strokeWidth={2} style={{ color: cat.from }} />
+                  </span>
                 </div>
                 <div>
                   <p className="font-black text-[var(--text)] text-sm">{cat.label}</p>
@@ -286,7 +296,9 @@ export default async function HomePage() {
               className="rounded-2xl p-3 md:p-5 border flex flex-col gap-2 md:gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
-              <span className="text-2xl md:text-3xl">{b.icon}</span>
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-500/10">
+                <b.icon size={24} strokeWidth={2} className="text-indigo-500" />
+              </span>
               <p className="font-black text-[var(--text)] text-sm">{b.title}</p>
               <p className="text-[11px] md:text-sm text-[var(--text-muted)] leading-relaxed">{b.desc}</p>
             </div>
@@ -313,7 +325,9 @@ export default async function HomePage() {
                 className="flex-shrink-0 w-72 rounded-2xl border p-4 flex flex-col gap-3"
                 style={{ background: "var(--bg)", borderColor: "var(--border)" }}
               >
-                <span className="text-3xl">{s.icon}</span>
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10">
+                  <s.icon size={24} strokeWidth={2} className="text-indigo-500" />
+                </span>
                 <p className="text-sm font-bold text-[var(--text)]">{s.title}</p>
                 <p className="text-[13px] text-[var(--text-muted)] leading-relaxed flex-1">{s.desc}</p>
               </div>
@@ -328,7 +342,9 @@ export default async function HomePage() {
                 className="rounded-2xl border p-6 flex flex-col gap-3"
                 style={{ background: "var(--bg)", borderColor: "var(--border)" }}
               >
-                <span className="text-3xl">{s.icon}</span>
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10">
+                  <s.icon size={26} strokeWidth={2} className="text-indigo-500" />
+                </span>
                 <p className="text-base font-bold text-[var(--text)]">{s.title}</p>
                 <p className="text-sm text-[var(--text-muted)] leading-relaxed flex-1">{s.desc}</p>
               </div>
