@@ -656,6 +656,20 @@ export default function ProductDetailClient({
             )}
           </div>
 
+          {/* Fila de miniaturas deslizable (móvil) — sincronizada con el carrusel */}
+          {allImages.length > 1 && (
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b"
+              style={{ borderColor: c.line, background: c.surface, scrollbarWidth: "none" } as React.CSSProperties}>
+              {allImages.map((img, i) => (
+                <button key={i} onClick={() => setActiveIndex(i)}
+                  className="w-14 h-14 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all"
+                  style={{ borderColor: activeIndex === i ? c.pcb : c.line, opacity: activeIndex === i ? 1 : 0.6 }}>
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Precio */}
           <div className="px-4 py-3 border-b" style={{ borderColor: c.line, background: c.surface }}>
             <div className="flex items-baseline gap-2 flex-wrap">
