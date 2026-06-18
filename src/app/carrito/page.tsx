@@ -239,21 +239,35 @@ export default function CarritoPage() {
                   className="rounded-xl border flex gap-4 p-4 transition-colors"
                   style={{ background: "var(--surface)", borderColor: "var(--border)" }}
                 >
-                  {/* Imagen / ícono */}
-                  <div
-                    className="w-20 h-20 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden"
-                    style={{ background: "var(--surface-alt, #f3f4f6)" }}
-                  >
-                    {product.image ? (
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        width={80}
-                        height={80}
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <span className="text-3xl">{product.icon}</span>
+                  {/* Imagen / ícono + badge de stock */}
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden"
+                      style={{ background: "var(--surface-alt, #f3f4f6)" }}
+                    >
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          width={80}
+                          height={80}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <span className="text-3xl">{product.icon}</span>
+                      )}
+                    </div>
+                    {typeof product.stock === "number" && product.stock > 0 && product.stock <= 5 && (
+                      <span
+                        className="absolute bottom-0 left-0 right-0 text-white text-[9px] font-semibold text-center py-0.5 rounded-b-lg"
+                        style={{
+                          background: product.stock <= 2
+                            ? "rgba(224,49,49,0.85)"
+                            : "rgba(30,34,48,0.78)",
+                        }}
+                      >
+                        {product.stock <= 2 ? "¡Casi agotado!" : `Quedan ${product.stock}`}
+                      </span>
                     )}
                   </div>
 
