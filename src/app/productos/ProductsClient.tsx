@@ -404,18 +404,12 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             </div>
           ) : filterCat ? (
             /* Category selected/hovered → flat grid */
-            <div
-              className="grid gap-3 auto-rows-fr"
-              style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}
-            >
+            <div className="grid gap-3 auto-rows-fr grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           ) : (
             /* No category → flat grid */
-            <div
-              className="grid gap-3 auto-rows-fr"
-              style={{ gridTemplateColumns: "repeat(6, minmax(0, 1fr))" }}
-            >
+            <div className="grid gap-3 auto-rows-fr grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {filtered.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           )}
