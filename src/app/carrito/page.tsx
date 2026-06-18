@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCartStore } from "@/store/cart";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 function clp(n: number) {
   return `$${Math.round(n).toLocaleString("es-CL")}`;
@@ -46,7 +46,7 @@ type ShippingData = {
 type Step = "cart" | "shipping";
 
 export default function CarritoPage() {
-  const { items, remove, updateQty, total, clear } = useCartStore();
+  const { items, remove, updateQty, clear } = useCartStore();
   const [step, setStep] = useState<Step>("cart");
   const [loading, setLoading] = useState(false);
   const [shipping, setShipping] = useState<ShippingData>({
@@ -61,7 +61,58 @@ export default function CarritoPage() {
   const [couponError, setCouponError] = useState("");
   const [couponApplied, setCouponApplied] = useState("");
 
-  const subtotal = total();
+  // ── Selección por ítem (estado local, NO se persiste) ──
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Al cargar el carrito, todo viene seleccionado por defecto.
+  // Si cambian los items (se agrega/quita algo), los nuevos entran seleccionados
+  // y se descartan ids que ya no existen.
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const existing = new Set(items.map((i) => i.product.id));
+      const kept = prev.filter((id) => existing.has(id));
+      const keptSet = new Set(kept);
+      const additions = items
+        .map((i) => i.product.id)
+        .filter((id) => !keptSet.has(id));
+      // Si prev estaba vacío (primera carga), seleccionar todo.
+      if (prev.length === 0) return items.map((i) => i.product.id);
+      return [...kept, ...additions];
+    });
+  }, [items]);
+
+  const isSelected = (id: string) => selectedIds.includes(id);
+
+  function toggleItem(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  const allSelected = items.length > 0 && selectedIds.length === items.length;
+
+  function toggleAll() {
+    setSelectedIds(allSelected ? [] : items.map((i) => i.product.id));
+  }
+
+  function removeSelected() {
+    selectedIds.forEach((id) => remove(id));
+    setSelectedIds([]);
+  }
+
+  // ── Cálculos basados SOLO en lo seleccionado ──
+  const selectedItems = useMemo(
+    () => items.filter((i) => selectedIds.includes(i.product.id)),
+    [items, selectedIds]
+  );
+
+  const selectedCount = selectedItems.reduce((s, i) => s + i.quantity, 0);
+
+  const subtotal = useMemo(
+    () => selectedItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+    [selectedItems]
+  );
+
   const discountAmount = couponType === "fixed"
     ? Math.min(couponDiscount, subtotal)
     : Math.round(subtotal * couponDiscount);
@@ -119,14 +170,14 @@ export default function CarritoPage() {
   }
 
   async function handleCheckout() {
-    if (items.length === 0 || !isShippingValid()) return;
+    if (selectedItems.length === 0 || !isShippingValid()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({
+          items: selectedItems.map((i) => ({
             id: i.product.id,
             name: i.product.name,
             price: i.product.price,
@@ -196,13 +247,15 @@ export default function CarritoPage() {
         <div className="max-w-5xl mx-auto px-6 py-3 flex flex-col gap-2">
           {subtotal >= FREE_SHIPPING ? (
             <p className="text-sm font-bold text-emerald-500">¡Tienes envío gratis en este pedido! 🎉</p>
-          ) : (
+          ) : subtotal > 0 ? (
             <p className="text-sm text-[var(--text-muted)]">
               Te faltan{" "}
               <span className="font-bold text-[var(--text)]">{clp(faltanEnvioGratis)}</span>{" "}
               para obtener{" "}
               <span className="font-bold text-indigo-500">envío gratis</span>
             </p>
+          ) : (
+            <p className="text-sm text-[var(--text-muted)]">Selecciona productos para ver el progreso de envío gratis</p>
           )}
           <div className="h-1.5 rounded-full overflow-hidden w-full" style={{ background: "var(--border)" }}>
             <div
@@ -233,12 +286,59 @@ export default function CarritoPage() {
                 </button>
               </div>
 
-              {items.map(({ product, quantity }) => (
+              {/* Barra seleccionar todo */}
+              <div
+                className="rounded-xl border flex items-center gap-3 px-4 py-2.5 text-sm"
+                style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+              >
+                <button
+                  onClick={toggleAll}
+                  aria-label="Seleccionar todo"
+                  className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 border-2 transition-colors ${allSelected ? "bg-indigo-500 border-indigo-500" : "border-[var(--text-muted)]"}`}
+                >
+                  {allSelected && (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </button>
+                <span className="font-semibold text-[var(--text)]">Seleccionar todo</span>
+                <span className="text-[var(--text-muted)]">· {selectedIds.length} de {items.length} seleccionados</span>
+                {selectedIds.length > 0 && (
+                  <button
+                    onClick={removeSelected}
+                    className="ml-auto text-xs text-[var(--text-muted)] hover:text-red-500 font-semibold transition-colors"
+                  >
+                    Quitar seleccionados
+                  </button>
+                )}
+              </div>
+
+              {items.map(({ product, quantity }) => {
+                const sel = isSelected(product.id);
+                return (
                 <div
                   key={product.id}
-                  className="rounded-xl border flex gap-4 p-4 transition-colors"
-                  style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+                  className="rounded-xl border flex gap-4 p-4 transition-all"
+                  style={{
+                    background: "var(--surface)",
+                    borderColor: sel ? "var(--border)" : "var(--border)",
+                    opacity: sel ? 1 : 0.55,
+                  }}
                 >
+                  {/* Checkbox */}
+                  <button
+                    onClick={() => toggleItem(product.id)}
+                    aria-label={sel ? "Deseleccionar" : "Seleccionar"}
+                    className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 self-start mt-1 border-2 transition-colors ${sel ? "bg-indigo-500 border-indigo-500" : "border-[var(--text-muted)]"}`}
+                  >
+                    {sel && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+
                   {/* Imagen / ícono + badge de stock */}
                   <div className="relative flex-shrink-0">
                     <div
@@ -276,7 +376,7 @@ export default function CarritoPage() {
                     <p className="font-bold text-sm text-[var(--text)] leading-tight line-clamp-2">{product.name}</p>
                     <p className="text-xs text-[var(--text-muted)] line-clamp-1">{product.description}</p>
 
-                    {/* Precio + qty en mobile: columna */}
+                    {/* Precio + qty */}
                     <div className="flex items-center justify-between mt-auto pt-2">
                       {/* Qty */}
                       <div
@@ -308,6 +408,9 @@ export default function CarritoPage() {
                         <p className="font-extrabold text-indigo-600 dark:text-indigo-400">
                           {clp(product.price * quantity)}
                         </p>
+                        {quantity > 1 && (
+                          <p className="text-[10px] text-[var(--text-muted)]">{clp(product.price)} c/u</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -326,7 +429,8 @@ export default function CarritoPage() {
                     </svg>
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </>
           ) : (
             /* Formulario envío */
@@ -437,8 +541,6 @@ export default function CarritoPage() {
           >
             <h2 className="font-black text-[var(--text)]">Resumen del pedido</h2>
 
-            
-
             {/* Cupón */}
             {couponApplied ? (
               <div className="flex items-center justify-between text-sm px-3 py-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800">
@@ -478,7 +580,7 @@ export default function CarritoPage() {
             {/* Totales */}
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-[var(--text-muted)]">Subtotal</span>
+                <span className="text-[var(--text-muted)]">Subtotal ({selectedCount} {selectedCount === 1 ? "ítem" : "ítems"})</span>
                 <span className="font-semibold text-[var(--text)]">{clp(subtotal)}</span>
               </div>
 
@@ -492,7 +594,7 @@ export default function CarritoPage() {
               <div className="flex justify-between">
                 <span className="text-[var(--text-muted)]">Despacho</span>
                 {step === "cart" ? (
-                  <span className="text-[var(--text-muted)]">—</span>
+                  <span className="text-[var(--text-muted)]">Se calcula en el envío</span>
                 ) : envio === 0 ? (
                   <span className="font-bold text-emerald-500">Gratis</span>
                 ) : (
@@ -513,14 +615,15 @@ export default function CarritoPage() {
             {step === "cart" ? (
               <button
                 onClick={() => setStep("shipping")}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm"
+                disabled={selectedItems.length === 0}
+                className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Continuar con envío →
+                Continuar con envío ({selectedItems.length}) →
               </button>
             ) : (
               <button
                 onClick={handleCheckout}
-                disabled={loading || !isShippingValid()}
+                disabled={loading || !isShippingValid() || selectedItems.length === 0}
                 className="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-sky-400 text-white font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
               >
                 {loading ? "Procesando..." : "Pagar con Transbank 🔒"}
