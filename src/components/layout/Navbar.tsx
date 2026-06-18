@@ -240,13 +240,13 @@ export default function Navbar() {
   const bigSearch = (
     <button
       onClick={toggleSearch}
-      className="hidden md:flex flex-1 max-w-md items-center gap-3 h-11 px-5 rounded-full border transition-colors hover:border-indigo-400"
+      className="hidden md:flex w-64 flex-shrink-0 items-center gap-2.5 h-11 px-4 rounded-full border transition-colors hover:border-indigo-400"
       style={{ borderColor: "var(--border)", background: "var(--surface-alt)", color: "var(--text-muted)" }}
     >
       <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0">
         <path fillRule="evenodd" d="M9 3a6 6 0 100 12A6 6 0 009 3zM1 9a8 8 0 1114.32 4.906l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387A8 8 0 011 9z" clipRule="evenodd" />
       </svg>
-      <span className="text-sm">Buscar productos, categorías…</span>
+      <span className="text-sm whitespace-nowrap">Buscar productos…</span>
     </button>
   );
 
@@ -260,17 +260,19 @@ export default function Navbar() {
         WebkitBackdropFilter: "blur(14px)",
       }}
     >
-      {/* ── DESKTOP: una sola fila (logo + buscador + links + acciones) ── */}
+      {/* ── DESKTOP: 3 zonas (logo+buscador izq · links centro · acciones der) ── */}
       <div className="hidden md:block max-w-6xl mx-auto px-4 md:px-6">
-        <nav className="flex items-center gap-4 h-16">
-          <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0">
+        <nav className="flex items-center h-16">
+          {/* Zona izquierda: logo + buscador compacto */}
+          <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0 mr-4">
             conAI
           </Link>
           {bigSearch}
-          {/* Links a la derecha del buscador */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Zona centro: links centrados (mx-auto los empuja al medio) */}
+          <div className="flex items-center gap-1 mx-auto">
             {navLinks}
           </div>
+          {/* Zona derecha: acciones */}
           {actions}
         </nav>
       </div>
