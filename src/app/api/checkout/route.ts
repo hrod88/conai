@@ -109,6 +109,42 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Error creando la orden" }, { status: 500 });
     }
 
+// ── Guardar/actualizar la dirección del usuario (Etapa 2 · opción C) ──
+    // A prueba de fallos: si esto falla, NO se cae la compra.
+    if (user?.id && shipping) {
+      try {
+        // ¿Ya tiene una dirección guardada? Si sí, la actualizamos; si no, la creamos.
+        const { data: existing } = await admin
+          .from("user_addresses")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1)
+          .maybeSingle();
+
+        const addressData = {
+          user_id: user.id,
+          name: shipping.name,
+          phone: shipping.phone,
+          address: shipping.address,
+          city: shipping.city,
+          region: shipping.region,
+          is_default: true,
+        };
+
+        if (existing?.id) {
+          await admin
+            .from("user_addresses")
+            .update(addressData)
+            .eq("id", existing.id);
+        } else {
+          await admin.from("user_addresses").insert(addressData);
+        }
+      } catch (addrErr) {
+        // Solo registramos el error; la compra sigue su curso normal.
+        console.error("No se pudo guardar la dirección (no afecta la compra):", addrErr);
+      }
+    }
+
     await admin.from("order_items").insert(
       items.map((item) => {
         const prod = dbProducts.find((p) => p.id === item.id)!;
