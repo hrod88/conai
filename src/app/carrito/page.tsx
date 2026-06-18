@@ -239,22 +239,48 @@ export default function CarritoPage() {
       {/* Steps bar */}
       <div className="border-b" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-3">
-          {[
-            { n: 1, label: "Carrito", active: step === "cart" },
-            { n: 2, label: "Envío", active: step === "shipping" },
-            { n: 3, label: "Pago", active: false },
-          ].map(({ n, label, active }, i) => (
+          {([
+            { n: 1, label: "Carrito", target: "cart" as Step },
+            { n: 2, label: "Envío", target: "shipping" as Step },
+            { n: 3, label: "Pago", target: null },
+          ]).map(({ n, label, target }, i) => {
+            const isCart = step === "cart";
+            const active = target !== null && target === step;
+            // "Carrito" queda completado (verde) cuando ya avanzamos a "shipping"
+            const done = target === "cart" && !isCart;
+            const clickable = target !== null && (active || done);
+            return (
             <div key={n} className="flex items-center gap-3">
               {i > 0 && <span className="text-[var(--text-muted)] text-xs">›</span>}
-              <div className="flex items-center gap-2">
-                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${active ? "bg-indigo-500 text-white" : "border text-[var(--text-muted)]"}`}
-                  style={!active ? { borderColor: "var(--border)" } : {}}>
-                  {n}
+              <button
+                type="button"
+                onClick={() => { if (clickable && target) setStep(target); }}
+                disabled={!clickable}
+                className={`flex items-center gap-2 ${clickable ? "cursor-pointer" : "cursor-default"}`}
+              >
+                <span
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                    done
+                      ? "bg-emerald-500 text-white"
+                      : active
+                      ? "bg-indigo-500 text-white"
+                      : "border text-[var(--text-muted)]"
+                  }`}
+                  style={!active && !done ? { borderColor: "var(--border)" } : {}}
+                >
+                  {done ? (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    n
+                  )}
                 </span>
-                <span className={`text-sm font-semibold ${active ? "text-[var(--text)]" : "text-[var(--text-muted)]"}`}>{label}</span>
-              </div>
+                <span className={`text-sm font-semibold ${active ? "text-[var(--text)]" : done ? "text-emerald-600" : "text-[var(--text-muted)]"}`}>{label}</span>
+              </button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
