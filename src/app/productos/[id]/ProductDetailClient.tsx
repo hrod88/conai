@@ -40,57 +40,6 @@ const tagLabel: Record<string, string> = {
   destacado:  "✨ Destacado",
 };
 
-const categorySpecs: Record<string, [string, string][]> = {
-  salud: [
-    ["Sensores", "Frec. cardíaca, SpO2, temperatura corporal"],
-    ["Batería", "Hasta 7 días de uso continuo"],
-    ["Conectividad", "Bluetooth 5.3 + compatible ANT+"],
-    ["Resistencia", "5 ATM (hasta 50 metros de profundidad)"],
-    ["Compatibilidad", "iOS 14+ / Android 10+"],
-    ["Pantalla", "AMOLED 1.43\", siempre activa"],
-  ],
-  belleza: [
-    ["Tecnología", "LED fotónico + vibración sónica 8,000 RPM"],
-    ["Modos", "3 intensidades ajustables"],
-    ["Carga", "USB-C, completa en 90 minutos"],
-    ["Duración", "45 minutos por carga"],
-    ["Material", "ABS médico + silicona hipoalergénica"],
-    ["Certificación", "Dermatológicamente testeado"],
-  ],
-  hogar: [
-    ["Conectividad", "Wi-Fi 802.11 ac + Zigbee 3.0"],
-    ["Control voz", "Amazon Alexa, Google Home, Siri"],
-    ["Voltaje", "220V monofásico (Chile)"],
-    ["Potencia", "Hasta 2,400W"],
-    ["Certificación", "CE, FCC, RoHS"],
-    ["Garantía", "12 meses de fábrica"],
-  ],
-  wearables: [
-    ["Procesador", "Dual-core 1.8 GHz dedicado"],
-    ["Pantalla", "AMOLED 1.78\", 326 ppi"],
-    ["Memoria", "32GB almacenamiento interno"],
-    ["Conectividad", "BT 5.3 + Wi-Fi 5 + NFC"],
-    ["Batería", "500mAh, hasta 48h uso normal"],
-    ["Resistencia", "IP68 (100m sumergible)"],
-  ],
-  mascotas: [
-    ["GPS", "Precisión ±2 metros, cobertura global"],
-    ["Batería", "3–5 días, carga en 2 horas"],
-    ["Resistencia", "IP67 (30 min a 1 metro)"],
-    ["App", "iOS + Android, descarga gratuita"],
-    ["Alertas", "Zona segura configurable 100m–5km"],
-    ["Peso", "Menos de 35 gramos"],
-  ],
-  gadgets: [
-    ["Procesador", "Quad-core ARM Cortex-A55 2.0 GHz"],
-    ["Memoria", "4GB RAM + 64GB almacenamiento"],
-    ["Conectividad", "Wi-Fi 6 + Bluetooth 5.2"],
-    ["Alimentación", "Batería 5,000mAh o 220V"],
-    ["Sistema", "Android optimizado / firmware propietario"],
-    ["Garantía", "12 meses importador oficial"],
-  ],
-};
-
 type Tab = "descripcion" | "specs" | "resenas" | "faq";
 
 function sanitizeHtml(html: string): string {
@@ -261,6 +210,8 @@ export default function ProductDetailClient({
   const activeImg = allImages[activeIndex] ?? null;
   const [zoomed, setZoomed]     = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+  const [lbZoomed, setLbZoomed]     = useState(false);
+  const [lbZoomOrigin, setLbZoomOrigin] = useState("50% 50%");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [touchStart, setTouchStart]     = useState<number | null>(null);
 
@@ -303,7 +254,6 @@ export default function ProductDetailClient({
     showToast(fav ? "Eliminado de favoritos" : `${product.name} guardado en favoritos ❤️`, "info");
   }
 
-  const specs = categorySpecs[product.category] ?? categorySpecs.gadgets;
   const [descExpanded, setDescExpanded] = useState(false);
   const [imgsExpanded, setImgsExpanded] = useState(false);
   const [localQuestions, setLocalQuestions] = useState<QuestionRow[]>(initialQuestions);
@@ -383,7 +333,7 @@ export default function ProductDetailClient({
               />
             ) : (
               <>
-                {product.description && product.description.length > 10 && (
+                {product.description && product.description.length > 10 ? (
                   <div>
                     <div className={`relative overflow-hidden ${descExpanded ? "" : "max-h-24"}`}>
                       <p className="text-sm leading-relaxed" style={{ color: c.inkSoft }}>{product.description}</p>
@@ -397,6 +347,13 @@ export default function ProductDetailClient({
                       {descExpanded ? "Ver menos ↑" : "Ver más ↓"}
                     </button>
                   </div>
+                ) : (
+                  (!product.description_images || product.description_images.length === 0) && (
+                    <div className="text-center py-8" style={{ color: c.inkSoft }}>
+                      <span className="text-4xl block mb-2">📝</span>
+                      <p className="text-sm">Este producto aún no tiene descripción detallada.</p>
+                    </div>
+                  )
                 )}
                 {product.description_images && product.description_images.length > 0 && (
                   <div>
@@ -451,21 +408,25 @@ export default function ProductDetailClient({
 
         {/* ── ESPECIFICACIONES ── */}
         {tab === "specs" && (
-          <div className="overflow-hidden rounded-xl border" style={{ borderColor: c.line }}>
-            <table className="w-full text-sm">
-              <tbody>
-                {(product.specifications?.length
-                  ? product.specifications
-                  : specs.map(([key, val]) => ({ key, value: val }))
-                ).map((row, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? c.paper : c.surface }}>
-                    <td className="px-4 py-3 font-semibold w-40 border-r" style={{ color: c.ink, borderColor: c.line }}>{row.key}</td>
-                    <td className="px-4 py-3" style={{ color: c.inkSoft }}>{row.value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          (product.specifications && product.specifications.length > 0) ? (
+            <div className="overflow-hidden rounded-xl border" style={{ borderColor: c.line }}>
+              <table className="w-full text-sm">
+                <tbody>
+                  {product.specifications.map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 === 0 ? c.paper : c.surface }}>
+                      <td className="px-4 py-3 font-semibold w-40 border-r" style={{ color: c.ink, borderColor: c.line }}>{row.key}</td>
+                      <td className="px-4 py-3" style={{ color: c.inkSoft }}>{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8" style={{ color: c.inkSoft }}>
+              <span className="text-4xl block mb-2">📋</span>
+              <p className="text-sm">Este producto aún no tiene especificaciones cargadas.</p>
+            </div>
+          )
         )}
 
         {/* ── RESEÑAS ── */}
@@ -666,14 +627,15 @@ export default function ProductDetailClient({
             )}
           </div>
 
-          {/* Carrusel */}
+          {/* Carrusel — imagen llena, sin tanto espacio */}
           <div className="relative w-full overflow-hidden select-none"
-            style={{ height: 300, background: `linear-gradient(160deg, ${c.pcbSoft} 0%, ${c.paper} 100%)` }}
+            style={{ height: 340, background: c.surface }}
             onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
             {activeImg ? (
-              <img src={activeImg} alt={product.name} className="w-full h-full object-contain p-6" draggable={false} />
+              <img src={activeImg} alt={product.name} className="w-full h-full object-cover" draggable={false} />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
+              <div className="w-full h-full flex items-center justify-center"
+                style={{ background: `linear-gradient(160deg, ${c.pcbSoft} 0%, ${c.paper} 100%)` }}>
                 <span className="text-9xl">{product.icon}</span>
               </div>
             )}
@@ -727,11 +689,11 @@ export default function ProductDetailClient({
               style={{ color: c.ink, fontFamily: "'Space Grotesk', sans-serif" }}>
               {product.name}
             </h1>
-            {product.rating && (
+            {(product.rating ?? 0) > 0 && (
               <div className="flex items-center gap-1.5 text-xs">
-                <Stars value={product.rating} />
-                <span className="font-semibold" style={{ color: c.ink }}>{product.rating.toFixed(1)}</span>
-                {product.review_count && <span style={{ color: c.inkSoft }}>({product.review_count} reseñas)</span>}
+                <Stars value={product.rating ?? 0} />
+                <span className="font-semibold" style={{ color: c.ink }}>{(product.rating ?? 0).toFixed(1)}</span>
+                {(product.review_count ?? 0) > 0 && <span style={{ color: c.inkSoft }}>({product.review_count} reseñas)</span>}
                 <span className="font-semibold ml-1" style={{ color: c.pcb }}>✓ Verificadas</span>
               </div>
             )}
@@ -798,25 +760,28 @@ export default function ProductDetailClient({
           </nav>
 
           {/* Card principal */}
-          <div className="rounded-2xl border p-8 flex flex-row gap-8 mb-2"
+          <div className="rounded-2xl border p-8 flex flex-row items-center gap-8 mb-2"
             style={{ background: c.surface, borderColor: c.line }}>
 
             {/* Galería */}
             <div className="flex flex-row gap-3 flex-shrink-0">
               {allImages.length > 1 && (
-                <div className="flex flex-col gap-1.5 overflow-y-auto max-h-64"
-                  style={{ scrollbarWidth: "none" } as React.CSSProperties}>
-                  {allImages.slice(0, 8).map((img, i) => (
-                    <button key={i} onClick={() => setActiveIndex(i)}
-                      className="w-14 h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0"
-                      style={{ borderColor: activeIndex === i ? c.pcb : "transparent", opacity: activeIndex === i ? 1 : 0.6 }}>
+                <div className="flex flex-col justify-between flex-shrink-0"
+                  style={{ height: 460 } as React.CSSProperties}>
+                  {allImages.slice(0, 6).map((img, i) => (
+                    <button key={i}
+                      onClick={() => setActiveIndex(i)}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      className="w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0"
+                      style={{ borderColor: activeIndex === i ? c.pcb : c.line, opacity: activeIndex === i ? 1 : 0.65 }}>
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
-              <div className="flex items-center justify-center w-80 h-80 rounded-2xl overflow-hidden flex-shrink-0 relative"
-                style={{ background: `linear-gradient(135deg, ${c.pcbSoft}, ${c.paper})`, cursor: "zoom-in" }}
+              {/* Imagen principal: alto fijo cómodo, foto completa con contain */}
+              <div className="flex items-center justify-center rounded-2xl overflow-hidden flex-shrink-0 relative"
+                style={{ width: 460, height: 460, background: c.surface, border: `1px solid ${c.line}`, cursor: "zoom-in" }}
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   setZoomOrigin(`${((e.clientX - rect.left) / rect.width) * 100}% ${((e.clientY - rect.top) / rect.height) * 100}%`);
@@ -825,7 +790,7 @@ export default function ProductDetailClient({
                 onMouseLeave={() => { setZoomed(false); setZoomOrigin("50% 50%"); }}
                 onClick={() => activeImg && setLightboxOpen(true)}>
                 {activeImg ? (
-                  <img src={activeImg} alt={product.name} className="w-full h-full object-contain p-4"
+                  <img src={activeImg} alt={product.name} className="w-full h-full object-contain p-3"
                     style={{ transform: zoomed ? "scale(2.2)" : "scale(1)", transformOrigin: zoomOrigin, transition: zoomed ? "transform-origin 0ms" : "transform 300ms ease-out" }} />
                 ) : (
                   <span className="text-8xl">{product.icon}</span>
@@ -860,11 +825,11 @@ export default function ProductDetailClient({
                 )}
               </div>
 
-              {product.rating && (
+              {(product.rating ?? 0) > 0 && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Stars value={product.rating} />
-                  <span className="font-semibold" style={{ color: c.ink }}>{product.rating.toFixed(1)}</span>
-                  {product.review_count && <span style={{ color: c.inkSoft }}>({product.review_count} reseñas)</span>}
+                  <Stars value={product.rating ?? 0} />
+                  <span className="font-semibold" style={{ color: c.ink }}>{(product.rating ?? 0).toFixed(1)}</span>
+                  {(product.review_count ?? 0) > 0 && <span style={{ color: c.inkSoft }}>({product.review_count} reseñas)</span>}
                   <span className="ml-1 text-xs font-semibold" style={{ color: c.pcb }}>✓ Verificadas</span>
                 </div>
               )}
@@ -960,31 +925,49 @@ export default function ProductDetailClient({
         </div>
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox — panel blanco grande estilo AliExpress */}
       {lightboxOpen && activeImg && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center"
-          style={{ background: "rgba(28,32,36,0.9)" }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(28,32,36,0.85)" }}
           onClick={() => setLightboxOpen(false)}>
-          <button className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-white text-xl"
-            style={{ background: "rgba(255,255,255,0.1)" }}
-            onClick={() => setLightboxOpen(false)}>
-            ✕
-          </button>
-          <div className="flex items-center gap-3 px-6" onClick={(e) => e.stopPropagation()}>
+          <div className="relative rounded-2xl overflow-hidden flex flex-row gap-4 p-5"
+            style={{ background: "#fff", width: "94vw", height: "92vh" }}
+            onClick={(e) => e.stopPropagation()}>
+            <button className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-xl z-10 transition-colors hover:bg-black/5"
+              style={{ color: c.ink }}
+              onClick={() => setLightboxOpen(false)}>
+              ✕
+            </button>
+
+            {/* Miniaturas a la izquierda */}
             {allImages.length > 1 && (
-              <div className="flex flex-col gap-2 overflow-y-auto max-h-[90vh] flex-shrink-0"
-                style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+              <div className="flex flex-col gap-2 overflow-y-auto flex-shrink-0 pr-1"
+                style={{ scrollbarWidth: "thin" } as React.CSSProperties}>
                 {allImages.map((img, i) => (
-                  <button key={i} onClick={() => setActiveIndex(i)}
-                    className="w-14 h-14 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all"
-                    style={{ borderColor: activeIndex === i ? c.pcb : "rgba(255,255,255,0.2)", opacity: activeIndex === i ? 1 : 0.5 }}>
+                  <button key={i}
+                    onClick={() => setActiveIndex(i)}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className="w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all"
+                    style={{ borderColor: activeIndex === i ? c.pcb : c.line, opacity: activeIndex === i ? 1 : 0.6 }}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             )}
-            <img src={activeImg} alt={product.name}
-              className="max-w-[90vw] max-h-[90vh] w-auto h-auto object-contain" />
+
+            {/* Imagen grande con zoom al cursor */}
+            <div className="flex-1 flex items-center justify-center overflow-hidden rounded-xl"
+              style={{ background: "#fff", cursor: "zoom-in" }}
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setLbZoomOrigin(`${((e.clientX - rect.left) / rect.width) * 100}% ${((e.clientY - rect.top) / rect.height) * 100}%`);
+                setLbZoomed(true);
+              }}
+              onMouseLeave={() => { setLbZoomed(false); setLbZoomOrigin("50% 50%"); }}>
+              <img src={activeImg} alt={product.name}
+                className="max-w-full max-h-full object-contain"
+                style={{ transform: lbZoomed ? "scale(2.5)" : "scale(1)", transformOrigin: lbZoomOrigin, transition: lbZoomed ? "transform-origin 0ms" : "transform 300ms ease-out" }} />
+            </div>
           </div>
         </div>
       )}
