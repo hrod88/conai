@@ -10,15 +10,15 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/products/ProductCard";
 
 const c = {
-  paper:      "#F7F4EE",
+  paper:      "#F4F5F8",
   surface:    "#FFFFFF",
-  ink:        "#1C2024",
-  inkSoft:    "#6E6A62",
-  pcb:        "#2F6B52",
-  pcbSoft:    "#E6EFE9",
+  ink:        "#1E2230",
+  inkSoft:    "#6B7280",
+  pcb:        "#5B5BD6",
+  pcbSoft:    "#EEF0FF",
   copper:     "#C2793C",
   copperSoft: "#F6E9DB",
-  line:       "#E6E1D6",
+  line:       "#E8EAEF",
 };
 
 function tagBadgeStyle(tag: string): React.CSSProperties {
