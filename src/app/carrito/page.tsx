@@ -122,6 +122,22 @@ export default function CarritoPage() {
   const freeShippingProgress = Math.min((subtotal / FREE_SHIPPING) * 100, 100);
   const faltanEnvioGratis = Math.max(0, FREE_SHIPPING - subtotal);
 
+  // Ahorro por descuentos de producto (original_price vs price) en lo seleccionado.
+  const productSavings = useMemo(
+    () =>
+      selectedItems.reduce((sum, i) => {
+        const op = i.product.original_price;
+        if (op && op > i.product.price) {
+          return sum + (op - i.product.price) * i.quantity;
+        }
+        return sum;
+      }, 0),
+    [selectedItems]
+  );
+  // Ahorro total = descuentos de producto + cupón + envío gratis (si aplica).
+  const envioAhorrado = subtotal >= FREE_SHIPPING && subtotal > 0 ? 2990 : 0;
+  const totalSavings = productSavings + discountAmount;
+
   async function applyCoupon() {
     if (!couponInput.trim()) return;
     setCouponLoading(true);
@@ -612,6 +628,17 @@ export default function CarritoPage() {
               </span>
             </div>
 
+            {/* Ahorro destacado */}
+            {totalSavings > 0 && selectedItems.length > 0 && (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                <span className="text-base">🎉</span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  Ahorras {clp(totalSavings)}
+                  {envioAhorrado > 0 && ` + envío gratis`}
+                </span>
+              </div>
+            )}
+
             {step === "cart" ? (
               <button
                 onClick={() => setStep("shipping")}
@@ -635,6 +662,31 @@ export default function CarritoPage() {
               <span>🚚 Despacho rápido</span>
               <span>↩ Devoluciones</span>
             </div>
+          </div>
+
+          {/* Bloque de garantías */}
+          <div
+            className="rounded-xl border p-4 mt-4 flex flex-col gap-2.5"
+            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          >
+            <p className="text-xs font-black text-[var(--text)] flex items-center gap-1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
+                <path d="M12 2 4 5v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V5z" />
+              </svg>
+              Garantías conAI
+            </p>
+            {[
+              "Reembolso si el paquete se pierde",
+              "Reembolso por artículos dañados",
+              "Reembolso si no llega en 45 días",
+            ].map((g) => (
+              <div key={g} className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 flex-shrink-0 mt-0.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>{g}</span>
+              </div>
+            ))}
           </div>
         </div>
 
