@@ -437,17 +437,7 @@ export default function CarritoPage() {
           >
             <h2 className="font-black text-[var(--text)]">Resumen del pedido</h2>
 
-            {/* Líneas de producto */}
-            <div className="flex flex-col gap-2 text-sm">
-              {items.map(({ product, quantity }) => (
-                <div key={product.id} className="flex justify-between text-[var(--text-muted)]">
-                  <span className="truncate mr-2 flex-1">{product.name} ×{quantity}</span>
-                  <span className="flex-shrink-0 font-medium text-[var(--text)]">{clp(product.price * quantity)}</span>
-                </div>
-              ))}
-            </div>
-
-            <hr style={{ borderColor: "var(--border)" }} />
+            
 
             {/* Cupón */}
             {couponApplied ? (
