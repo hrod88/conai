@@ -61,6 +61,30 @@ export default function CarritoPage() {
   const [couponError, setCouponError] = useState("");
   const [couponApplied, setCouponApplied] = useState("");
 
+// ── Dirección guardada del usuario (Etapa 3) ──
+  const [savedAddress, setSavedAddress] = useState<ShippingData | null>(null);
+  const [addressUsed, setAddressUsed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/my-address")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && data?.address) {
+          setSavedAddress(data.address as ShippingData);
+        }
+      })
+      .catch(() => { /* sin dirección guardada, no pasa nada */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  function useSavedAddress() {
+    if (savedAddress) {
+      setShipping(savedAddress);
+      setAddressUsed(true);
+    }
+  }
+
   // ── Selección por ítem (estado local, NO se persiste) ──
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -482,6 +506,32 @@ export default function CarritoPage() {
             >
               <h2 className="font-black text-[var(--text)]">Datos de envío</h2>
 
+{savedAddress && !addressUsed && (
+                <div
+                  className="rounded-xl border p-4 flex flex-col gap-2"
+                  style={{ borderColor: "#10b981", background: "rgba(16,185,129,0.06)" }}
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="text-lg">📍</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-[var(--text)]">Usar mi dirección guardada</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                        {savedAddress.name} · {savedAddress.phone}
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {savedAddress.address}, {savedAddress.city} · {savedAddress.region}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={useSavedAddress}
+                    className="self-start text-xs font-bold px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                  >
+                    Usar esta dirección
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">Nombre completo *</label>
@@ -564,6 +614,15 @@ export default function CarritoPage() {
                   )}
                 </div>
               </div>
+
+{addressUsed && (
+                <button
+                  onClick={() => { setShipping({ name:"", phone:"", address:"", city:"", region: "Región Metropolitana de Santiago" }); setAddressUsed(false); }}
+                  className="text-xs text-indigo-500 hover:underline font-semibold self-start"
+                >
+                  Usar otra dirección
+                </button>
+              )}
 
               <button
                 onClick={() => setStep("cart")}
