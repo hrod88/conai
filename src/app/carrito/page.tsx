@@ -61,7 +61,7 @@ export default function CarritoPage() {
   const [couponError, setCouponError] = useState("");
   const [couponApplied, setCouponApplied] = useState("");
 
-// ── Dirección guardada del usuario (Etapa 3) ──
+  // ── Dirección guardada del usuario (Etapa 3) ──
   const [savedAddress, setSavedAddress] = useState<ShippingData | null>(null);
   const [addressUsed, setAddressUsed] = useState(false);
 
@@ -408,7 +408,7 @@ export default function CarritoPage() {
                   {/* Imagen / ícono + badge de stock */}
                   <div className="relative flex-shrink-0">
                     <div
-                      className="w-20 h-20 rounded-lg flex items-center justify-center overflow-hidden"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center overflow-hidden"
                       style={{ background: "var(--surface-alt, #f3f4f6)" }}
                     >
                       {product.image ? (
@@ -443,10 +443,10 @@ export default function CarritoPage() {
                     <p className="text-xs text-[var(--text-muted)] line-clamp-1">{product.description}</p>
 
                     {/* Precio + qty */}
-                    <div className="flex items-center justify-between mt-auto pt-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-auto pt-2">
                       {/* Qty */}
                       <div
-                        className="flex items-center rounded-lg border overflow-hidden"
+                        className="flex items-center rounded-lg border overflow-hidden w-fit"
                         style={{ borderColor: "var(--border)" }}
                       >
                         <button
@@ -465,7 +465,7 @@ export default function CarritoPage() {
                       </div>
 
                       {/* Precio */}
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         {product.original_price && product.original_price > product.price && (
                           <p className="text-xs text-[var(--text-muted)] line-through">
                             {clp(product.original_price * quantity)}
@@ -506,7 +506,7 @@ export default function CarritoPage() {
             >
               <h2 className="font-black text-[var(--text)]">Datos de envío</h2>
 
-{savedAddress && !addressUsed && (
+              {savedAddress && !addressUsed && (
                 <div
                   className="rounded-xl border p-4 flex flex-col gap-2"
                   style={{ borderColor: "#10b981", background: "rgba(16,185,129,0.06)" }}
@@ -615,7 +615,7 @@ export default function CarritoPage() {
                 </div>
               </div>
 
-{addressUsed && (
+              {addressUsed && (
                 <button
                   onClick={() => { setShipping({ name:"", phone:"", address:"", city:"", region: "Región Metropolitana de Santiago" }); setAddressUsed(false); }}
                   className="text-xs text-indigo-500 hover:underline font-semibold self-start"
