@@ -37,7 +37,7 @@ export default function FlashBanner() {
   if (!visible || done || pathname === "/") return null;
 
   return (
-    <div className="relative z-50 flex items-center justify-center gap-3 px-4 py-2 text-white text-[12px] font-bold"
+    <div className="relative z-40 flex items-center justify-center gap-3 px-4 py-2 text-white text-[12px] font-bold"
       style={{ background: "linear-gradient(90deg, #6366f1, #0ea5e9, #10b981)" }}>
       <span>⚡ Flash Sale — 20% en todo el sitio</span>
       <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full font-black tabular-nums">

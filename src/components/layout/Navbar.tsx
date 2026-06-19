@@ -43,15 +43,15 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    // PRUEBA: detector desactivado temporalmente
+    // function handleClickOutside(e: MouseEvent) {
+    //   if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    //     setDropdownOpen(false);
+    //   }
+    // }
+    // document.addEventListener("mousedown", handleClickOutside);
+    // return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   async function handleSignOut() {
     await supabase.auth.signOut();
     setDropdownOpen(false);
@@ -166,7 +166,8 @@ export default function Navbar() {
             </button>
             {dropdownOpen && (
               <div
-                className="absolute right-0 mt-2 w-48 rounded-xl border shadow-lg py-1 z-50"
+                onMouseDown={(e) => e.stopPropagation()}
+                className="absolute right-0 mt-2 w-48 rounded-xl border shadow-lg py-1 z-[100]"
                 style={{ background: "var(--surface)", borderColor: "var(--border)" }}
               >
                 <div className="px-3 py-2 text-xs truncate" style={{ color: "var(--text-muted)" }}>
@@ -175,7 +176,7 @@ export default function Navbar() {
                 <div className="my-1 border-t" style={{ borderColor: "var(--border)" }} />
                 <Link
                   href="/cuenta"
-                  onClick={() => setDropdownOpen(false)}
+                  onClick={(e) => { e.preventDefault(); setTimeout(() => window.location.assign("/cuenta"), 0); }}
                   className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-[var(--surface-alt)]"
                   style={{ color: "var(--text)" }}
                 >
@@ -188,7 +189,7 @@ export default function Navbar() {
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    onClick={() => setDropdownOpen(false)}
+                    onClick={(e) => { e.preventDefault(); setTimeout(() => window.location.assign("/admin"), 0); }}
                     className="flex items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-[var(--surface-alt)]"
                     style={{ color: "var(--text)" }}
                   >
