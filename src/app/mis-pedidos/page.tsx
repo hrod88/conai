@@ -8,11 +8,66 @@ const statusStyles: Record<string, { label: string; color: string; bg: string; b
   shipped:   { label: "Enviado",    color: "#1e40af", bg: "#dbeafe", border: "#93c5fd" },
   delivered: { label: "Entregado",  color: "#3730a3", bg: "#e0e7ff", border: "#a5b4fc" },
 };
+const SHIPPING_STEPS = [
+  { key: "received", label: "Recibido" },
+  { key: "preparing", label: "Preparando" },
+  { key: "shipped", label: "Despachado" },
+  { key: "in_transit", label: "En camino" },
+  { key: "delivered", label: "Entregado" },
+] as const;
 
+function shippingStepIndex(status: string | null): number {
+  const idx = SHIPPING_STEPS.findIndex((s) => s.key === status);
+  return idx === -1 ? 0 : idx;
+}
+
+function ShippingTimeline({ status }: { status: string | null }) {
+  const currentIdx = shippingStepIndex(status);
+  return (
+    <div className="flex items-center w-full py-1">
+      {SHIPPING_STEPS.map((step, i) => {
+        const done = i < currentIdx;
+        const current = i === currentIdx;
+        return (
+          <div key={step.key} className="flex-1 flex flex-col items-center relative">
+            {i > 0 && (
+              <div
+                className="absolute h-[3px] top-[13px]"
+                style={{
+                  left: "-50%",
+                  width: "100%",
+                  background: i <= currentIdx ? "#16a34a" : "var(--border)",
+                  zIndex: 0,
+                }}
+              />
+            )}
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold relative z-10 border-2"
+              style={{
+                background: done ? "#16a34a" : current ? "#6366f1" : "var(--surface)",
+                borderColor: done ? "#16a34a" : current ? "#6366f1" : "var(--border)",
+                color: done || current ? "#fff" : "var(--text-muted)",
+              }}
+            >
+              {done ? "✓" : i + 1}
+            </div>
+            <span
+              className="text-[9px] font-semibold mt-1.5 text-center leading-tight"
+              style={{ color: done ? "#16a34a" : current ? "#6366f1" : "var(--text-muted)" }}
+            >
+              {step.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 type OrderRow = {
   id: string;
   total: number;
   status: string;
+  shipping_status: string | null;
   created_at: string;
   shipping_name: string | null;
   shipping_address: string | null;
@@ -34,7 +89,7 @@ export default async function MisPedidosPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, total, status, created_at, shipping_name, shipping_address, shipping_city, shipping_region, shipping_cost, order_items(quantity, unit_price, products(name, icon))")
+    .select("id, total, status, shipping_status, created_at, shipping_name, shipping_address, shipping_city, shipping_region, shipping_cost, order_items(quantity, unit_price, products(name, icon))")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false }) as { data: OrderRow[] | null };
 
@@ -111,7 +166,7 @@ export default async function MisPedidosPage() {
                     </div>
                   ))}
                 </div>
-
+<ShippingTimeline status={order.shipping_status} />
                 <hr style={{ borderColor: "var(--border)" }} />
 
                 {order.shipping_address && (
