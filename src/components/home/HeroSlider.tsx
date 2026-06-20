@@ -378,13 +378,13 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
   return (
     <section
       className="relative overflow-hidden flex flex-col"
-      style={{ height: "calc(100vh - 64px)", background: "var(--bg)" }}
+      style={{ height: "calc(70vh - 64px)", background: "var(--bg)" }}
     >
       <div className="flex-1 max-w-6xl mx-auto w-full px-6 grid md:grid-cols-[50%_50%] gap-8 items-center min-h-0">
 
         {/* ── Columna izquierda ─────────────────────────────── */}
         <div
-          className="flex flex-col gap-5"
+          className="flex flex-col gap-4"
           style={{
             opacity:    animating ? 0 : 1,
             transform:  animating ? "translateY(12px)" : "translateY(0)",
@@ -398,7 +398,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
             {cfg.eyebrow}
           </span>
 
-          <h1 className="text-5xl md:text-6xl font-black leading-[1.05] text-[var(--text)]">
+          <h1 className="text-4xl md:text-5xl font-black leading-[1.05] text-[var(--text)]">
             {cfg.line1}
             <br />
             {cfg.line2}{" "}
@@ -423,7 +423,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
             {cfg.stats.map((s) => (
               <div
                 key={s.label}
-                className="flex flex-col items-center px-4 py-2 rounded-xl border text-center"
+                className="flex flex-col items-center px-3 py-1.5 rounded-xl border text-center"
                 style={{ borderColor: "var(--border)", background: "var(--surface)" }}
               >
                 <span className="text-sm font-black" style={{ color: cfg.accentFrom }}>
@@ -453,7 +453,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
           <div className="flex items-center gap-3 mt-1">
             <Link
               href="/productos"
-              className="px-6 py-3 text-white font-black rounded-full text-sm transition-all hover:scale-105 hover:shadow-lg"
+              className="px-6 py-2.5 text-white font-black rounded-full text-sm transition-all hover:scale-105 hover:shadow-lg"
               style={{
                 background: `linear-gradient(135deg, ${cfg.accentFrom}, ${cfg.accentTo})`,
                 boxShadow:  `0 6px 20px ${cfg.accentFrom}40`,
@@ -463,7 +463,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
             </Link>
             <Link
               href="/productos"
-              className="px-6 py-3 font-bold rounded-full text-sm border transition-all hover:border-indigo-400 text-[var(--text-muted)]"
+              className="px-6 py-2.5 font-bold rounded-full text-sm border transition-all hover:border-indigo-400 text-[var(--text-muted)]"
               style={{ borderColor: "var(--border)" }}
             >
               Ver todos
@@ -473,7 +473,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
 
         {/* ── Columna derecha — BentoScene ─────────────────── */}
         <div
-          className="hidden md:block h-[500px]"
+          className="hidden md:block h-[340px]"
           style={{
             opacity:    animating ? 0 : 1,
             transform:  animating ? "translateY(8px)" : "translateY(0)",
