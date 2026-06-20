@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import HeroSlider from "@/components/home/HeroSlider";
+import PromoStrip from "@/components/ui/PromoStrip";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
@@ -104,6 +105,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <PromoStrip />
       <HeroSlider heroData={heroData} />
 
       {/* ── Categorías (nuevo: scroll reveal + tilt 3D + bento) ── */}
