@@ -2,12 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import HeroSlider from "@/components/home/HeroSlider";
 import PromoStrip from "@/components/ui/PromoStrip";
+import OfertasDelDia from "@/components/ui/OfertasDelDia";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
 import { Truck, RotateCcw, ShieldCheck, Lock, Bot, type LucideIcon } from "lucide-react";
 import CategoriesShowcase from "@/components/home/CategoriesShowcase";
-
 export const dynamic = "force-dynamic";
 
 const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
@@ -63,6 +63,7 @@ export default async function HomePage() {
     { data: featuredRaw },
     { data: trendingRaw },
     { data: totalProductsCount },
+    { data: ofertasRaw },
   ] = await Promise.all([
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
@@ -78,6 +79,9 @@ export default async function HomePage() {
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }),
     // Conteo real de productos activos, para la sección de stats (sin traer filas).
     supabase.from("products").select("id", { count: "exact", head: true }).neq("active", false),
+    // Productos con descuento real, para la sección "Ofertas de hoy".
+    supabase.from("products").select("id, name, price, original_price, image, icon")
+      .neq("active", false).not("original_price", "is", null).order("original_price", { ascending: false }).limit(40),
   ]);
 
   const heroData = {
@@ -103,10 +107,19 @@ export default async function HomePage() {
   // Número real de productos para las stats del hero (en vez del "180+" fijo).
   const totalProducts = totalProductsCount ?? 0;
 
+  // Productos para la sección "Ofertas de hoy"
+  const ofertasData = (ofertasRaw ?? []) as {
+    id: string; name: string; price: number;
+    original_price: number | null; image: string | null; icon: string | null;
+  }[];
+
   return (
     <>
       <PromoStrip />
       <HeroSlider heroData={heroData} />
+
+      {/* ── Ofertas de hoy ── */}
+      <OfertasDelDia products={ofertasData} />
 
       {/* ── Categorías (nuevo: scroll reveal + tilt 3D + bento) ── */}
       <CategoriesShowcase />
