@@ -3,6 +3,7 @@ import Image from "next/image";
 import HeroSlider from "@/components/home/HeroSlider";
 import PromoStrip from "@/components/ui/PromoStrip";
 import OfertasDelDia from "@/components/ui/OfertasDelDia";
+import ProductosDestacados from "@/components/ui/ProductosDestacados";
 import NewsletterSection from "@/components/home/NewsletterSection";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
@@ -113,6 +114,9 @@ export default async function HomePage() {
     original_price: number | null; image: string | null; icon: string | null;
   }[];
 
+  // 30 productos para el escaparate "Seguro que te gusta"
+  const escaparateData = ofertasData.slice(0, 30);
+
   return (
     <>
       <PromoStrip />
@@ -121,8 +125,8 @@ export default async function HomePage() {
       {/* ── Ofertas de hoy ── */}
       <OfertasDelDia products={ofertasData} />
 
-      {/* ── Categorías (nuevo: scroll reveal + tilt 3D + bento) ── */}
-      <CategoriesShowcase />
+      {/* ── Escaparate de productos (reemplaza categorías) ── */}
+      <ProductosDestacados products={escaparateData} />
 
       {/* ── Más vendidos ────────────────────────── */}
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
