@@ -129,7 +129,8 @@ const SLIDE_CONFIGS = [
 
 type SlideConfig = typeof SLIDE_CONFIGS[number];
 
-const INTERVAL = 5000;
+const INTERVAL = 5000;       // cambio de slide
+const ROTATE_INTERVAL = 4500; // rotación de productos entre tarjetas
 
 // ── BentoCard ─────────────────────────────────────────────────────────────────
 interface BentoCardProps {
@@ -170,7 +171,6 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 
       {size === "large" && (
         <div className="flex flex-col p-4 flex-1">
-          {/* Imagen o ícono centrado verticalmente */}
           <div className="flex-1 flex items-center justify-center min-h-0">
             {product.image ? (
               <div className="relative w-full h-full">
@@ -180,7 +180,6 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
               <span className="text-5xl select-none">{product.icon}</span>
             )}
           </div>
-          {/* Texto en la parte inferior */}
           <div className="flex flex-col gap-1 pt-2">
             {tag && (
               <span
@@ -253,6 +252,11 @@ function BentoCard({ product, size, accentFrom, isHovered, onEnter, onLeave }: B
 }
 
 // ── BentoScene ────────────────────────────────────────────────────────────────
+// Slots fijos: 0 = grande, 1 = sup derecha, 2 = inf izquierda, 3 = inf derecha
+// Circuito de rotación pedido: 1 → 0 → 2 → 3 → 1
+// (sup der → principal → inf izq → inf der → sup der)
+const NEXT_SLOT: Record<number, number> = { 1: 0, 0: 2, 2: 3, 3: 1 };
+
 function BentoScene({
   products,
   config,
@@ -263,6 +267,23 @@ function BentoScene({
   onHover:  (h: boolean) => void;
 }) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  // slotOfProduct[i] = en qué slot está el producto i (0..3)
+  const [slotOfProduct, setSlotOfProduct] = useState<number[]>([0, 1, 2, 3]);
+  const [fading, setFading] = useState(false);
+  const pausedRef = useRef(false);
+
+  // Rotación cíclica de productos entre tarjetas
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (pausedRef.current) return;
+      setFading(true);
+      setTimeout(() => {
+        setSlotOfProduct((prev) => prev.map((slot) => NEXT_SLOT[slot]));
+        setFading(false);
+      }, 260);
+    }, ROTATE_INTERVAL);
+    return () => clearInterval(t);
+  }, []);
 
   if (products.length === 0) {
     return (
@@ -272,11 +293,22 @@ function BentoScene({
     );
   }
 
-  // Rellena hasta 4 repitiendo los disponibles si hay menos
+  // 4 productos (rellena repitiendo si hay menos)
   const display = [0, 1, 2, 3].map((i) => products[i % products.length]);
 
-  const enter = (i: number) => { setHoveredIdx(i); onHover(true); };
-  const leave = ()           => { setHoveredIdx(null); onHover(false); };
+  // productInSlot[s] = índice del producto que está en el slot s
+  const productInSlot: number[] = [0, 0, 0, 0];
+  slotOfProduct.forEach((slot, prodIdx) => { productInSlot[slot] = prodIdx; });
+
+  const enter = (i: number) => { setHoveredIdx(i); pausedRef.current = true; onHover(true); };
+  const leave = ()           => { setHoveredIdx(null); pausedRef.current = false; onHover(false); };
+
+  const fadeStyle = () => ({
+    opacity: fading ? 0 : 1,
+    transform: fading ? "scale(0.9)" : "scale(1)",
+    transition: "opacity 0.26s ease, transform 0.26s ease",
+    height: "100%",
+  });
 
   return (
     <div className="relative w-full h-full p-1">
@@ -307,38 +339,46 @@ function BentoScene({
         className="relative h-full grid gap-2.5"
         style={{ gridTemplateColumns: "3fr 2fr", gridTemplateRows: "1fr 1fr" }}
       >
-        {/* Grande — ocupa ambas filas */}
+        {/* Slot 0: Grande — ocupa ambas filas */}
         <div style={{ gridRow: "1 / 3" }}>
+          <div style={fadeStyle()}>
+            <BentoCard
+              product={display[productInSlot[0]]} size="large"
+              accentFrom={config.accentFrom}
+              isHovered={hoveredIdx === 0}
+              onEnter={() => enter(0)} onLeave={leave}
+            />
+          </div>
+        </div>
+
+        {/* Slot 1: Mediano — fila superior derecha */}
+        <div style={fadeStyle()}>
           <BentoCard
-            product={display[0]} size="large"
+            product={display[productInSlot[1]]} size="medium"
             accentFrom={config.accentFrom}
-            isHovered={hoveredIdx === 0}
-            onEnter={() => enter(0)} onLeave={leave}
+            isHovered={hoveredIdx === 1}
+            onEnter={() => enter(1)} onLeave={leave}
           />
         </div>
 
-        {/* Mediano — fila superior derecha */}
-        <BentoCard
-          product={display[1]} size="medium"
-          accentFrom={config.accentFrom}
-          isHovered={hoveredIdx === 1}
-          onEnter={() => enter(1)} onLeave={leave}
-        />
-
-        {/* Pequeños — fila inferior derecha, lado a lado */}
+        {/* Slots 2 y 3: Pequeños — fila inferior derecha */}
         <div className="grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
-          <BentoCard
-            product={display[2]} size="small"
-            accentFrom={config.accentFrom}
-            isHovered={hoveredIdx === 2}
-            onEnter={() => enter(2)} onLeave={leave}
-          />
-          <BentoCard
-            product={display[3]} size="small"
-            accentFrom={config.accentFrom}
-            isHovered={hoveredIdx === 3}
-            onEnter={() => enter(3)} onLeave={leave}
-          />
+          <div style={fadeStyle()}>
+            <BentoCard
+              product={display[productInSlot[2]]} size="small"
+              accentFrom={config.accentFrom}
+              isHovered={hoveredIdx === 2}
+              onEnter={() => enter(2)} onLeave={leave}
+            />
+          </div>
+          <div style={fadeStyle()}>
+            <BentoCard
+              product={display[productInSlot[3]]} size="small"
+              accentFrom={config.accentFrom}
+              isHovered={hoveredIdx === 3}
+              onEnter={() => enter(3)} onLeave={leave}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -507,9 +547,9 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
         ))}
       </div>
 
-      {/* ── Barra de progreso ────────────────────────────────── */}
+      {/* ── Barra de progreso — FIJA al fondo de la ventana, ancho completo ── */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-[3px]"
+        className="fixed bottom-0 left-0 w-full h-[4px] z-40"
         style={{ background: "var(--border)" }}
       >
         <div
