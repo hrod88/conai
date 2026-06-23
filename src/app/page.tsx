@@ -296,7 +296,7 @@ export default async function HomePage() {
 
       {/* ── Stats ───────────────────────────────── */}
       <section className="py-10 md:py-14 px-6" style={{ background: "linear-gradient(135deg, #6366f1, #0ea5e9)" }}>
-        <div className="max-w-4xl mx-auto grid grid-cols-3 gap-4 md:gap-6 text-center text-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-3 gap-4 md:gap-6 text-center text-white">
           {[
             { n: `${totalProducts}`, label: "Productos disponibles" },
             { n: "30 días",          label: "Para devolver" },
