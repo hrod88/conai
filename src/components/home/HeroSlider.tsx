@@ -308,10 +308,11 @@ function BentoScene({
     transform: fading ? "scale(0.9)" : "scale(1)",
     transition: "opacity 0.26s ease, transform 0.26s ease",
     height: "100%",
+    minHeight: 0,
   });
 
   return (
-    <div className="relative w-full h-full p-1">
+    <div className="relative w-full max-w-full h-full p-1 overflow-hidden">
       {/* Blobs decorativos */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
         <div
@@ -336,8 +337,8 @@ function BentoScene({
 
       {/* Grid bento: 3fr | 2fr, dos filas */}
       <div
-        className="relative h-full grid gap-2.5"
-        style={{ gridTemplateColumns: "3fr 2fr", gridTemplateRows: "1fr 1fr" }}
+        className="relative h-full w-full grid gap-2.5"
+        style={{ gridTemplateColumns: "minmax(0, 3fr) minmax(0, 2fr)", gridTemplateRows: "minmax(0, 1fr) minmax(0, 1fr)" }}
       >
         {/* Slot 0: Grande — ocupa ambas filas */}
         <div style={{ gridRow: "1 / 3" }}>
@@ -362,7 +363,7 @@ function BentoScene({
         </div>
 
         {/* Slots 2 y 3: Pequeños — fila inferior derecha */}
-        <div className="grid gap-2.5" style={{ gridTemplateColumns: "1fr 1fr" }}>
+        <div className="grid gap-2.5 min-h-0" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)" }}>
           <div style={fadeStyle()}>
             <BentoCard
               product={display[productInSlot[2]]} size="small"
@@ -420,11 +421,15 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
       className="relative overflow-hidden flex flex-col"
       style={{ height: "calc(70vh - 64px)", background: "var(--bg)" }}
     >
-      <div className="flex-1 max-w-6xl mx-auto w-full px-6 grid md:grid-cols-[50%_50%] gap-8 items-center min-h-0">
+      <div className="flex-1 max-w-6xl mx-auto w-full px-4 md:px-6 flex items-center min-h-0">
+       <div
+        className="w-full rounded-2xl shadow-lg px-6 py-6 md:px-8 md:py-7 grid md:grid-cols-2 gap-6 items-center"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)", height: "420px" }}
+       >
 
         {/* ── Columna izquierda ─────────────────────────────── */}
         <div
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-4 min-w-0"
           style={{
             opacity:    animating ? 0 : 1,
             transform:  animating ? "translateY(12px)" : "translateY(0)",
@@ -513,7 +518,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
 
         {/* ── Columna derecha — BentoScene ─────────────────── */}
         <div
-          className="hidden md:block h-[340px]"
+          className="hidden md:block h-[340px] min-w-0"
           style={{
             opacity:    animating ? 0 : 1,
             transform:  animating ? "translateY(8px)" : "translateY(0)",
@@ -527,6 +532,7 @@ export default function HeroSlider({ heroData }: { heroData?: HeroData }) {
             onHover={(h) => { pausedRef.current = h; }}
           />
         </div>
+       </div>
       </div>
 
       {/* ── Dots ─────────────────────────────────────────────── */}
