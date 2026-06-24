@@ -140,6 +140,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   const [isMobile, setIsMobile]                   = useState(false);
   const [filterSheetOpen, setFilterSheetOpen]     = useState(false);
   const [sortSheetOpen, setSortSheetOpen]         = useState(false);
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   // Temporizador para cerrar el menú con un pequeño retardo (evita cierres bruscos
@@ -234,7 +235,7 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* ══ DESKTOP: Franja superior — botón (izq) + barra de subcategorías (der), misma altura h-12 ══ */}
       <div
         className="hidden md:flex items-stretch h-12 flex-shrink-0"
-        style={{ background: "var(--bg)" }}
+        style={{ background: "var(--surface)" }}
       >
         {/* Botón "Todas las categorías" — minimizado (solo ☰) cuando el rail está contraído,
             completo (☰ + texto) al expandir. Su ancho acompaña al del rail para quedar alineado. */}
@@ -243,9 +244,9 @@ export default function ProductsClient({ products, initialCategory }: Props) {
           onMouseLeave={scheduleCloseMenu}
           onClick={() => setMenuOpen((v) => !v)}
           className={`flex items-center h-full text-[13px] font-bold whitespace-nowrap flex-shrink-0 overflow-hidden transition-[width] duration-200 ease-out rounded-lg hover:bg-[var(--surface-alt)] ${
-            menuOpen ? "w-44 gap-2.5 px-4 justify-start" : "w-14 gap-0 px-0 justify-center"
+            menuOpen ? "w-44 gap-2.5 px-4 justify-start" : "w-11 gap-0 px-0 justify-center"
           }`}
-          style={{ background: "transparent", color: "var(--text)" }}
+          style={{ background: "var(--bg)", color: "var(--text)" }}
           aria-label="Todas las categorías"
         >
           <Menu size={18} strokeWidth={2} className="flex-shrink-0" />
@@ -315,20 +316,20 @@ export default function ProductsClient({ products, initialCategory }: Props) {
       {/* ══ Cuerpo: sidebar (colapsa su ANCHO al ocultarse) + área principal ══ */}
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── DESKTOP: Sidebar RAIL. Contraído (w-14) muestra solo íconos; al pasar el
+        {/* ── DESKTOP: Sidebar RAIL. Contraído (44px) muestra solo íconos centrados; al pasar el
             cursor se expande (w-44) mostrando los nombres. Empuja la grilla al expandir. ── */}
         <div
           className="hidden md:flex flex-shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
           style={{
-            width: menuOpen ? "11rem" : "3.5rem",
+            width: menuOpen ? "11rem" : "2.75rem",
             background: "var(--bg)",
           }}
           onMouseEnter={openMenu}
           onMouseLeave={scheduleCloseMenu}
         >
           <div
-            className="flex-shrink-0 overflow-y-auto overflow-x-hidden flex flex-col py-2 transition-[width] duration-200 ease-out"
-            style={{ width: menuOpen ? "11rem" : "3.5rem" }}
+            className="flex-shrink-0 overflow-y-auto overflow-x-hidden flex flex-col pt-3 md:pt-4 pb-2 transition-[width] duration-200 ease-out"
+            style={{ width: menuOpen ? "11rem" : "2.75rem" }}
           >
             {categories.map((c) => {
               // Resaltado: activo si está fijado por clic O si el cursor está encima.
@@ -342,8 +343,8 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                   // la barra de subcategorías de arriba cambia sola, sin clic.
                   onMouseEnter={() => setHoverCategory(c.value)}
                   title={c.label}
-                  className={`flex items-center justify-between py-2.5 mx-2 rounded-xl text-[12.5px] font-medium transition-colors ${
-                    menuOpen ? "px-3" : "px-0 justify-center"
+                  className={`flex items-center justify-between py-2.5 rounded-xl text-[12.5px] font-medium transition-colors ${
+                    menuOpen ? "px-3 mx-2" : "px-0 justify-center"
                   } ${
                     isActive
                       ? "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold"
@@ -371,88 +372,143 @@ export default function ProductsClient({ products, initialCategory }: Props) {
             className="md:hidden flex flex-col border-b"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
-            <div
-              className="flex gap-2 overflow-x-auto px-3 pt-2.5 pb-1.5"
-              style={{ scrollbarWidth: "none" } as React.CSSProperties}
-            >
+            {/* ── MÓVIL · Enfoque C: Tarjeta de contexto compacta ─────────────────
+                Muestra dónde estás (categoría + ícono + conteo) y permite filtrar/
+                ordenar de un toque. Las subcategorías van abajo como chips con
+                contador discreto. */}
+
+            {/* Tarjeta de contexto: categoría activa + conteo + acciones */}
+            <div className="px-3 pt-2.5 pb-2 flex items-center gap-2">
+              {/* Botón hamburguesa que abre el panel de categorías (bottom sheet) */}
               <button
-                onClick={clearFilters}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
-                  !drillCategory
+                onClick={() => setCategorySheetOpen(true)}
+                aria-label="Abrir categorías"
+                className="flex items-center justify-center w-9 h-9 rounded-full flex-shrink-0 text-white"
+                style={{ background: "linear-gradient(135deg, #6366f1, #38bdf8)" }}
+              >
+                <Menu size={17} strokeWidth={2.25} />
+              </button>
+
+              {/* Etiqueta de categoría actual + conteo */}
+              <div className="flex-1 min-w-0 flex items-center gap-2">
+                {drillCategory ? (
+                  (() => {
+                    const cat = categories.find((c) => c.value === drillCategory);
+                    if (!cat) return null;
+                    const Icon = cat.icon;
+                    return (
+                      <>
+                        <span
+                          className="flex items-center justify-center w-6 h-6 rounded-md flex-shrink-0 text-white"
+                          style={{ background: "linear-gradient(135deg, #6366f1, #38bdf8)" }}
+                        >
+                          <Icon size={14} strokeWidth={2} />
+                        </span>
+                        <span className="text-[13px] font-bold text-[var(--text)] truncate">{cat.label}</span>
+                      </>
+                    );
+                  })()
+                ) : (
+                  <span className="text-[13px] font-bold text-[var(--text)] truncate">Todos los productos</span>
+                )}
+                <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0 ml-auto">
+                  <span className="font-bold text-[var(--text)]">{filtered.length}</span> producto{filtered.length === 1 ? "" : "s"}
+                </span>
+              </div>
+            </div>
+
+            {/* Píldoras: Filtros · Ordenar (compactas, no gigantes) */}
+            <div className="px-3 pb-2 flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
+              <button
+                onClick={() => setFilterSheetOpen(true)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-bold border transition-colors ${
+                  activeFilterCount > 0
                     ? "bg-indigo-600 text-white border-indigo-600"
                     : "border-[var(--border)] text-[var(--text-muted)]"
                 }`}
-                style={drillCategory ? { background: "var(--bg)" } : {}}
+                style={activeFilterCount === 0 ? { background: "var(--bg)" } : {}}
               >
-                Todo
+                ⚙️ Filtros
+                {activeFilterCount > 0 && (
+                  <span className="px-1.5 py-0.5 bg-white text-indigo-600 text-[9.5px] rounded-full font-black leading-none">
+                    {activeFilterCount}
+                  </span>
+                )}
               </button>
-              {categories.map((c) => {
-                const active = drillCategory === c.value;
-                return (
-                  <button
-                    key={c.value}
-                    onClick={() => handleCatClick(c.value)}
-                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
-                      active
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "border-[var(--border)] text-[var(--text-muted)]"
-                    }`}
-                    style={!active ? { background: "var(--bg)" } : {}}
-                  >
-                    <c.icon size={17} strokeWidth={2} className="flex-shrink-0" />
-                    {c.label}
-                  </button>
-                );
-              })}
+              <button
+                onClick={() => setSortSheetOpen(true)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-bold border transition-colors ${
+                  sortBy !== "relevance"
+                    ? "border-indigo-300 text-indigo-600 dark:text-indigo-400"
+                    : "border-[var(--border)] text-[var(--text-muted)]"
+                }`}
+                style={{ background: "var(--bg)" }}
+              >
+                ↕ Ordenar
+                {sortBy !== "relevance" && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block" />}
+              </button>
+
+              {/* Si hay categoría activa, botón rápido para volver a "Todos" */}
+              {drillCategory && (
+                <button
+                  onClick={clearFilters}
+                  className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11.5px] font-medium border border-[var(--border)] text-[var(--text-muted)]"
+                  style={{ background: "var(--bg)" }}
+                >
+                  ✕ Limpiar
+                </button>
+              )}
             </div>
 
+            {/* Subcategorías como chips con contador (solo si hay categoría activa) */}
             {drillCategory && (
               <div
-                className="flex gap-2 overflow-x-auto px-3 pb-1.5"
+                className="flex gap-1.5 overflow-x-auto px-3 pb-2.5"
                 style={{ scrollbarWidth: "none" } as React.CSSProperties}
               >
+                <button
+                  onClick={() => setActiveSubcategory(null)}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-bold border transition-colors ${
+                    !activeSubcategory
+                      ? "bg-white text-indigo-600 border-indigo-600 dark:bg-indigo-950/40"
+                      : "border-[var(--border)] text-[var(--text-muted)]"
+                  }`}
+                  style={activeSubcategory ? { background: "var(--bg)" } : {}}
+                >
+                  Todas
+                  <span className={`px-1.5 py-0.5 text-[9.5px] rounded-full font-black leading-none ${
+                    !activeSubcategory ? "bg-indigo-600 text-white" : "bg-[var(--surface)] text-[var(--text-muted)]"
+                  }`}>
+                    {products.filter((p) => p.category === drillCategory).length}
+                  </span>
+                </button>
                 {SUBCATEGORIES[drillCategory].map((sub) => {
                   const active = activeSubcategory === sub.id;
+                  const count = products.filter((p) => p.category === drillCategory && p.subcategory === sub.id).length;
                   return (
                     <button
                       key={sub.id}
                       onClick={() => setActiveSubcategory(active ? null : sub.id)}
-                      className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-bold border transition-colors ${
                         active
-                          ? "bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-900/40 dark:text-indigo-300 dark:border-indigo-700"
+                          ? "bg-white text-indigo-600 border-indigo-600 dark:bg-indigo-950/40"
                           : "border-[var(--border)] text-[var(--text-muted)]"
                       }`}
                       style={!active ? { background: "var(--bg)" } : {}}
                     >
                       {sub.label}
+                      {count > 0 && (
+                        <span className={`px-1.5 py-0.5 text-[9.5px] rounded-full font-black leading-none ${
+                          active ? "bg-indigo-600 text-white" : "bg-[var(--surface)] text-[var(--text-muted)]"
+                        }`}>
+                          {count}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             )}
-
-            <div className="flex gap-2 px-3 pb-2.5 pt-1">
-              <button
-                onClick={() => setSortSheetOpen(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border"
-                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
-              >
-                ↕ Ordenar
-                {sortBy !== "relevance" && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 inline-block" />}
-              </button>
-              <button
-                onClick={() => setFilterSheetOpen(true)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border"
-                style={{ background: "var(--bg)", borderColor: "var(--border)", color: "var(--text-muted)" }}
-              >
-                ⚙️ Filtros
-                {activeFilterCount > 0 && (
-                  <span className="px-1.5 py-0.5 bg-indigo-600 text-white text-[10px] rounded-full font-black leading-none">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </div>
           </div>
 
           {/* Product grid */}
@@ -580,6 +636,86 @@ export default function ProductsClient({ products, initialCategory }: Props) {
                   {sortBy === opt.value && <span className="text-indigo-600 font-black text-base">✓</span>}
                 </button>
               ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Bottom sheet móvil: lista de categorías ─────────────────────────
+          Se abre al tocar el botón hamburguesa de la barra superior móvil.
+          Mismo patrón visual que los sheets de Filtros y Ordenar. */}
+      {categorySheetOpen && isMobile && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setCategorySheetOpen(false)} />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl max-h-[80vh] flex flex-col"
+            style={{ background: "var(--surface)" }}
+          >
+            <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
+              <h3 className="text-[16px] font-black text-[var(--text)]">Categorías</h3>
+              <button
+                onClick={() => setCategorySheetOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)]"
+                style={{ background: "var(--bg)" }}
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto px-3 pb-5 flex flex-col gap-1">
+              {/* Opción "Todos los productos" para limpiar el filtro */}
+              <button
+                onClick={() => { clearFilters(); setCategorySheetOpen(false); }}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-bold transition-colors ${
+                  !drillCategory
+                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
+                    : "text-[var(--text)] hover:bg-[var(--bg)]"
+                }`}
+              >
+                <span
+                  className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 text-white"
+                  style={{ background: "linear-gradient(135deg, #6366f1, #38bdf8)" }}
+                >
+                  <Menu size={17} strokeWidth={2} />
+                </span>
+                <span className="flex-1 text-left">Todos los productos</span>
+                <span className="text-[11px] text-[var(--text-muted)]">{products.length}</span>
+              </button>
+
+              {/* Lista de categorías reales */}
+              {categories.map((c) => {
+                const active = drillCategory === c.value;
+                const Icon = c.icon;
+                const count = products.filter((p) => p.category === c.value).length;
+                return (
+                  <button
+                    key={c.value}
+                    onClick={() => { handleCatClick(c.value); setCategorySheetOpen(false); }}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-bold transition-colors ${
+                      active
+                        ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
+                        : "text-[var(--text)] hover:bg-[var(--bg)]"
+                    }`}
+                  >
+                    <span
+                      className={`flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 ${
+                        active ? "text-white" : ""
+                      }`}
+                      style={
+                        active
+                          ? { background: "linear-gradient(135deg, #6366f1, #38bdf8)" }
+                          : { background: "var(--bg)", color: "var(--text-muted)" }
+                      }
+                    >
+                      <Icon size={17} strokeWidth={1.75} />
+                    </span>
+                    <span className="flex-1 text-left">{c.label}</span>
+                    <span className={`text-[11px] ${active ? "text-indigo-400" : "text-[var(--text-muted)]"}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>
