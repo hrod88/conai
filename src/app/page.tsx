@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import HeroSlider from "@/components/home/HeroSlider";
+import MobileHero from "@/components/home/MobileHero";
 import PromoStrip from "@/components/ui/PromoStrip";
 import OfertasDelDia from "@/components/ui/OfertasDelDia";
 import ProductosDestacados from "@/components/ui/ProductosDestacados";
@@ -117,10 +118,24 @@ export default async function HomePage() {
   // 30 productos para el escaparate "Seguro que te gusta"
   const escaparateData = ofertasData.slice(0, 30);
 
+  // Productos para el hero móvil: tomamos 2 con mejor descuento.
+  // Si no hay descuentos, caemos en bestsellers para que el hero igual se vea.
+  const mobileHeroProducts = (heroData.discounts.length >= 2
+    ? heroData.discounts
+    : heroData.bestsellers
+  ).slice(0, 2);
+
   return (
     <>
       <PromoStrip />
-      <HeroSlider heroData={heroData} />
+
+      {/* HeroSlider sigue mandando en DESKTOP. */}
+      <div className="hidden md:block">
+        <HeroSlider heroData={heroData} />
+      </div>
+
+      {/* Hero comercial nuevo, SOLO MÓVIL (md:hidden por dentro). */}
+      <MobileHero products={mobileHeroProducts} />
 
       {/* ── Ofertas de hoy ── */}
       <OfertasDelDia products={ofertasData} />
