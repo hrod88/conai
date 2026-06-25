@@ -1,263 +1,301 @@
 "use client";
 
-// HeroDesktop.tsx — FASE 2 con fusión de PromoStrip dentro
+// HeroDesktop.tsx — FASE 2.4
 // ──────────────────────────────────────────────────────────────────────────
-// Hero comercial SOLO DESKTOP (md+) en estilo AliExpress/Temu.
-// Reemplaza al HeroSlider (Bento) Y al PromoStrip (cupones grandes), ambos
-// quedan inutilizados en el page.tsx pero sus archivos siguen en el repo.
-//
-// Estructura unificada:
-//   1) Banner principal (gradient rojo→naranja del manual §2):
-//      Izquierda: eyebrow + título "Hasta -26% OFF" + descripción +
-//                 3 cupones (CONAI5/CONAI10/CONAI18) + timer real +
-//                 CTAs + sello chileno discreto.
-//      Derecha: 2 productos reales con precio rojo + badge naranja.
-//   2) Franja de beneficios debajo, en indigo (manual §8 sello chileno).
-//
-// El timer es honesto (manual §6): termina cada DOMINGO a las 23:59 y se
-// renueva al siguiente domingo. No se reinicia al llegar a cero.
+// Cambios vs 2.3:
+//   - Flecha con animación PULSE (late como corazón, escala 1→1.18 + ring).
+//   - Derecha: preparado para imagen real PNG de Freepik.
+//     Mientras no esté, muestra placeholder bonito (no el emoji feo).
+//     Cuando tengas /public/hero-box.png, descomenta las 3 líneas marcadas.
 // ──────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-type HeroMiniProduct = {
-  id: string;
-  name: string;
-  price: number;
-  icon?: string | null;
-  image?: string | null;
-};
+const FRASES = [
+  "Hasta −26% OFF",
+  "Tecnología buena, sin pagar de más",
+  "Cyber Semana activa",
+  "Llévatelo hoy",
+];
+const ROTACION_MS = 3000;
 
-interface HeroDesktopProps {
-  /** Productos a destacar dentro del banner (idealmente 2 con descuento). */
-  products: HeroMiniProduct[];
-}
-
-// Cupones activos. Si el día de mañana cambian códigos o montos, se editan
-// acá. En el futuro esto debería venir de una tabla `coupons` en Supabase.
 const COUPONS = [
   { amount: "$5.000",  cond: "sobre $40.000",  code: "CONAI5"  },
   { amount: "$10.000", cond: "sobre $70.000",  code: "CONAI10" },
   { amount: "$18.000", cond: "sobre $120.000", code: "CONAI18" },
 ];
 
-/**
- * Devuelve ms hasta el próximo domingo 23:59:59. Si hoy es domingo y aún no
- * son las 23:59, retorna lo que queda; si ya pasó, salta al próximo domingo.
- */
-function msHastaProximoDomingo(): number {
-  const ahora = new Date();
-  const proximo = new Date(ahora);
-  const diasParaDomingo = (7 - ahora.getDay()) % 7;
-  proximo.setDate(ahora.getDate() + diasParaDomingo);
-  proximo.setHours(23, 59, 59, 999);
-  if (proximo.getTime() <= ahora.getTime()) {
-    proximo.setDate(proximo.getDate() + 7);
-  }
-  return proximo.getTime() - ahora.getTime();
+const CARD_COLORS = ["#dc2626", "#2563eb", "#db2777"];
+
+export type HeroProduct = {
+  id: string;
+  name: string;
+  price: number;
+  original_price?: number | null;
+  image?: string | null;
+  icon?: string | null;
+};
+
+interface HeroDesktopProps {
+  products: HeroProduct[];
 }
 
-/** Formatea ms como "Xd HH:MM:SS" o "HH:MM:SS" si <24h. */
-function formatearTiempo(ms: number): string {
-  const totalSeg = Math.max(0, Math.floor(ms / 1000));
-  const dias = Math.floor(totalSeg / 86400);
-  const horas = Math.floor((totalSeg % 86400) / 3600);
-  const mins = Math.floor((totalSeg % 3600) / 60);
-  const segs = totalSeg % 60;
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return dias > 0
-    ? `${dias}d ${pad(horas)}:${pad(mins)}:${pad(segs)}`
-    : `${pad(horas)}:${pad(mins)}:${pad(segs)}`;
+// Inyectamos el keyframe de pulse via <style> en el cliente para no depender
+// de Tailwind (no tiene este keyframe built-in con ring expansivo).
+const PULSE_CSS = `
+@keyframes hero-pulse {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255,255,255,.75); }
+  50%  { transform: scale(1.18); box-shadow: 0 0 0 10px rgba(255,255,255,.0);  }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255,255,255,.0);  }
 }
+.hero-arrow-pulse {
+  animation: hero-pulse 1.5s ease-in-out infinite;
+}
+`;
 
 export default function HeroDesktop({ products }: HeroDesktopProps) {
-  // Se inicializa en cliente vía useEffect para evitar mismatch SSR/cliente.
-  const [tiempoRestante, setTiempoRestante] = useState<string>("");
+  const [fraseIdx, setFraseIdx] = useState(0);
+  const [anim, setAnim] = useState<"idle" | "exit" | "enter">("idle");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const tick = () => setTiempoRestante(formatearTiempo(msHastaProximoDomingo()));
-    tick();
-    const id = setInterval(tick, 1000);
+    setMounted(true);
+    const id = setInterval(() => {
+      setAnim("exit");
+      setTimeout(() => {
+        setFraseIdx((i) => (i + 1) % FRASES.length);
+        setAnim("enter");
+        setTimeout(() => setAnim("idle"), 50);
+      }, 300);
+    }, ROTACION_MS);
     return () => clearInterval(id);
   }, []);
 
-  const destacados = (products ?? []).slice(0, 2);
+  const fraseStyle: React.CSSProperties = {
+    fontSize: "32px",
+    fontWeight: 800,
+    lineHeight: 1.1,
+    letterSpacing: "-0.5px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    display: "block",
+    transition: anim === "enter" ? "none" : "transform 0.3s ease, opacity 0.3s ease",
+    transform:
+      anim === "idle"  ? "translateY(0)"    :
+      anim === "exit"  ? "translateY(-24px)" :
+                         "translateY(24px)",
+    opacity: anim === "idle" ? 1 : 0,
+  };
+
+  const cards = products.slice(0, 3);
+
+  // ── Para usar la imagen real: ──────────────────────────────────────────
+  // 1) Descarga tu PNG de Freepik y guárdalo en /public/hero-box.png
+  // 2) Cambia esta constante a true:
+  const HAS_HERO_IMAGE = true;
+  // ──────────────────────────────────────────────────────────────────────
 
   return (
-    <section className="hidden md:block w-full bg-[var(--bg)] py-4 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section className="hidden md:block w-full">
+      {/* Inyección del keyframe de pulse (solo cliente) */}
+      {mounted && <style>{PULSE_CSS}</style>}
 
-        {/* ═══════════════ BANNER PRINCIPAL ═══════════════ */}
+      <div
+        className="relative overflow-hidden w-full text-white"
+        style={{ background: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)" }}
+      >
+        {/* Burbujas decorativas */}
+        <span aria-hidden className="absolute pointer-events-none rounded-full"
+          style={{ right:"6%", top:"-20%", width:"300px", height:"300px", background:"rgba(255,255,255,.06)" }} />
+        <span aria-hidden className="absolute pointer-events-none rounded-full"
+          style={{ left:"-4%", bottom:"-20%", width:"250px", height:"250px", background:"rgba(255,255,255,.05)" }} />
+
+        {/* ── 1) FRANJA DE CUPONES DISCRETA ── */}
         <div
-          className="relative overflow-hidden rounded-t-2xl shadow-lg flex items-stretch gap-6 px-7 py-6 text-white"
-          style={{
-            background: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)",
-            minHeight: "360px",
-          }}
+          className="relative z-10 flex items-center gap-5 px-10 py-1.5 text-[11px] font-semibold"
+          style={{ background:"rgba(0,0,0,.14)", borderBottom:"1px solid rgba(255,255,255,.14)", opacity:.9 }}
         >
-          {/* Burbujas decorativas (manual §2). */}
-          <span
-            aria-hidden
-            className="absolute -right-12 -top-12 w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: "rgba(255,255,255,.08)" }}
-          />
-          <span
-            aria-hidden
-            className="absolute -left-16 -bottom-16 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: "rgba(255,255,255,.06)" }}
-          />
-
-          {/* ── Columna izquierda: mensaje + cupones + timer + CTAs ──── */}
-          <div className="flex-1 flex flex-col justify-center relative z-10 max-w-[58%]">
-            <p className="text-[11px] font-extrabold tracking-[2px] uppercase opacity-95">
-              ⚡ Cyber Semana · Termina domingo
-            </p>
-
-            <h1
-              className="font-extrabold leading-[0.95] mt-2"
-              style={{ fontSize: "clamp(34px, 3.8vw, 48px)", letterSpacing: "-1px" }}
-            >
-              Hasta −26% OFF
-            </h1>
-
-            <p className="text-[13.5px] opacity-95 mt-2 max-w-[460px] leading-relaxed">
-              En tecnología, wearables y salud. Más de 45 productos rebajados.
-            </p>
-
-            {/* ── Cupones fusionados (antes en PromoStrip) ──
-                Píldoras blancas con monto en rojo, código abajo en naranja.
-                El borde punteado entre cupones es decisión del manual: aporta
-                identidad visual al estilo "tarjeta de ticket". */}
-            <div className="flex items-stretch bg-white rounded-xl overflow-hidden mt-4 w-fit shadow-md">
-              {COUPONS.map((c, i) => (
-                <div
-                  key={c.code}
-                  className={`px-4 py-2 text-center ${
-                    i < COUPONS.length - 1
-                      ? "border-r-2 border-dashed border-orange-200"
-                      : ""
-                  }`}
-                >
-                  <div
-                    className="text-[15px] font-extrabold leading-none"
-                    style={{ color: "#dc2626" }}
-                  >
-                    −{c.amount}
-                  </div>
-                  <div className="text-[9px] text-gray-500 mt-0.5">{c.cond}</div>
-                  <div
-                    className="text-[10px] font-extrabold tracking-wider mt-0.5"
-                    style={{ color: "#f97316" }}
-                  >
-                    {c.code}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Timer real (manual §6). suppressHydrationWarning evita warning
-                normal por contenido distinto entre SSR y cliente. */}
-            <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-black/25 backdrop-blur-sm self-start">
-              <span className="text-[13px] font-bold">⏰ Quedan</span>
+          <span className="opacity-80">🎟️ Cupones:</span>
+          {COUPONS.map((c, i) => (
+            <span key={c.code} className="flex items-center gap-1.5">
+              {i > 0 && <span className="opacity-30">|</span>}
+              <span>−{c.amount} sobre {c.cond} ·</span>
               <span
-                className="text-[15px] font-extrabold tabular-nums"
-                suppressHydrationWarning
+                className="font-extrabold tracking-wide px-1.5 py-0.5 rounded"
+                style={{ background:"rgba(255,255,255,.2)", fontSize:"10px" }}
               >
-                {tiempoRestante || "—:—:—"}
+                {c.code}
               </span>
-            </div>
-
-            <div className="flex items-center gap-3 mt-4">
-              <Link
-                href="/productos?descuento=1"
-                className="inline-flex items-center gap-2 px-7 py-3 bg-white text-red-600 rounded-full font-extrabold text-[14px] shadow-md hover:scale-105 transition-transform"
-              >
-                Ver ofertas →
-              </Link>
-              <Link
-                href="/productos"
-                className="inline-flex items-center gap-2 px-7 py-3 text-white rounded-full font-bold text-[14px] border-2 border-white/40 hover:bg-white/10 transition-colors"
-              >
-                Ver todos
-              </Link>
-            </div>
-
-            {/* Sello chileno (manual §8) */}
-            <div className="flex items-center gap-3 mt-4 text-[11.5px] font-semibold opacity-95">
-              <span>🇨🇱 Transbank</span>
-              <span>·</span>
-              <span>🚚 Envío 24-48h</span>
-              <span>·</span>
-              <span>🤖 Soporte IA</span>
-            </div>
-          </div>
-
-          {/* ── Columna derecha: 2 productos reales ─────────────────────── */}
-          <div className="flex gap-3 items-center relative z-10">
-            {destacados.map((p) => (
-              <Link
-                key={p.id}
-                href={`/productos/${p.id}`}
-                className="bg-white rounded-2xl p-3 w-[180px] flex flex-col gap-2 text-[var(--text)] hover:-translate-y-1 hover:shadow-xl transition-all"
-                aria-label={p.name}
-              >
-                <div className="relative aspect-[1/1] rounded-xl bg-gray-50 overflow-hidden">
-                  {p.image ? (
-                    <Image
-                      src={p.image}
-                      alt={p.name}
-                      fill
-                      sizes="180px"
-                      className="object-contain p-2"
-                    />
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-5xl">
-                      {p.icon ?? "🛍️"}
-                    </span>
-                  )}
-                  <span
-                    className="absolute top-2 right-2 text-[10px] font-extrabold px-2 py-0.5 rounded-md text-white"
-                    style={{ background: "#dc2626" }}
-                  >
-                    −26%
-                  </span>
-                </div>
-                <p className="text-[11.5px] font-bold leading-tight line-clamp-2 min-h-[28px] text-gray-800">
-                  {p.name}
-                </p>
-                <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-[15px] font-extrabold" style={{ color: "#dc2626" }}>
-                    ${Number(p.price).toLocaleString("es-CL")}
-                  </span>
-                  <span
-                    className="text-[9px] font-extrabold text-white px-1.5 py-0.5 rounded leading-none"
-                    style={{ background: "#f97316" }}
-                  >
-                    −26% OFF
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
+            </span>
+          ))}
         </div>
 
-        {/* ═══════════════ FRANJA DE BENEFICIOS ═══════════════ */}
-        {/* Indigo (manual §2: marca/navegación), separa el bloque comercial
-            arriba (rojo) del resto de la página. Antes era parte del
-            PromoStrip; aquí queda fusionada. */}
+        {/* ── 2) CUERPO PRINCIPAL ── */}
         <div
-          className="flex flex-wrap items-center justify-center gap-x-8 gap-y-1 px-5 py-2.5 text-white text-[12px] rounded-b-2xl"
-          style={{ background: "#3730a3" }}
+          className="relative z-10 mx-auto px-10 py-5 grid items-center gap-8"
+          style={{ maxWidth:"1280px", gridTemplateColumns:"1.1fr 1fr" }}
         >
-          <span>🚚 <b className="font-bold">Envío gratis</b> sobre $49.990</span>
-          <span className="opacity-40">·</span>
-          <span>📦 <b className="font-bold">Entrega rápida</b> · 3-5 días hábiles</span>
-          <span className="opacity-40">·</span>
-          <span>↩️ <b className="font-bold">Devoluciones</b> garantizadas</span>
+
+          {/* ── IZQUIERDA ── */}
+          <div className="flex flex-col">
+            <p className="text-[12px] font-semibold opacity-95 mb-2">
+              ⚡ <b className="font-extrabold">CYBER SEMANA</b> · Termina dom 23:59 (CLT)
+            </p>
+
+            {/* Frase rotativa + flecha PULSE */}
+            <Link
+              href="/productos?descuento=1"
+              className="inline-flex items-center gap-3 mb-4 group self-start"
+              style={{ overflow:"hidden", height:"38px" }}
+              aria-label="Ver ofertas"
+            >
+              <h1 style={fraseStyle} suppressHydrationWarning>
+                {FRASES[fraseIdx]}
+              </h1>
+              {/* Flecha con animación Pulse (late como corazón) */}
+              <span
+                className="hero-arrow-pulse flex items-center justify-center rounded-full bg-white text-red-600 font-extrabold flex-shrink-0"
+                style={{ width:"34px", height:"34px", fontSize:"16px", cursor:"pointer" }}
+              >
+                ›
+              </span>
+            </Link>
+
+            {/* 3 tarjetas de producto */}
+            <div className="grid gap-2" style={{ gridTemplateColumns:"repeat(3,1fr)" }}>
+              {cards.map((p, i) => {
+                const discountPct = p.original_price && p.original_price > p.price
+                  ? Math.round((1 - p.price / p.original_price) * 100)
+                  : null;
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/productos/${p.id}`}
+                    className="bg-white rounded-xl overflow-hidden flex flex-col hover:-translate-y-0.5 hover:shadow-lg transition-all"
+                    style={{ borderTop:`3px solid ${CARD_COLORS[i] ?? "#dc2626"}` }}
+                  >
+                    <div className="flex items-center gap-2 p-2.5">
+                      <div
+                        className="flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center"
+                        style={{ width:"58px", height:"58px" }}
+                      >
+                        {p.image ? (
+                          <Image src={p.image} alt={p.name} width={58} height={58} className="object-contain p-1" />
+                        ) : (
+                          <span style={{ fontSize:"28px" }}>{p.icon ?? "🛍️"}</span>
+                        )}
+                      </div>
+                      <p
+                        className="text-[11px] font-bold text-gray-800 leading-snug"
+                        style={{
+                          display:"-webkit-box",
+                          WebkitLineClamp:3,
+                          WebkitBoxOrient:"vertical",
+                          overflow:"hidden",
+                        } as React.CSSProperties}
+                      >
+                        {p.name}
+                      </p>
+                    </div>
+                    <div
+                      className="flex items-baseline gap-1.5 px-2.5 pb-2.5 pt-1 border-t"
+                      style={{ borderColor:"#f4f3f9" }}
+                    >
+                      <span className="font-extrabold" style={{ fontSize:"14px", color:"#dc2626" }}>
+                        ${Number(p.price).toLocaleString("es-CL")}
+                      </span>
+                      {discountPct && (
+                        <span className="text-white font-extrabold px-1 py-0.5 rounded"
+                          style={{ fontSize:"9px", background:"#f97316" }}>
+                          −{discountPct}%
+                        </span>
+                      )}
+                      {p.original_price && (
+                        <span className="text-gray-400 line-through" style={{ fontSize:"9.5px" }}>
+                          ${Number(p.original_price).toLocaleString("es-CL")}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── DERECHA: imagen de Freepik o placeholder bonito ── */}
+          <div className="flex items-center justify-center">
+            {HAS_HERO_IMAGE ? (
+              // ── Cuando tengas /public/hero-box.png, cambia HAS_HERO_IMAGE a true ──
+              <Image
+                src="/hero-box.png"
+                alt="Productos rebajados"
+                width={420}
+                height={280}
+                className="object-contain drop-shadow-2xl"
+                priority
+              />
+            ) : (
+              // ── Placeholder hasta tener la imagen ──
+              <div
+                className="rounded-2xl flex flex-col items-center justify-center text-center gap-4 relative overflow-hidden"
+                style={{
+                  width:"400px", height:"270px",
+                  background:"radial-gradient(circle at 50% 35%, rgba(255,255,255,.2), rgba(255,255,255,.05))",
+                  border:"2px dashed rgba(255,255,255,.3)",
+                }}
+              >
+                {/* Mini ilustración CSS mientras no hay imagen */}
+                <div className="relative" style={{ width:"180px", height:"130px" }}>
+                  {/* Caja base */}
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-xl flex items-end justify-center pb-2"
+                    style={{ width:"140px", height:"85px", background:"linear-gradient(160deg,#fbbf24,#f59e0b)", boxShadow:"0 8px 20px rgba(0,0,0,.25)" }}>
+                    <span className="text-white font-extrabold tracking-widest" style={{ fontSize:"13px" }}>conAI</span>
+                  </div>
+                  {/* Tapa */}
+                  <div className="absolute" style={{ bottom:"81px", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"70px solid transparent", borderRight:"70px solid transparent", borderBottom:"20px solid #fcd34d" }} />
+                  {/* Productos saliendo */}
+                  <span className="absolute" style={{ top:"0px", left:"60%", fontSize:"36px", filter:"drop-shadow(0 4px 8px rgba(0,0,0,.2))" }}>📷</span>
+                  <span className="absolute" style={{ top:"8px", left:"5%", fontSize:"32px", filter:"drop-shadow(0 4px 8px rgba(0,0,0,.2))" }}>🎧</span>
+                  {/* Puntos decorativos */}
+                  <span className="absolute rounded-full" style={{ width:"12px", height:"12px", background:"#facc15", top:"42px", right:"0" }} />
+                  <span className="absolute rounded-full" style={{ width:"8px", height:"8px", background:"#34d399", top:"20px", left:"38%" }} />
+                  {/* Badge */}
+                  <div className="absolute rounded-full flex items-center justify-center font-extrabold text-white"
+                    style={{ width:"38px", height:"38px", background:"#2563eb", fontSize:"12px", bottom:"2px", left:"-14px", boxShadow:"0 3px 8px rgba(0,0,0,.2)" }}>
+                    %
+                  </div>
+                </div>
+
+                <div className="text-white/90 text-center" style={{ fontSize:"11px" }}>
+                  <p className="font-bold" style={{ fontSize:"12px" }}>Pon tu imagen aquí</p>
+                  <p className="opacity-75 mt-0.5">Descarga de Freepik y guarda en</p>
+                  <code className="rounded px-1.5 py-0.5 mt-1 inline-block"
+                    style={{ background:"rgba(0,0,0,.25)", fontSize:"9px" }}>
+                    /public/hero-box.png
+                  </code>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* ── 3) FRANJA DE BENEFICIOS ── */}
+        <div className="relative z-10 w-full text-white py-2.5 px-10" style={{ background:"#3730a3" }}>
+          <div
+            className="mx-auto flex flex-wrap items-center justify-center gap-x-7 gap-y-1"
+            style={{ maxWidth:"1280px", fontSize:"12.5px" }}
+          >
+            <span>🚚 <b className="font-bold">Envío gratis</b> sobre $49.990</span>
+            <span className="opacity-30">·</span>
+            <span>📦 <b className="font-bold">Entrega rápida</b> · 3-5 días hábiles</span>
+            <span className="opacity-30">·</span>
+            <span>↩️ <b className="font-bold">Devoluciones</b> garantizadas</span>
+            <span className="opacity-30">·</span>
+            <span>🇨🇱 <b className="font-bold">Pago Transbank</b></span>
+          </div>
+        </div>
       </div>
     </section>
   );
