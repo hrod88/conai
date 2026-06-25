@@ -1,13 +1,13 @@
 "use client";
 
-// HeroDesktop.tsx — FASE 2.4
-// ──────────────────────────────────────────────────────────────────────────
-// Cambios vs 2.3:
-//   - Flecha con animación PULSE (late como corazón, escala 1→1.18 + ring).
-//   - Derecha: preparado para imagen real PNG de Freepik.
-//     Mientras no esté, muestra placeholder bonito (no el emoji feo).
-//     Cuando tengas /public/hero-box.png, descomenta las 3 líneas marcadas.
-// ──────────────────────────────────────────────────────────────────────────
+// HeroDesktop.tsx — FASE 2.5
+// Fixes:
+//   - Flecha pulse: se corta porque el Link tiene overflow:hidden.
+//     Solución: sacar la flecha FUERA del Link, ponerla al lado.
+//     El overflow:hidden del Link era para contener el slide-up del texto,
+//     ahora solo aplica al h1, no a la flecha.
+//   - Hero más compacto: altura reducida, tipografía más chica,
+//     padding menor. Más parecido a AliExpress real.
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -42,8 +42,6 @@ interface HeroDesktopProps {
   products: HeroProduct[];
 }
 
-// Inyectamos el keyframe de pulse via <style> en el cliente para no depender
-// de Tailwind (no tiene este keyframe built-in con ring expansivo).
 const PULSE_CSS = `
 @keyframes hero-pulse {
   0%   { transform: scale(1);    box-shadow: 0 0 0 0    rgba(255,255,255,.75); }
@@ -73,8 +71,10 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
     return () => clearInterval(id);
   }, []);
 
+  // El slide-up ahora aplica SOLO al h1, no al contenedor completo.
+  // Así la flecha puede estar fuera sin que la corten.
   const fraseStyle: React.CSSProperties = {
-    fontSize: "32px",
+    fontSize: "28px",
     fontWeight: 800,
     lineHeight: 1.1,
     letterSpacing: "-0.5px",
@@ -84,47 +84,41 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
     transition: anim === "enter" ? "none" : "transform 0.3s ease, opacity 0.3s ease",
     transform:
       anim === "idle"  ? "translateY(0)"    :
-      anim === "exit"  ? "translateY(-24px)" :
-                         "translateY(24px)",
+      anim === "exit"  ? "translateY(-22px)" :
+                         "translateY(22px)",
     opacity: anim === "idle" ? 1 : 0,
   };
 
   const cards = products.slice(0, 3);
-
-  // ── Para usar la imagen real: ──────────────────────────────────────────
-  // 1) Descarga tu PNG de Freepik y guárdalo en /public/hero-box.png
-  // 2) Cambia esta constante a true:
   const HAS_HERO_IMAGE = true;
-  // ──────────────────────────────────────────────────────────────────────
 
   return (
     <section className="hidden md:block w-full">
-      {/* Inyección del keyframe de pulse (solo cliente) */}
       {mounted && <style>{PULSE_CSS}</style>}
 
       <div
-        className="relative overflow-hidden w-full text-white"
+        className="relative w-full text-white"
         style={{ background: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)" }}
       >
         {/* Burbujas decorativas */}
         <span aria-hidden className="absolute pointer-events-none rounded-full"
-          style={{ right:"6%", top:"-20%", width:"300px", height:"300px", background:"rgba(255,255,255,.06)" }} />
+          style={{ right:"6%", top:"-20%", width:"260px", height:"260px", background:"rgba(255,255,255,.06)" }} />
         <span aria-hidden className="absolute pointer-events-none rounded-full"
-          style={{ left:"-4%", bottom:"-20%", width:"250px", height:"250px", background:"rgba(255,255,255,.05)" }} />
+          style={{ left:"-4%", bottom:"-20%", width:"200px", height:"200px", background:"rgba(255,255,255,.05)" }} />
 
         {/* ── 1) FRANJA DE CUPONES DISCRETA ── */}
         <div
-          className="relative z-10 flex items-center gap-5 px-10 py-1.5 text-[11px] font-semibold"
+          className="relative z-10 flex items-center gap-4 px-8 py-1 text-[10.5px] font-semibold"
           style={{ background:"rgba(0,0,0,.14)", borderBottom:"1px solid rgba(255,255,255,.14)", opacity:.9 }}
         >
-          <span className="opacity-80">🎟️ Cupones:</span>
+          <span className="opacity-75">🎟️ Cupones:</span>
           {COUPONS.map((c, i) => (
-            <span key={c.code} className="flex items-center gap-1.5">
-              {i > 0 && <span className="opacity-30">|</span>}
+            <span key={c.code} className="flex items-center gap-1">
+              {i > 0 && <span className="opacity-25 mx-1">|</span>}
               <span>−{c.amount} sobre {c.cond} ·</span>
               <span
-                className="font-extrabold tracking-wide px-1.5 py-0.5 rounded"
-                style={{ background:"rgba(255,255,255,.2)", fontSize:"10px" }}
+                className="font-extrabold px-1.5 py-0.5 rounded ml-0.5"
+                style={{ background:"rgba(255,255,255,.2)", fontSize:"9.5px", letterSpacing:".5px" }}
               >
                 {c.code}
               </span>
@@ -132,36 +126,44 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
           ))}
         </div>
 
-        {/* ── 2) CUERPO PRINCIPAL ── */}
+        {/* ── 2) CUERPO PRINCIPAL (compacto) ── */}
         <div
-          className="relative z-10 mx-auto px-10 py-5 grid items-center gap-8"
+          className="relative z-10 mx-auto px-8 py-4 grid items-center gap-6"
           style={{ maxWidth:"1280px", gridTemplateColumns:"1.1fr 1fr" }}
         >
 
           {/* ── IZQUIERDA ── */}
-          <div className="flex flex-col">
-            <p className="text-[12px] font-semibold opacity-95 mb-2">
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] font-semibold opacity-90">
               ⚡ <b className="font-extrabold">CYBER SEMANA</b> · Termina dom 23:59 (CLT)
             </p>
 
-            {/* Frase rotativa + flecha PULSE */}
-            <Link
-              href="/productos?descuento=1"
-              className="inline-flex items-center gap-3 mb-4 group self-start"
-              style={{ overflow:"hidden", height:"38px" }}
-              aria-label="Ver ofertas"
-            >
-              <h1 style={fraseStyle} suppressHydrationWarning>
-                {FRASES[fraseIdx]}
-              </h1>
-              {/* Flecha con animación Pulse (late como corazón) */}
-              <span
-                className="hero-arrow-pulse flex items-center justify-center rounded-full bg-white text-red-600 font-extrabold flex-shrink-0"
-                style={{ width:"34px", height:"34px", fontSize:"16px", cursor:"pointer" }}
+            {/* Frase rotativa + flecha PULSE
+                IMPORTANTE: la flecha está FUERA del contenedor con overflow:hidden
+                para que el pulse no se corte en los bordes. */}
+            <div className="flex items-center gap-3">
+              {/* Contenedor del texto: overflow hidden para slide-up */}
+              <Link
+                href="/productos?descuento=1"
+                className="block"
+                style={{ overflow:"hidden", height:"32px" }}
+                aria-label="Ver ofertas"
               >
-                ›
-              </span>
-            </Link>
+                <h1 style={fraseStyle} suppressHydrationWarning>
+                  {FRASES[fraseIdx]}
+                </h1>
+              </Link>
+
+              {/* Flecha FUERA del overflow:hidden → el pulse se ve completo */}
+              <Link href="/productos?descuento=1" aria-label="Ver ofertas" tabIndex={-1}>
+                <span
+                  className="hero-arrow-pulse flex items-center justify-center rounded-full bg-white text-red-600 font-extrabold flex-shrink-0"
+                  style={{ width:"30px", height:"30px", fontSize:"15px" }}
+                >
+                  ›
+                </span>
+              </Link>
+            </div>
 
             {/* 3 tarjetas de producto */}
             <div className="grid gap-2" style={{ gridTemplateColumns:"repeat(3,1fr)" }}>
@@ -176,19 +178,19 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
                     className="bg-white rounded-xl overflow-hidden flex flex-col hover:-translate-y-0.5 hover:shadow-lg transition-all"
                     style={{ borderTop:`3px solid ${CARD_COLORS[i] ?? "#dc2626"}` }}
                   >
-                    <div className="flex items-center gap-2 p-2.5">
+                    <div className="flex items-center gap-2 p-2">
                       <div
                         className="flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center"
-                        style={{ width:"58px", height:"58px" }}
+                        style={{ width:"52px", height:"52px" }}
                       >
                         {p.image ? (
-                          <Image src={p.image} alt={p.name} width={58} height={58} className="object-contain p-1" />
+                          <Image src={p.image} alt={p.name} width={52} height={52} className="object-contain p-1" />
                         ) : (
-                          <span style={{ fontSize:"28px" }}>{p.icon ?? "🛍️"}</span>
+                          <span style={{ fontSize:"24px" }}>{p.icon ?? "🛍️"}</span>
                         )}
                       </div>
                       <p
-                        className="text-[11px] font-bold text-gray-800 leading-snug"
+                        className="text-[10.5px] font-bold text-gray-800 leading-snug"
                         style={{
                           display:"-webkit-box",
                           WebkitLineClamp:3,
@@ -200,20 +202,20 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
                       </p>
                     </div>
                     <div
-                      className="flex items-baseline gap-1.5 px-2.5 pb-2.5 pt-1 border-t"
+                      className="flex items-baseline gap-1 px-2 pb-2 pt-1 border-t"
                       style={{ borderColor:"#f4f3f9" }}
                     >
-                      <span className="font-extrabold" style={{ fontSize:"14px", color:"#dc2626" }}>
+                      <span className="font-extrabold" style={{ fontSize:"13px", color:"#dc2626" }}>
                         ${Number(p.price).toLocaleString("es-CL")}
                       </span>
                       {discountPct && (
                         <span className="text-white font-extrabold px-1 py-0.5 rounded"
-                          style={{ fontSize:"9px", background:"#f97316" }}>
+                          style={{ fontSize:"8.5px", background:"#f97316" }}>
                           −{discountPct}%
                         </span>
                       )}
                       {p.original_price && (
-                        <span className="text-gray-400 line-through" style={{ fontSize:"9.5px" }}>
+                        <span className="text-gray-400 line-through" style={{ fontSize:"9px" }}>
                           ${Number(p.original_price).toLocaleString("es-CL")}
                         </span>
                       )}
@@ -224,55 +226,46 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
             </div>
           </div>
 
-          {/* ── DERECHA: imagen de Freepik o placeholder bonito ── */}
+          {/* ── DERECHA: imagen o placeholder ── */}
           <div className="flex items-center justify-center">
             {HAS_HERO_IMAGE ? (
-              // ── Cuando tengas /public/hero-box.png, cambia HAS_HERO_IMAGE a true ──
               <Image
-                src="/hero-box.png"
-                alt="Productos rebajados"
-                width={420}
-                height={280}
-                className="object-contain drop-shadow-2xl"
-                priority
-              />
+  src="/hero-box.png"
+  alt="Productos rebajados"
+  width={380}
+  height={240}
+  className="object-contain drop-shadow-2xl"
+  style={{ maxWidth: "100%", maxHeight: "220px", width: "auto", height: "220px" }}
+  priority
+/>
             ) : (
-              // ── Placeholder hasta tener la imagen ──
               <div
-                className="rounded-2xl flex flex-col items-center justify-center text-center gap-4 relative overflow-hidden"
+                className="rounded-2xl flex flex-col items-center justify-center text-center gap-3"
                 style={{
-                  width:"400px", height:"270px",
-                  background:"radial-gradient(circle at 50% 35%, rgba(255,255,255,.2), rgba(255,255,255,.05))",
-                  border:"2px dashed rgba(255,255,255,.3)",
+                  width:"340px", height:"220px",
+                  background:"radial-gradient(circle at 50% 35%,rgba(255,255,255,.18),rgba(255,255,255,.04))",
+                  border:"2px dashed rgba(255,255,255,.28)",
                 }}
               >
-                {/* Mini ilustración CSS mientras no hay imagen */}
-                <div className="relative" style={{ width:"180px", height:"130px" }}>
-                  {/* Caja base */}
+                <div className="relative" style={{ width:"160px", height:"115px" }}>
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-xl flex items-end justify-center pb-2"
-                    style={{ width:"140px", height:"85px", background:"linear-gradient(160deg,#fbbf24,#f59e0b)", boxShadow:"0 8px 20px rgba(0,0,0,.25)" }}>
-                    <span className="text-white font-extrabold tracking-widest" style={{ fontSize:"13px" }}>conAI</span>
+                    style={{ width:"125px", height:"75px", background:"linear-gradient(160deg,#fbbf24,#f59e0b)", boxShadow:"0 8px 18px rgba(0,0,0,.22)" }}>
+                    <span className="text-white font-extrabold tracking-widest" style={{ fontSize:"12px" }}>conAI</span>
                   </div>
-                  {/* Tapa */}
-                  <div className="absolute" style={{ bottom:"81px", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"70px solid transparent", borderRight:"70px solid transparent", borderBottom:"20px solid #fcd34d" }} />
-                  {/* Productos saliendo */}
-                  <span className="absolute" style={{ top:"0px", left:"60%", fontSize:"36px", filter:"drop-shadow(0 4px 8px rgba(0,0,0,.2))" }}>📷</span>
-                  <span className="absolute" style={{ top:"8px", left:"5%", fontSize:"32px", filter:"drop-shadow(0 4px 8px rgba(0,0,0,.2))" }}>🎧</span>
-                  {/* Puntos decorativos */}
-                  <span className="absolute rounded-full" style={{ width:"12px", height:"12px", background:"#facc15", top:"42px", right:"0" }} />
-                  <span className="absolute rounded-full" style={{ width:"8px", height:"8px", background:"#34d399", top:"20px", left:"38%" }} />
-                  {/* Badge */}
+                  <div className="absolute" style={{ bottom:"71px", left:"50%", transform:"translateX(-50%)", width:0, height:0, borderLeft:"62px solid transparent", borderRight:"62px solid transparent", borderBottom:"17px solid #fcd34d" }} />
+                  <span className="absolute" style={{ top:"0", left:"57%", fontSize:"32px", filter:"drop-shadow(0 3px 6px rgba(0,0,0,.2))" }}>📷</span>
+                  <span className="absolute" style={{ top:"6px", left:"5%", fontSize:"28px", filter:"drop-shadow(0 3px 6px rgba(0,0,0,.2))" }}>🎧</span>
+                  <span className="absolute rounded-full" style={{ width:"10px", height:"10px", background:"#facc15", top:"38px", right:"0" }} />
+                  <span className="absolute rounded-full" style={{ width:"7px", height:"7px", background:"#34d399", top:"16px", left:"38%" }} />
                   <div className="absolute rounded-full flex items-center justify-center font-extrabold text-white"
-                    style={{ width:"38px", height:"38px", background:"#2563eb", fontSize:"12px", bottom:"2px", left:"-14px", boxShadow:"0 3px 8px rgba(0,0,0,.2)" }}>
+                    style={{ width:"32px", height:"32px", background:"#2563eb", fontSize:"11px", bottom:"2px", left:"-12px", boxShadow:"0 3px 8px rgba(0,0,0,.2)" }}>
                     %
                   </div>
                 </div>
-
-                <div className="text-white/90 text-center" style={{ fontSize:"11px" }}>
-                  <p className="font-bold" style={{ fontSize:"12px" }}>Pon tu imagen aquí</p>
-                  <p className="opacity-75 mt-0.5">Descarga de Freepik y guarda en</p>
-                  <code className="rounded px-1.5 py-0.5 mt-1 inline-block"
-                    style={{ background:"rgba(0,0,0,.25)", fontSize:"9px" }}>
+                <div className="text-white/85 text-center" style={{ fontSize:"10px" }}>
+                  <p className="font-bold" style={{ fontSize:"11px" }}>Pon tu imagen aquí</p>
+                  <code className="rounded px-1 py-0.5 mt-1 inline-block"
+                    style={{ background:"rgba(0,0,0,.22)", fontSize:"8.5px" }}>
                     /public/hero-box.png
                   </code>
                 </div>
@@ -282,10 +275,10 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
         </div>
 
         {/* ── 3) FRANJA DE BENEFICIOS ── */}
-        <div className="relative z-10 w-full text-white py-2.5 px-10" style={{ background:"#3730a3" }}>
+        <div className="relative z-10 w-full text-white py-2 px-8" style={{ background:"#3730a3" }}>
           <div
-            className="mx-auto flex flex-wrap items-center justify-center gap-x-7 gap-y-1"
-            style={{ maxWidth:"1280px", fontSize:"12.5px" }}
+            className="mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1"
+            style={{ maxWidth:"1280px", fontSize:"12px" }}
           >
             <span>🚚 <b className="font-bold">Envío gratis</b> sobre $49.990</span>
             <span className="opacity-30">·</span>
@@ -296,6 +289,7 @@ export default function HeroDesktop({ products }: HeroDesktopProps) {
             <span>🇨🇱 <b className="font-bold">Pago Transbank</b></span>
           </div>
         </div>
+
       </div>
     </section>
   );

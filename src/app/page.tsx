@@ -11,11 +11,6 @@ import { Truck, RotateCcw, ShieldCheck, Lock, Bot, type LucideIcon } from "lucid
 import CategoriesShowcase from "@/components/home/CategoriesShowcase";
 export const dynamic = "force-dynamic";
 
-// NOTA: PromoStrip se eliminó del JSX (fase 2 del manual). Los cupones, el
-// timer y la franja de beneficios viven ahora dentro de HeroDesktop. El
-// archivo PromoStrip.tsx se mantiene en /src/components/ui por si más
-// adelante quisiéramos reactivarlo, pero ya no se invoca aquí.
-
 const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: Truck,     title: "Envío gratis",       desc: "En compras sobre $30.000 a todo Chile. Despacho en 24-48 horas hábiles." },
   { icon: RotateCcw, title: "30 días devolución", desc: "Sin preguntas. Si no te convence, lo retiramos a domicilio sin costo." },
@@ -55,81 +50,81 @@ export default async function HomePage() {
 
   type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & { category: string };
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
+  type HeroDesktopProduct = {
+    id: string; name: string; price: number;
+    original_price: number | null; image: string | null; icon: string | null;
+  };
 
   const [
-    { data: bestsellersRaw },
     { data: discountsRaw },
-    { data: newRaw },
-    { data: featuredRaw },
+    { data: bestsellersRaw },
     { data: trendingRaw },
     { data: totalProductsCount },
     { data: ofertasRaw },
+    { data: heroDesktopRaw },
   ] = await Promise.all([
-    supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
+    // Para MobileHero
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "descuento").order("rating", { ascending: false }).limit(4),
+    // Para MobileHero fallback
     supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .neq("active", false).eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
-    supabase.from("products").select("id, name, price, icon, image, tag, category")
-      .neq("active", false).order("rating", { ascending: false }).limit(4),
+      .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }).limit(4),
+    // Para sección Más vendidos
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }),
+    // Conteo total
     supabase.from("products").select("id", { count: "exact", head: true }).neq("active", false),
+    // Para OfertasDelDia y ProductosDestacados
     supabase.from("products").select("id, name, price, original_price, image, icon")
       .neq("active", false).not("original_price", "is", null).order("original_price", { ascending: false }).limit(40),
+    // Para HeroDesktop: los 3 productos con MAYOR descuento absoluto (original_price - price).
+    // Ordenamos por original_price DESC como proxy del ahorro más visible.
+    supabase.from("products")
+      .select("id, name, price, original_price, image, icon")
+      .neq("active", false)
+      .not("original_price", "is", null)
+      .order("original_price", { ascending: false })
+      .limit(3),
   ]);
 
-  const heroData = {
-    bestsellers: (bestsellersRaw ?? []) as HeroProduct[],
-    discounts:   (discountsRaw   ?? []) as HeroProduct[],
-    newProducts: (newRaw         ?? []) as HeroProduct[],
-    featured:    (featuredRaw    ?? []) as HeroProduct[],
-  };
+  const ofertasData = (ofertasRaw ?? []) as HeroDesktopProduct[];
+  const escaparateData = ofertasData.slice(0, 30);
 
+  // Productos para MobileHero
+  const mobileHeroProducts = ((discountsRaw ?? []) as HeroProduct[]).length >= 2
+    ? (discountsRaw as HeroProduct[]).slice(0, 2)
+    : (bestsellersRaw as HeroProduct[] ?? []).slice(0, 2);
+
+  // Productos para HeroDesktop (los 3 con más descuento)
+  const heroDesktopProducts = (heroDesktopRaw ?? []) as HeroDesktopProduct[];
+
+  // Más vendidos por categoría
   const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
   const trendingAll = (trendingRaw ?? []) as TrendingProduct[];
   const seen = new Set<string>();
   const trendingProducts: TrendingProduct[] = [];
   for (const cat of allCats) {
     const match = trendingAll.find((p) => p.category === cat && !seen.has(p.id));
-    if (match) {
-      seen.add(match.id);
-      trendingProducts.push(match);
-    }
+    if (match) { seen.add(match.id); trendingProducts.push(match); }
   }
 
   const totalProducts = totalProductsCount ?? 0;
 
-  const ofertasData = (ofertasRaw ?? []) as {
-    id: string; name: string; price: number;
-    original_price: number | null; image: string | null; icon: string | null;
-  }[];
-
-  const escaparateData = ofertasData.slice(0, 30);
-
-  // Productos a destacar dentro del hero (desktop Y móvil reutilizan la misma data).
-  const heroFeatured = (heroData.discounts.length >= 2
-    ? heroData.discounts
-    : heroData.bestsellers
-  ).slice(0, 2);
-
   return (
     <>
-      {/* Hero comercial nuevo, SOLO DESKTOP. Incluye cupones, timer real,
-          sello chileno y franja de beneficios. Reemplaza HeroSlider+PromoStrip. */}
-      <HeroDesktop products={heroFeatured} />
+      {/* Hero SOLO DESKTOP: franja cupones + frase rotativa + 3 productos + caja */}
+      <HeroDesktop products={heroDesktopProducts} />
 
-      {/* Hero comercial nuevo, SOLO MÓVIL (md:hidden por dentro). */}
-      <MobileHero products={heroFeatured} />
+      {/* Hero SOLO MÓVIL */}
+      <MobileHero products={mobileHeroProducts} />
 
       {/* ── Ofertas de hoy ── */}
       <OfertasDelDia products={ofertasData} />
 
-      {/* ── Escaparate de productos (reemplaza categorías) ── */}
+      {/* ── Escaparate ── */}
       <ProductosDestacados products={escaparateData} />
 
-      {/* ── Más vendidos ────────────────────────── */}
+      {/* ── Más vendidos ── */}
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="flex items-end justify-between mb-4 md:mb-8">
@@ -141,21 +136,14 @@ export default async function HomePage() {
               Ver todos →
             </Link>
           </div>
-
-          <div
-            className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4"
-            style={{ scrollbarWidth: "none" } as React.CSSProperties}
-          >
+          <div className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
             {trendingProducts.map((p) => {
-              const t    = tagStyles[p.tag ?? "bestseller"];
+              const t = tagStyles[p.tag ?? "bestseller"];
               const meta = catMeta[p.category] ?? { color: "#6366f1", bg: "#eef2ff", label: p.category };
               return (
-                <Link
-                  key={`m-${p.id}`}
-                  href={`/productos/${p.id}`}
+                <Link key={`m-${p.id}`} href={`/productos/${p.id}`}
                   className="flex-shrink-0 w-36 rounded-2xl border p-3 flex flex-col gap-1.5 active:scale-95 transition-all"
-                  style={{ background: meta.bg, borderColor: `${meta.color}25` }}
-                >
+                  style={{ background: meta.bg, borderColor: `${meta.color}25` }}>
                   <div className="relative">
                     {p.image ? (
                       <div className="relative w-full h-20 rounded-xl bg-white/60 overflow-hidden">
@@ -166,34 +154,23 @@ export default async function HomePage() {
                         <span className="text-3xl">{p.icon}</span>
                       </div>
                     )}
-                    {t && (
-                      <span className="absolute top-1 left-1 text-[8px] font-black px-1.5 py-0.5 rounded-full"
-                        style={{ background: t.bg, color: t.color }}>
-                        {t.label}
-                      </span>
-                    )}
+                    {t && <span className="absolute top-1 left-1 text-[8px] font-black px-1.5 py-0.5 rounded-full" style={{ background: t.bg, color: t.color }}>{t.label}</span>}
                   </div>
                   <p className="font-bold text-[11px] text-gray-700 leading-tight line-clamp-2 flex-1">{p.name}</p>
                   <p className="text-[9px] text-gray-400 font-medium">{meta.label}</p>
-                  <p className="font-black text-sm" style={{ color: meta.color }}>
-                    ${Number(p.price).toLocaleString("es-CL")}
-                  </p>
+                  <p className="font-black text-sm" style={{ color: meta.color }}>${Number(p.price).toLocaleString("es-CL")}</p>
                 </Link>
               );
             })}
           </div>
-
           <div className="hidden md:grid grid-cols-3 lg:grid-cols-6 gap-3">
             {trendingProducts.map((p) => {
-              const t    = tagStyles[p.tag ?? "bestseller"];
+              const t = tagStyles[p.tag ?? "bestseller"];
               const meta = catMeta[p.category] ?? { color: "#6366f1", bg: "#eef2ff", label: p.category };
               return (
-                <Link
-                  key={p.id}
-                  href={`/productos/${p.id}`}
+                <Link key={p.id} href={`/productos/${p.id}`}
                   className="group rounded-2xl border p-4 flex flex-col gap-2 transition-all hover:-translate-y-1 hover:shadow-md"
-                  style={{ background: meta.bg, borderColor: `${meta.color}20` }}
-                >
+                  style={{ background: meta.bg, borderColor: `${meta.color}20` }}>
                   <div className="relative mb-1">
                     {p.image ? (
                       <div className="relative w-full h-24 rounded-lg bg-gray-50 overflow-hidden">
@@ -204,18 +181,11 @@ export default async function HomePage() {
                         <span className="text-3xl">{p.icon}</span>
                       </div>
                     )}
-                    {t && (
-                      <span className="absolute top-1 left-1 text-[9px] font-black px-1.5 py-0.5 rounded-full"
-                        style={{ background: t.bg, color: t.color }}>
-                        {t.label}
-                      </span>
-                    )}
+                    {t && <span className="absolute top-1 left-1 text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: t.bg, color: t.color }}>{t.label}</span>}
                   </div>
                   <p className="font-bold text-[12px] text-gray-700 leading-tight">{p.name}</p>
                   <p className="text-[10px] text-gray-400 font-medium">{meta.label}</p>
-                  <p className="font-black text-sm mt-auto" style={{ color: meta.color }}>
-                    ${Number(p.price).toLocaleString("es-CL")}
-                  </p>
+                  <p className="font-black text-sm mt-auto" style={{ color: meta.color }}>${Number(p.price).toLocaleString("es-CL")}</p>
                 </Link>
               );
             })}
@@ -223,7 +193,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Por qué conAI ───────────────────────── */}
+      {/* ── Por qué conAI ── */}
       <section className="py-8 md:py-16 px-4 md:px-6 max-w-6xl mx-auto">
         <div className="text-center mb-5 md:mb-10">
           <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Nuestra promesa</p>
@@ -231,11 +201,8 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
           {benefits.map((b) => (
-            <div
-              key={b.title}
-              className="rounded-2xl p-3 md:p-5 border flex flex-col gap-2 md:gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
-              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
-            >
+            <div key={b.title} className="rounded-2xl p-3 md:p-5 border flex flex-col gap-2 md:gap-3 transition-all hover:-translate-y-0.5 hover:shadow-md"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
               <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-500/10">
                 <b.icon size={24} strokeWidth={2} className="text-indigo-500" />
               </span>
@@ -253,17 +220,10 @@ export default async function HomePage() {
             <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Tu compra, segura</p>
             <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">Compra con confianza</h2>
           </div>
-
-          <div
-            className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4"
-            style={{ scrollbarWidth: "none" } as React.CSSProperties}
-          >
+          <div className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
             {trustSignals.map((s) => (
-              <div
-                key={s.title}
-                className="flex-shrink-0 w-72 rounded-2xl border p-4 flex flex-col gap-3"
-                style={{ background: "var(--bg)", borderColor: "var(--border)" }}
-              >
+              <div key={s.title} className="flex-shrink-0 w-72 rounded-2xl border p-4 flex flex-col gap-3"
+                style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
                 <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10">
                   <s.icon size={24} strokeWidth={2} className="text-indigo-500" />
                 </span>
@@ -272,14 +232,10 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-
           <div className="hidden md:grid grid-cols-3 gap-5">
             {trustSignals.map((s) => (
-              <div
-                key={s.title}
-                className="rounded-2xl border p-6 flex flex-col gap-3"
-                style={{ background: "var(--bg)", borderColor: "var(--border)" }}
-              >
+              <div key={s.title} className="rounded-2xl border p-6 flex flex-col gap-3"
+                style={{ background: "var(--bg)", borderColor: "var(--border)" }}>
                 <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10">
                   <s.icon size={26} strokeWidth={2} className="text-indigo-500" />
                 </span>
@@ -291,13 +247,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Stats ───────────────────────────────── */}
+      {/* ── Stats ── */}
       <section className="py-10 md:py-14 px-6" style={{ background: "linear-gradient(135deg, #6366f1, #0ea5e9)" }}>
         <div className="max-w-6xl mx-auto grid grid-cols-3 gap-4 md:gap-6 text-center text-white">
           {[
             { n: `${totalProducts}`, label: "Productos disponibles" },
-            { n: "30 días",          label: "Para devolver" },
-            { n: "24/7",             label: "Soporte con IA" },
+            { n: "30 días", label: "Para devolver" },
+            { n: "24/7", label: "Soporte con IA" },
           ].map((s) => (
             <div key={s.label}>
               <p className="text-2xl md:text-4xl font-black">{s.n}</p>
@@ -307,7 +263,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Newsletter ──────────────────────────── */}
+      {/* ── Newsletter ── */}
       <NewsletterSection />
     </>
   );
