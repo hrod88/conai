@@ -10,6 +10,9 @@ interface Props {
   product: Product;
 }
 
+// Estilos de los badges existentes (no se tocan, sirven para "Más vendidos",
+// "Recién llegado", etc.). El BADGE DE DESCUENTO de la card va aparte abajo,
+// con la paleta del manual (naranja).
 const tagStyles: Record<string, string> = {
   bestseller: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700",
   nuevo:      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700",
@@ -18,8 +21,9 @@ const tagStyles: Record<string, string> = {
   destacado:  "bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-700",
 };
 
+// Glosario de copy del manual (§4): textos cortos y propios, no genéricos.
 const tagLabel: Record<string, string> = {
-  bestseller: "⭐ Más vendidos",
+  bestseller: "⭐ Más vendido",
   nuevo:      "🆕 Recién llegado",
   descuento:  "💲 Descuento",
   oferta:     "🔥 Oferta",
@@ -41,14 +45,15 @@ export default function ProductCard({ product }: Props) {
     e.preventDefault();
     e.stopPropagation();
     add(product);
-    showToast(`${product.name} agregado al carrito 🛒`, "success");
+    // Tono manual §4: cercano, en directo.
+    showToast(`${product.name} está en tu carrito 🛒`, "success");
   }
 
   function handleFav(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     toggle(product);
-    if (!fav) showToast(`${product.name} guardado en favoritos ❤️`, "info");
+    if (!fav) showToast(`Guardé ${product.name} en favoritos ❤️`, "info");
   }
 
   return (
@@ -60,23 +65,35 @@ export default function ProductCard({ product }: Props) {
         borderColor: "var(--border)",
       }}
     >
-      {/* Favorite button */}
+      {/* Botón favorito */}
       <button
         onClick={handleFav}
         className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-all z-10 opacity-0 group-hover:opacity-100 hover:scale-110"
         style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-        title={fav ? "Quitar de favoritos" : "Agregar a favoritos"}
+        title={fav ? "Quitar de favoritos" : "Guardar en favoritos"}
       >
         <span className="text-sm">{fav ? "❤️" : "🤍"}</span>
       </button>
 
-      {/* Image / Icon + tag */}
+      {/* Imagen / ícono + tag superior izquierdo */}
       <div className="relative">
         {product.tag && (
           <span className={`absolute top-1.5 left-1.5 z-10 text-[10px] font-bold px-2 py-0.5 rounded-full border ${tagStyles[product.tag]}`}>
             {tagLabel[product.tag]}
           </span>
         )}
+
+        {/* BADGE DE DESCUENTO (paleta manual §5): rojo agresivo, esquina superior derecha.
+            Se muestra solo cuando hay descuento real. */}
+        {hasDiscount && (
+          <span
+            className="absolute top-1.5 right-1.5 z-10 text-[10px] font-extrabold px-2 py-0.5 rounded-md text-white shadow-sm"
+            style={{ background: "#dc2626" }}
+          >
+            −{discountPct}%
+          </span>
+        )}
+
         <div
           className="w-full h-[180px] flex items-center justify-center rounded-xl overflow-hidden"
           style={{ background: "var(--surface-alt)" }}
@@ -93,7 +110,7 @@ export default function ProductCard({ product }: Props) {
         </div>
       </div>
 
-      {/* Name — 2 líneas, altura reservada para que las tarjetas queden parejas */}
+      {/* Nombre — 2 líneas con altura reservada para que las tarjetas queden parejas */}
       <p
         className="font-bold text-[12.5px] text-[var(--text)] leading-[1.25] line-clamp-2 min-h-[2.5em]"
         title={product.name}
@@ -112,31 +129,40 @@ export default function ProductCard({ product }: Props) {
         </div>
       )}
 
-      {/* Price — precio tachado arriba, y abajo precio actual + descuento JUNTOS (nunca saltan) */}
+      {/* Precio (manual §5): "orgulloso del descuento".
+          - Precio final ROJO y grande, peso 800.
+          - Badge "−X% OFF" NARANJA al lado del precio (no debajo).
+          - Precio original tachado, gris, abajo y más chico. */}
       <div className="mt-auto pt-1.5 border-t" style={{ borderColor: "var(--border)" }}>
-        {hasDiscount && (
-          <span className="block text-[11px] text-[var(--text-muted)] line-through leading-none mb-0.5">
-            ${Number(product.original_price).toLocaleString("es-CL")}
-          </span>
-        )}
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-indigo-600 dark:text-indigo-400 text-base leading-none">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span
+            className="font-extrabold text-base leading-none"
+            style={{ color: hasDiscount ? "#dc2626" : "var(--text)" }}
+          >
             ${Number(product.price).toLocaleString("es-CL")}
           </span>
           {hasDiscount && (
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-md leading-none">
-              -{discountPct}%
+            <span
+              className="text-[10px] font-extrabold text-white px-1.5 py-0.5 rounded-md leading-none"
+              style={{ background: "#f97316" }}
+            >
+              −{discountPct}% OFF
             </span>
           )}
         </div>
+        {hasDiscount && (
+          <span className="block text-[11px] text-[var(--text-muted)] line-through leading-none mt-1">
+            ${Number(product.original_price).toLocaleString("es-CL")}
+          </span>
+        )}
       </div>
 
-      {/* Button full-width */}
+      {/* Botón CTA (manual §4): "+ Lo quiero" en gradient indigo→celeste */}
       <button
         onClick={handleAdd}
         className="w-full text-[12px] font-bold bg-gradient-to-r from-indigo-500 to-sky-400 text-white py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all"
       >
-        + Agregar
+        + Lo quiero
       </button>
     </Link>
   );
