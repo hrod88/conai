@@ -2,7 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import HeroDesktop from "@/components/home/HeroDesktop";
 import MobileHero from "@/components/home/MobileHero";
-import PromoStrip from "@/components/ui/PromoStrip";
 import OfertasDelDia from "@/components/ui/OfertasDelDia";
 import ProductosDestacados from "@/components/ui/ProductosDestacados";
 import NewsletterSection from "@/components/home/NewsletterSection";
@@ -12,6 +11,11 @@ import { Truck, RotateCcw, ShieldCheck, Lock, Bot, type LucideIcon } from "lucid
 import CategoriesShowcase from "@/components/home/CategoriesShowcase";
 export const dynamic = "force-dynamic";
 
+// NOTA: PromoStrip se eliminó del JSX (fase 2 del manual). Los cupones, el
+// timer y la franja de beneficios viven ahora dentro de HeroDesktop. El
+// archivo PromoStrip.tsx se mantiene en /src/components/ui por si más
+// adelante quisiéramos reactivarlo, pero ya no se invoca aquí.
+
 const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: Truck,     title: "Envío gratis",       desc: "En compras sobre $30.000 a todo Chile. Despacho en 24-48 horas hábiles." },
   { icon: RotateCcw, title: "30 días devolución", desc: "Sin preguntas. Si no te convence, lo retiramos a domicilio sin costo." },
@@ -19,7 +23,6 @@ const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: Bot,       title: "Soporte IA 24/7",    desc: "Asistente inteligente disponible siempre. Equipo humano de lunes a viernes." },
 ];
 
-// Señales de confianza reales (reemplazan los testimonios inventados).
 const trustSignals: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: ShieldCheck, title: "Pago protegido por Transbank", desc: "Procesamos con WebPay Plus, el estándar bancario de Chile. No guardamos los datos de tu tarjeta." },
   { icon: Truck,       title: "Despacho a todo Chile",        desc: "Enviamos con Chilexpress y Starken a cualquier región. Seguimiento de tu pedido incluido." },
@@ -53,7 +56,6 @@ export default async function HomePage() {
   type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & { category: string };
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
 
-  // Una sola consulta por bloque, en paralelo. Antes había 12 secuenciales.
   const [
     { data: bestsellersRaw },
     { data: discountsRaw },
@@ -85,7 +87,6 @@ export default async function HomePage() {
     featured:    (featuredRaw    ?? []) as HeroProduct[],
   };
 
-  // Elegimos el mejor bestseller por categoría, en memoria (1 por categoría).
   const allCats = ["salud", "belleza", "hogar", "wearables", "mascotas", "gadgets", "audio", "oficina", "juguetes", "deportes", "electronica", "telefonos"] as const;
   const trendingAll = (trendingRaw ?? []) as TrendingProduct[];
   const seen = new Set<string>();
@@ -107,8 +108,7 @@ export default async function HomePage() {
 
   const escaparateData = ofertasData.slice(0, 30);
 
-  // Productos a destacar dentro del hero (desktop Y móvil reutilizan la misma data):
-  // tomamos 2 con descuento; si no hay, caemos a bestsellers para que igual se vea.
+  // Productos a destacar dentro del hero (desktop Y móvil reutilizan la misma data).
   const heroFeatured = (heroData.discounts.length >= 2
     ? heroData.discounts
     : heroData.bestsellers
@@ -116,9 +116,8 @@ export default async function HomePage() {
 
   return (
     <>
-      <PromoStrip />
-
-      {/* Hero comercial nuevo, SOLO DESKTOP (manual §1, decisión Fase 2). */}
+      {/* Hero comercial nuevo, SOLO DESKTOP. Incluye cupones, timer real,
+          sello chileno y franja de beneficios. Reemplaza HeroSlider+PromoStrip. */}
       <HeroDesktop products={heroFeatured} />
 
       {/* Hero comercial nuevo, SOLO MÓVIL (md:hidden por dentro). */}
@@ -143,7 +142,6 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {/* Mobile: scroll horizontal */}
           <div
             className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4"
             style={{ scrollbarWidth: "none" } as React.CSSProperties}
@@ -185,7 +183,6 @@ export default async function HomePage() {
             })}
           </div>
 
-          {/* Desktop: grid */}
           <div className="hidden md:grid grid-cols-3 lg:grid-cols-6 gap-3">
             {trendingProducts.map((p) => {
               const t    = tagStyles[p.tag ?? "bestseller"];
