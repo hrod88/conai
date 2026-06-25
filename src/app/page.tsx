@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import HeroSlider from "@/components/home/HeroSlider";
+import HeroDesktop from "@/components/home/HeroDesktop";
 import MobileHero from "@/components/home/MobileHero";
 import PromoStrip from "@/components/ui/PromoStrip";
 import OfertasDelDia from "@/components/ui/OfertasDelDia";
@@ -20,7 +20,6 @@ const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
 ];
 
 // Señales de confianza reales (reemplazan los testimonios inventados).
-// Todo aquí es verdadero y verificable en el proyecto: no inventamos clientes.
 const trustSignals: { icon: LucideIcon; title: string; desc: string }[] = [
   { icon: ShieldCheck, title: "Pago protegido por Transbank", desc: "Procesamos con WebPay Plus, el estándar bancario de Chile. No guardamos los datos de tu tarjeta." },
   { icon: Truck,       title: "Despacho a todo Chile",        desc: "Enviamos con Chilexpress y Starken a cualquier región. Seguimiento de tu pedido incluido." },
@@ -54,10 +53,7 @@ export default async function HomePage() {
   type HeroProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag"> & { category: string };
   type TrendingProduct = Pick<Product, "id" | "name" | "price" | "icon" | "image" | "tag" | "category">;
 
-  // Una sola consulta trae todos los bestsellers con su categoría.
-  // Antes esto eran 12 consultas secuenciales (una por categoría, en un bucle for):
-  // la página esperaba 12 viajes a la base, uno tras otro. Ahora es 1 viaje y
-  // elegimos en memoria el mejor por categoría. Más rápido y más simple.
+  // Una sola consulta por bloque, en paralelo. Antes había 12 secuenciales.
   const [
     { data: bestsellersRaw },
     { data: discountsRaw },
@@ -75,13 +71,9 @@ export default async function HomePage() {
       .neq("active", false).eq("tag", "nuevo").order("rating", { ascending: false }).limit(4),
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).order("rating", { ascending: false }).limit(4),
-    // Todos los bestsellers con su categoría, ordenados por popularidad.
-    // De aquí sacamos el mejor de cada categoría en memoria (abajo).
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }),
-    // Conteo real de productos activos, para la sección de stats (sin traer filas).
     supabase.from("products").select("id", { count: "exact", head: true }).neq("active", false),
-    // Productos con descuento real, para la sección "Ofertas de hoy".
     supabase.from("products").select("id, name, price, original_price, image, icon")
       .neq("active", false).not("original_price", "is", null).order("original_price", { ascending: false }).limit(40),
   ]);
@@ -106,21 +98,18 @@ export default async function HomePage() {
     }
   }
 
-  // Número real de productos para las stats del hero (en vez del "180+" fijo).
   const totalProducts = totalProductsCount ?? 0;
 
-  // Productos para la sección "Ofertas de hoy"
   const ofertasData = (ofertasRaw ?? []) as {
     id: string; name: string; price: number;
     original_price: number | null; image: string | null; icon: string | null;
   }[];
 
-  // 30 productos para el escaparate "Seguro que te gusta"
   const escaparateData = ofertasData.slice(0, 30);
 
-  // Productos para el hero móvil: tomamos 2 con mejor descuento.
-  // Si no hay descuentos, caemos en bestsellers para que el hero igual se vea.
-  const mobileHeroProducts = (heroData.discounts.length >= 2
+  // Productos a destacar dentro del hero (desktop Y móvil reutilizan la misma data):
+  // tomamos 2 con descuento; si no hay, caemos a bestsellers para que igual se vea.
+  const heroFeatured = (heroData.discounts.length >= 2
     ? heroData.discounts
     : heroData.bestsellers
   ).slice(0, 2);
@@ -129,13 +118,11 @@ export default async function HomePage() {
     <>
       <PromoStrip />
 
-      {/* HeroSlider sigue mandando en DESKTOP. */}
-      <div className="hidden md:block">
-        <HeroSlider heroData={heroData} />
-      </div>
+      {/* Hero comercial nuevo, SOLO DESKTOP (manual §1, decisión Fase 2). */}
+      <HeroDesktop products={heroFeatured} />
 
       {/* Hero comercial nuevo, SOLO MÓVIL (md:hidden por dentro). */}
-      <MobileHero products={mobileHeroProducts} />
+      <MobileHero products={heroFeatured} />
 
       {/* ── Ofertas de hoy ── */}
       <OfertasDelDia products={ofertasData} />
@@ -262,7 +249,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Compra con confianza (reemplaza testimonios inventados) ── */}
+      {/* ── Compra con confianza ── */}
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="text-center mb-5 md:mb-10">
@@ -270,7 +257,6 @@ export default async function HomePage() {
             <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">Compra con confianza</h2>
           </div>
 
-          {/* Mobile: scroll horizontal */}
           <div
             className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4"
             style={{ scrollbarWidth: "none" } as React.CSSProperties}
@@ -290,7 +276,6 @@ export default async function HomePage() {
             ))}
           </div>
 
-          {/* Desktop: grid 3 cols */}
           <div className="hidden md:grid grid-cols-3 gap-5">
             {trustSignals.map((s) => (
               <div
