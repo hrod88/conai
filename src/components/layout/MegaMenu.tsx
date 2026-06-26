@@ -380,4 +380,16 @@ const MegaMenu = {
   Panel,
 };
 
+// Hook exportado para que componentes externos (Navbar) puedan
+// leer si el mega menú está abierto y reaccionar (ej: quitar border).
+export function useMegaMenuOpen() {
+  const [isOpen, setIsOpen] = useState(state.open);
+  useEffect(() => {
+    const l = () => setIsOpen(state.open);
+    state.listeners.add(l);
+    return () => { state.listeners.delete(l); };
+  }, []);
+  return isOpen;
+}
+
 export default MegaMenu;

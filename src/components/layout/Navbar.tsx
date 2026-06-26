@@ -9,7 +9,7 @@ import { useThemeStore } from "@/store/theme";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import MegaMenu from "@/components/layout/MegaMenu";
+import MegaMenu, { useMegaMenuOpen } from "@/components/layout/MegaMenu";
 
 const links = [
   { href: "/", label: "Inicio" },
@@ -30,6 +30,7 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
+  const megaOpen = useMegaMenuOpen();
   const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "").split(",").map((e) => e.trim());
   const isAdmin = !!user && adminEmails.includes(user.email ?? "");
 
@@ -254,7 +255,7 @@ export default function Navbar() {
         className="sticky top-0 z-50 transition-colors duration-300"
         style={{
           background: theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)",
-          borderColor: "var(--border)",
+          borderBottom: megaOpen ? "1px solid transparent" : "1px solid var(--border)",
           backdropFilter: "blur(14px)",
           WebkitBackdropFilter: "blur(14px)",
         }}
