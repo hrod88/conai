@@ -138,7 +138,8 @@ function useMegaMenuState() {
 }
 
 // Alturas: navbar (64) + subnav (40) + bordes (~2). Total: ~106px.
-const TOP_OFFSET_PX = 106;
+// Alturas: navbar (64) + subnav (40) = 104px exactos, sin gap.
+const TOP_OFFSET_PX = 104;
 
 // ══════════════════════════════════════════════════════════════════════
 // COMPONENTE 1: Subnav (la barra con el botón "Todas las categorías")
@@ -214,10 +215,10 @@ function Panel() {
   return (
     <>
       {/* OVERLAY: mismo color que el panel (var(--bg)) para verse uniforme */}
-      <div
+  <div
         className="fixed left-0 right-0 bottom-0 hidden md:block"
         style={{
-          top: `${TOP_OFFSET_PX}px`,
+          top: `${TOP_OFFSET_PX - 1}px`,
           background: "#ffffff",
           zIndex: 40,
         }}
