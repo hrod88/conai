@@ -237,7 +237,7 @@ function Panel() {
           height: `calc(100vh - ${TOP_OFFSET_PX}px)`,
           zIndex: 50,
           background: "var(--bg)",
-          boxShadow: "0 16px 40px rgba(0,0,0,.18)",
+          boxShadow: "0 2px 8px rgba(0,0,0,.04)",
           borderTop: "none",
         }}
         onMouseEnter={openNow}
@@ -246,7 +246,7 @@ function Panel() {
         {/* Columna izquierda */}
         <div
           className="flex-shrink-0 overflow-y-auto"
-          style={{ width: "220px", background: "#ffffff" }}
+          style={{ width: "220px", background: "#ffffff", borderRight: "none" }}
         >
           {CATS.map(cat => (
             <button
@@ -255,8 +255,7 @@ function Panel() {
               onClick={closeNow}
               className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all"
               style={{
-                background: cat.id === activeId ? "#eef2ff" : "transparent",
-                borderRadius: "8px",
+                background: "transparent",
               }}
             >
               <span style={{ fontSize: "16px", width: "20px", textAlign: "center", flexShrink: 0 }}>
