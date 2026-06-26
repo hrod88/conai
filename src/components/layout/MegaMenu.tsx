@@ -1,20 +1,23 @@
 "use client";
 
-// MegaMenu.tsx — v4 DEFINITIVO
+// MegaMenu.tsx — v5
 // ──────────────────────────────────────────────────────────────────────────
-// Estructura dividida en 2 componentes que comparten estado via React Context:
+// Estructura dividida en 2 componentes que comparten estado via un singleton:
 //   - MegaMenu.Subnav: barra inferior del navbar con el botón "Todas las
 //                      categorías" y los links rápidos. Va DENTRO del header
 //                      sticky.
-//   - MegaMenu.Panel:  el panel desplegable + overlay oscuro. Va FUERA del
-//                      header sticky, a nivel raíz, para que su
-//                      position:fixed funcione correctamente contra el
-//                      viewport (no contra el contenedor sticky padre).
+//   - MegaMenu.Panel:  el panel desplegable + overlay. Va FUERA del header
+//                      sticky, a nivel raíz, para que su position:fixed
+//                      funcione correctamente contra el viewport.
 //
 // Apertura: por HOVER automático sobre el botón. Cierra al sacar el cursor.
+//
+// Alineación: el panel vive dentro de la MISMA caja del navbar
+// (max-w-6xl + px-4/px-6), así su borde izquierdo cae sobre "conAI", el
+// derecho sobre el avatar "R", y comparte ancho con "Ofertas de hoy".
 // ──────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState, useCallback, createContext, useContext, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -84,9 +87,9 @@ function clp(n: number) { return `$${Math.round(n).toLocaleString("es-CL")}`; }
 function disc(p: number, o: number) { return Math.round((1 - p / o) * 100); }
 
 // ── Estado compartido entre Subnav y Panel ────────────────────────────
-// Como ambos componentes están en lugares distintos del árbol pero deben
-// compartir el mismo estado de apertura/categoría activa, los conectamos
-// con un singleton fuera de React (más simple que Context para este caso).
+// Ambos componentes están en lugares distintos del árbol pero comparten el
+// mismo estado de apertura/categoría activa, conectados con un singleton
+// fuera de React (más simple que Context para este caso).
 
 type Listener = () => void;
 const state = {
@@ -137,7 +140,6 @@ function useMegaMenuState() {
   };
 }
 
-// Alturas: navbar (64) + subnav (40) + bordes (~2). Total: ~106px.
 // Alturas: navbar (64) + subnav (40) = 104px exactos, sin gap.
 const TOP_OFFSET_PX = 104;
 
@@ -181,7 +183,7 @@ function Subnav() {
           ].map(l => (
             <Link
               key={l.href} href={l.href}
-              className="px-3 h-full flex items-center text-[12px] whitespace-nowrap transition-colors hover:text-indigo-500 border-b-2 border-transparent hover:border-indigo-400"
+              className="px-3 my-1.5 rounded-full flex items-center text-[12px] whitespace-nowrap transition-colors hover:bg-black/[0.04]"
               style={{ color: l.hot ? "#dc2626" : "var(--text-muted)", fontWeight: l.hot ? 800 : 600 }}
             >
               {l.label}
@@ -194,7 +196,7 @@ function Subnav() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// COMPONENTE 2: Panel (overlay oscuro + panel desplegable)
+// COMPONENTE 2: Panel (overlay + panel desplegable)
 // Va FUERA del <header> sticky, a nivel raíz, para que su
 // position:fixed funcione contra el viewport correctamente.
 // ══════════════════════════════════════════════════════════════════════
@@ -214,8 +216,9 @@ function Panel() {
 
   return (
     <>
-      {/* OVERLAY: mismo color que el panel (var(--bg)) para verse uniforme */}
-  <div
+      {/* OVERLAY: blanco a todo el viewport, detrás del panel.
+          Arranca 1px más arriba para tapar el borde del header sin dejar gap. */}
+      <div
         className="fixed left-0 right-0 bottom-0 hidden md:block"
         style={{
           top: `${TOP_OFFSET_PX - 1}px`,
@@ -226,144 +229,153 @@ function Panel() {
         onClick={closeNow}
       />
 
-      {/* PANEL: max-w-6xl centrado, llega hasta el fondo */}
+      {/* HOST: ocupa el viewport pero no captura clicks fuera del panel.
+          El panel real vive dentro de la MISMA caja del navbar
+          (max-w-6xl + px-4/px-6), así queda alineado: borde izq con "conAI",
+          borde der con el avatar "R", y mismo ancho que "Ofertas de hoy". */}
       <div
-        className="fixed hidden md:flex"
+        className="fixed left-0 right-0 hidden md:block"
         style={{
           top: `${TOP_OFFSET_PX}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "100%",
-          maxWidth: "72rem", // = max-w-6xl = 1152px
           height: `calc(100vh - ${TOP_OFFSET_PX}px)`,
           zIndex: 50,
-          background: "var(--bg)",
-          boxShadow: "0 2px 8px rgba(0,0,0,.04)",
-          borderTop: "none",
+          pointerEvents: "none",
         }}
-        onMouseEnter={openNow}
-        onMouseLeave={scheduleClose}
       >
-        {/* Columna izquierda */}
-        <div
-          className="flex-shrink-0 overflow-y-auto"
-          style={{ width: "220px", background: "#ffffff", borderRight: "none" }}
-        >
-          {CATS.map(cat => (
-            <button
-              key={cat.id}
-              onMouseEnter={() => setActive(cat.id)}
-              onClick={closeNow}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all"
-              style={{
-                background: "transparent",
-              }}
-            >
-              <span style={{ fontSize: "16px", width: "20px", textAlign: "center", flexShrink: 0 }}>
-                {cat.em}
-              </span>
-              <span
-                className="text-[12px] flex-1 text-left"
-                style={{ color: cat.id === activeId ? "#6366f1" : "var(--text)", fontWeight: cat.id === activeId ? 700 : 600 }}
-              >
-                {cat.name}
-              </span>
-              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>{cat.count}</span>
-              <span className="text-[10px]" style={{ color: cat.id === activeId ? "#6366f1" : "var(--text-muted)" }}>›</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Columna derecha */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-extrabold" style={{ color: "var(--text)" }}>
-                {activeCat.em} Subcategorías de {activeCat.name}
-              </span>
-              <Link
-                href={`/productos?category=${activeCat.id}`}
-                onClick={closeNow}
-                className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700"
-              >
-                Ver todos ({activeCat.count}) →
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {activeCat.subcats.map(s => (
-                <Link
-                  key={s.slug}
-                  href={`/productos?category=${activeCat.id}&subcategory=${s.slug}`}
-                  onClick={closeNow}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700"
-                  style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--surface)" }}
-                >
-                  <span style={{ fontSize: "12px" }}>{s.em}</span>
-                  {s.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="text-[11px] font-extrabold mb-2.5" style={{ color: "var(--text)" }}>
-              ⭐ Más vendidos en {activeCat.name}
-            </p>
-            <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
-              {activeCat.products.map(p => (
-                <Link
-                  key={p.id}
-                  href={`/productos/${p.id}`}
-                  onClick={closeNow}
-                  className="rounded-xl overflow-hidden border transition-all hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5"
-                  style={{ borderColor: "var(--border)", background: "var(--surface)" }}
-                >
-                  <div className="aspect-square flex items-center justify-center relative" style={{ background: "var(--surface-alt)" }}>
-                    {p.image ? (
-                      <Image src={p.image} alt={p.name} fill sizes="120px" className="object-contain p-2" />
-                    ) : (
-                      <span style={{ fontSize: "28px" }}>{p.em}</span>
-                    )}
-                    <span
-                      className="absolute top-1.5 right-1.5 text-white font-extrabold rounded"
-                      style={{ background: "#dc2626", fontSize: "8.5px", padding: "2px 5px" }}
-                    >
-                      −{disc(p.price, p.originalPrice)}%
-                    </span>
-                  </div>
-                  <div className="p-1.5">
-                    <p
-                      className="font-semibold leading-tight overflow-hidden"
-                      style={{ fontSize: "9.5px", color: "var(--text)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } as React.CSSProperties}
-                    >
-                      {p.name}
-                    </p>
-                    <p className="font-extrabold mt-1" style={{ fontSize: "11.5px", color: "#dc2626" }}>
-                      {clp(p.price)}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
+        <div className="max-w-6xl mx-auto px-4 md:px-6 h-full">
           <div
-            className="rounded-xl p-4 text-white flex items-center justify-between"
-            style={{ background: activeCat.bg }}
+            className="flex h-full"
+            style={{
+              pointerEvents: "auto",
+              background: "var(--bg)",
+              boxShadow: "0 2px 8px rgba(0,0,0,.04)",
+              borderTop: "none",
+            }}
+            onMouseEnter={openNow}
+            onMouseLeave={scheduleClose}
           >
-            <div>
-              <p className="font-extrabold text-[10px] opacity-90 tracking-widest uppercase mb-1">⚡ CYBER SEMANA</p>
-              <p className="font-extrabold text-[15px] leading-tight">{activeCat.bannerText}</p>
-              <p className="text-[10px] opacity-85 mt-0.5">Hasta −26% · Envío gratis sobre $30.000</p>
-            </div>
-            <Link
-              href={`/productos?category=${activeCat.id}`}
-              onClick={closeNow}
-              className="flex-shrink-0 bg-white font-extrabold rounded-full px-4 py-2 text-[11px] hover:opacity-90 transition-opacity"
-              style={{ color: activeCat.color }}
+            {/* Columna izquierda */}
+            <div
+              className="flex-shrink-0 overflow-y-auto"
+              style={{ width: "220px", background: "#ffffff", borderRight: "none" }}
             >
-              Ver ofertas →
-            </Link>
+              {CATS.map(cat => (
+                <button
+                  key={cat.id}
+                  onMouseEnter={() => setActive(cat.id)}
+                  onClick={closeNow}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all"
+                  style={{
+                    background: "transparent",
+                  }}
+                >
+                  <span style={{ fontSize: "16px", width: "20px", textAlign: "center", flexShrink: 0 }}>
+                    {cat.em}
+                  </span>
+                  <span
+                    className="text-[12px] flex-1 text-left"
+                    style={{ color: cat.id === activeId ? "#6366f1" : "var(--text)", fontWeight: cat.id === activeId ? 700 : 600 }}
+                  >
+                    {cat.name}
+                  </span>
+                  <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>{cat.count}</span>
+                  <span className="text-[10px]" style={{ color: cat.id === activeId ? "#6366f1" : "var(--text-muted)" }}>›</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Columna derecha */}
+            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[11px] font-extrabold" style={{ color: "var(--text)" }}>
+                    {activeCat.em} Subcategorías de {activeCat.name}
+                  </span>
+                  <Link
+                    href={`/productos?category=${activeCat.id}`}
+                    onClick={closeNow}
+                    className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700"
+                  >
+                    Ver todos ({activeCat.count}) →
+                  </Link>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {activeCat.subcats.map(s => (
+                    <Link
+                      key={s.slug}
+                      href={`/productos?category=${activeCat.id}&subcategory=${s.slug}`}
+                      onClick={closeNow}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700"
+                      style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--surface)" }}
+                    >
+                      <span style={{ fontSize: "12px" }}>{s.em}</span>
+                      {s.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-extrabold mb-2.5" style={{ color: "var(--text)" }}>
+                  ⭐ Más vendidos en {activeCat.name}
+                </p>
+                <div className="grid gap-2" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
+                  {activeCat.products.map(p => (
+                    <Link
+                      key={p.id}
+                      href={`/productos/${p.id}`}
+                      onClick={closeNow}
+                      className="rounded-xl overflow-hidden border transition-all hover:border-indigo-300 hover:shadow-md hover:-translate-y-0.5"
+                      style={{ borderColor: "var(--border)", background: "var(--surface)" }}
+                    >
+                      <div className="aspect-square flex items-center justify-center relative" style={{ background: "var(--surface-alt)" }}>
+                        {p.image ? (
+                          <Image src={p.image} alt={p.name} fill sizes="120px" className="object-contain p-2" />
+                        ) : (
+                          <span style={{ fontSize: "28px" }}>{p.em}</span>
+                        )}
+                        <span
+                          className="absolute top-1.5 right-1.5 text-white font-extrabold rounded"
+                          style={{ background: "#dc2626", fontSize: "8.5px", padding: "2px 5px" }}
+                        >
+                          −{disc(p.price, p.originalPrice)}%
+                        </span>
+                      </div>
+                      <div className="p-1.5">
+                        <p
+                          className="font-semibold leading-tight overflow-hidden"
+                          style={{ fontSize: "9.5px", color: "var(--text)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } as React.CSSProperties}
+                        >
+                          {p.name}
+                        </p>
+                        <p className="font-extrabold mt-1" style={{ fontSize: "11.5px", color: "#dc2626" }}>
+                          {clp(p.price)}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl p-4 text-white flex items-center justify-between"
+                style={{ background: activeCat.bg }}
+              >
+                <div>
+                  <p className="font-extrabold text-[10px] opacity-90 tracking-widest uppercase mb-1">⚡ CYBER SEMANA</p>
+                  <p className="font-extrabold text-[15px] leading-tight">{activeCat.bannerText}</p>
+                  <p className="text-[10px] opacity-85 mt-0.5">Hasta −26% · Envío gratis sobre $30.000</p>
+                </div>
+                <Link
+                  href={`/productos?category=${activeCat.id}`}
+                  onClick={closeNow}
+                  className="flex-shrink-0 bg-white font-extrabold rounded-full px-4 py-2 text-[11px] hover:opacity-90 transition-opacity"
+                  style={{ color: activeCat.color }}
+                >
+                  Ver ofertas →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
