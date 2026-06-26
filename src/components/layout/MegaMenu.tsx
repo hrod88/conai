@@ -218,7 +218,7 @@ function Panel() {
         className="fixed left-0 right-0 bottom-0 hidden md:block"
         style={{
           top: `${TOP_OFFSET_PX}px`,
-          background: "var(--bg)",
+          background: "#ffffff",
           zIndex: 40,
         }}
         onMouseEnter={scheduleClose}
@@ -246,7 +246,7 @@ function Panel() {
         {/* Columna izquierda */}
         <div
           className="flex-shrink-0 overflow-y-auto"
-          style={{ width: "220px", background: "var(--surface)", borderRight: "1px solid var(--border)" }}
+          style={{ width: "220px", background: "#f4f3f9", borderRight: "1px solid #e8e6f0" }}
         >
           {CATS.map(cat => (
             <button
