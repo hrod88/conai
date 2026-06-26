@@ -150,7 +150,7 @@ function Subnav() {
   const active = open || hovered;
 
   return (
-    <div className="hidden md:block border-t" style={{ borderColor: "var(--border)" }}>
+    <div className="hidden md:block" style={{ borderBottom: "none" }}>
       <div className="max-w-6xl mx-auto px-4 md:px-6 flex items-stretch h-10">
         <button
           onMouseEnter={() => { setHovered(true); openNow(); }}
