@@ -251,7 +251,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className="sticky top-0 z-50 border-b transition-colors duration-300"
+        className="sticky top-0 z-50 transition-colors duration-300"
         style={{
           background: theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)",
           borderColor: "var(--border)",
