@@ -246,17 +246,17 @@ function Panel() {
         {/* Columna izquierda */}
         <div
           className="flex-shrink-0 overflow-y-auto"
-          style={{ width: "220px", background: "#ffffff", borderRight: "1px solid #eee" }}
+          style={{ width: "220px", background: "#ffffff" }}
         >
           {CATS.map(cat => (
             <button
               key={cat.id}
               onMouseEnter={() => setActive(cat.id)}
               onClick={closeNow}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all border-l-[3px]"
+              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all"
               style={{
-                borderLeftColor: cat.id === activeId ? "#6366f1" : "transparent",
-                background:      cat.id === activeId ? "var(--bg)" : "transparent",
+                background: cat.id === activeId ? "#eef2ff" : "transparent",
+                borderRadius: "8px",
               }}
             >
               <span style={{ fontSize: "16px", width: "20px", textAlign: "center", flexShrink: 0 }}>
