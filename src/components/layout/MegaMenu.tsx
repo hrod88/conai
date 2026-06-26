@@ -246,7 +246,7 @@ function Panel() {
         {/* Columna izquierda */}
         <div
           className="flex-shrink-0 overflow-y-auto"
-          style={{ width: "220px", background: "#f4f3f9", borderRight: "1px solid #e8e6f0" }}
+          style={{ width: "220px", background: "#ffffff", borderRight: "1px solid #eee" }}
         >
           {CATS.map(cat => (
             <button
