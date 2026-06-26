@@ -9,6 +9,7 @@ import { useThemeStore } from "@/store/theme";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import MegaMenu from "@/components/layout/MegaMenu";
 
 const links = [
   { href: "/", label: "Inicio" },
@@ -16,7 +17,6 @@ const links = [
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
 ];
-
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -44,20 +44,13 @@ export default function Navbar() {
 
   useEffect(() => {
     // PRUEBA: detector desactivado temporalmente
-    // function handleClickOutside(e: MouseEvent) {
-    //   if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-    //     setDropdownOpen(false);
-    //   }
-    // }
-    // document.addEventListener("mousedown", handleClickOutside);
-    // return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
   async function handleSignOut() {
     await supabase.auth.signOut();
     setDropdownOpen(false);
   }
 
-  // ── Links centrados (segunda fila en desktop) ──
   const navLinks = links.map((l) => {
     const active = pathname === l.href;
     return (
@@ -76,11 +69,9 @@ export default function Navbar() {
     );
   });
 
-  // ── Acciones de la derecha (favoritos, carrito, tema, cuenta) ──
-  // El search MÓVIL se mantiene aquí intacto (no tocamos móvil).
   const actions = (
     <div className="flex items-center gap-2">
-      {/* Search mobile (sin cambios) */}
+      {/* Search mobile */}
       <button
         onClick={toggleSearch}
         className="md:hidden w-9 h-9 rounded-full flex items-center justify-center border transition-colors"
@@ -235,9 +226,6 @@ export default function Navbar() {
     </div>
   );
 
-  // Barra de búsqueda grande (desktop). Al hacer clic dispara tu mismo
-  // sistema de búsqueda (toggleSearch), así el aspecto es nuevo pero la
-  // función es la que ya tenías.
   const bigSearch = (
     <button
       onClick={toggleSearch}
@@ -251,41 +239,56 @@ export default function Navbar() {
     </button>
   );
 
+  // ──────────────────────────────────────────────────────────────────────
+  // ESTRUCTURA:
+  //   <Fragment>
+  //     <header sticky>  ← solo el navbar/subnav son sticky
+  //     <MegaMenu />     ← FUERA del sticky, así su position:fixed funciona
+  //                        correctamente contra el viewport (no contra el
+  //                        wrapper sticky, que era el bug anterior).
+  //   </Fragment>
+  // ──────────────────────────────────────────────────────────────────────
   return (
-    <header
-      className="sticky top-0 z-50 border-b transition-colors duration-300"
-      style={{
-        background: theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)",
-        borderColor: "var(--border)",
-        backdropFilter: "blur(14px)",
-        WebkitBackdropFilter: "blur(14px)",
-      }}
-    >
-      {/* ── DESKTOP: 3 zonas (logo+buscador izq · links centro · acciones der) ── */}
-      <div className="hidden md:block max-w-6xl mx-auto px-4 md:px-6">
-        <nav className="flex items-center h-16">
-          {/* Zona izquierda: logo + buscador compacto */}
-          <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0 mr-4">
+    <>
+      <header
+        className="sticky top-0 z-50 border-b transition-colors duration-300"
+        style={{
+          background: theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)",
+          borderColor: "var(--border)",
+          backdropFilter: "blur(14px)",
+          WebkitBackdropFilter: "blur(14px)",
+        }}
+      >
+        {/* ── DESKTOP ── */}
+        <div className="hidden md:block max-w-6xl mx-auto px-4 md:px-6">
+          <nav className="flex items-center h-16">
+            <Link href="/" className="text-2xl font-black gradient-text flex-shrink-0 mr-4">
+              conAI
+            </Link>
+            {bigSearch}
+            <div className="flex items-center gap-1 mx-auto">
+              {navLinks}
+            </div>
+            {actions}
+          </nav>
+        </div>
+
+        {/* ── MÓVIL: sin cambios ── */}
+        <nav className="md:hidden flex items-center h-16 px-4 gap-3">
+          <Link href="/" className="text-xl font-black gradient-text flex-shrink-0">
             conAI
           </Link>
-          {bigSearch}
-          {/* Zona centro: links centrados (mx-auto los empuja al medio) */}
-          <div className="flex items-center gap-1 mx-auto">
-            {navLinks}
-          </div>
-          {/* Zona derecha: acciones */}
+          <div className="flex-1" />
           {actions}
         </nav>
-      </div>
 
-      {/* ── MÓVIL: se mantiene igual que antes (sin cambios) ── */}
-      <nav className="md:hidden flex items-center h-16 px-4 gap-3">
-        <Link href="/" className="text-xl font-black gradient-text flex-shrink-0">
-          conAI
-        </Link>
-        <div className="flex-1" />
-        {actions}
-      </nav>
-    </header>
+        {/* El subnav también va dentro del sticky para que se pegue arriba */}
+        <MegaMenu.Subnav />
+      </header>
+
+      {/* El panel + overlay del MegaMenu FUERA del sticky:
+          así su position:fixed funciona contra el viewport. */}
+      <MegaMenu.Panel />
+    </>
   );
 }
