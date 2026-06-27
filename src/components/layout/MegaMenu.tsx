@@ -217,6 +217,16 @@ function Panel() {
     return () => document.removeEventListener("keydown", onKey);
   }, [closeNow]);
 
+  // Bloquear scroll del body mientras el mega menú está abierto, así la home
+  // de atrás (hero) no se mueve por detrás al hacer scroll en las categorías.
+  useEffect(() => {
+    if (open) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const activeCat = CATS.find(c => c.id === activeId) ?? CATS[0];
@@ -264,7 +274,7 @@ function Panel() {
             {/* Columna izquierda */}
             <div
               className="flex-shrink-0 overflow-y-auto"
-              style={{ width: "220px", background: "#ffffff", borderRight: "none" }}
+              style={{ width: "220px", background: "#ffffff", borderRight: "none", overscrollBehavior: "contain" }}
             >
               {CATS.map(cat => {
                 const isActive = cat.id === activeId;
@@ -295,7 +305,7 @@ function Panel() {
             </div>
 
             {/* Columna derecha */}
-            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4" style={{ overscrollBehavior: "contain" }}>
               <div>
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-[11px] font-extrabold flex items-center gap-1.5" style={{ color: "var(--text)" }}>

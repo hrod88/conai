@@ -251,13 +251,15 @@ export default function Navbar() {
   // ──────────────────────────────────────────────────────────────────────
   return (
     <>
-      <header
+    <header
         className="sticky top-0 z-50 transition-colors duration-300"
         style={{
-          background: theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)",
+          background: megaOpen
+            ? (theme === "dark" ? "#0d0d1a" : "#ffffff")
+            : (theme === "dark" ? "rgba(13,13,26,0.96)" : "rgba(255,255,255,0.96)"),
           borderBottom: megaOpen ? "1px solid transparent" : "1px solid var(--border)",
-          backdropFilter: "blur(14px)",
-          WebkitBackdropFilter: "blur(14px)",
+          backdropFilter: megaOpen ? "none" : "blur(14px)",
+          WebkitBackdropFilter: megaOpen ? "none" : "blur(14px)",
         }}
       >
         {/* ── DESKTOP ── */}
