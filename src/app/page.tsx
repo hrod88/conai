@@ -73,7 +73,8 @@ export default async function HomePage() {
     supabase.from("products").select("id, name, price, icon, image, tag, category")
       .neq("active", false).eq("tag", "bestseller").order("review_count", { ascending: false }),
     // Conteo total
-    supabase.from("products").select("id", { count: "exact", head: true }).neq("active", false),
+    // Conteo total
+    supabase.from("products").select("id").neq("active", false),
     // Para OfertasDelDia y ProductosDestacados
     supabase.from("products").select("id, name, price, original_price, image, icon")
       .neq("active", false).not("original_price", "is", null).order("original_price", { ascending: false }).limit(40),
@@ -108,7 +109,7 @@ export default async function HomePage() {
     if (match) { seen.add(match.id); trendingProducts.push(match); }
   }
 
-  const totalProducts = totalProductsCount ?? 0;
+  const totalProducts = totalProductsCount?.length ?? 0;
 
   return (
     <>

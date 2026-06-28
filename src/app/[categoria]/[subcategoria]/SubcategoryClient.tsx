@@ -370,7 +370,7 @@ export default function SubcategoryClient({
                         {p.rating && p.rating > 0 && (
                           <p className="text-[10.5px] mt-1" style={{ color: "var(--text-muted)" }}>
                             ⭐ {p.rating.toFixed(1)}
-                            {p.review_count ? ` · ${p.review_count} reseñas` : ""}
+                            {p.review_count && p.review_count > 0 ? ` · ${p.review_count} reseñas` : ""}
                           </p>
                         )}
                       </div>
