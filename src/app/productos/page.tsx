@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function ProductosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string }>;
+  searchParams: Promise<{ cat?: string; category?: string; subcategory?: string; tag?: string }>;
 }) {
-  const { cat } = await searchParams;
+  const { cat, category, subcategory, tag } = await searchParams;
   const supabase = await createClient();
 
   const { data: products } = await supabase
@@ -18,10 +18,15 @@ export default async function ProductosPage({
     .neq("active", false)
     .order("created_at", { ascending: false });
 
+  // Aceptamos `category` (del mega menú) o `cat` (legacy) como categoría inicial.
+  const initialCategory = (category ?? cat) as Category | undefined;
+
   return (
     <ProductsClient
       products={products ?? []}
-      initialCategory={(cat as Category) ?? null}
+      initialCategory={initialCategory ?? null}
+      initialSubcategory={subcategory ?? null}
+      initialTag={tag ?? null}
     />
   );
 }

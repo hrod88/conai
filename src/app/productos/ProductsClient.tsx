@@ -121,9 +121,11 @@ const sortOptions: { value: SortOption; label: string }[] = [
 interface Props {
   products: Product[];
   initialCategory: Category | null;
+  initialSubcategory?: string | null;
+  initialTag?: string | null;
 }
 
-export default function ProductsClient({ products, initialCategory }: Props) {
+export default function ProductsClient({ products, initialCategory, initialSubcategory, initialTag }: Props) {
   const [drillCategory, setDrillCategory]         = useState<Category | null>(initialCategory ?? null);
   // Categoría sobre la que está el cursor (hover). Solo desktop.
   // Si hay hover, manda el hover; si no, manda lo elegido por clic (drillCategory).
@@ -131,11 +133,11 @@ export default function ProductsClient({ products, initialCategory }: Props) {
   // Si el mega-menú (sidebar) está desplegado. Arranca cerrado y se abre
   // al pasar el cursor por el botón hamburguesa o por el propio sidebar.
   const [menuOpen, setMenuOpen]                   = useState(false);
-  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null);
+const [activeSubcategory, setActiveSubcategory] = useState<string | null>(initialSubcategory ?? null);
   // Subcategoría sobre la que está el cursor (hover). Si hay, manda sobre la fijada.
   const [hoverSubcategory, setHoverSubcategory]   = useState<string | null>(null);
   const [activePrices, setActivePrices]           = useState<string[]>([]);
-  const [activeTags, setActiveTags]               = useState<string[]>([]);
+const [activeTags, setActiveTags]               = useState<string[]>(initialTag ? [initialTag] : []);
   const [sortBy, setSortBy]                       = useState<SortOption>("relevance");
   const [isMobile, setIsMobile]                   = useState(false);
   const [filterSheetOpen, setFilterSheetOpen]     = useState(false);
