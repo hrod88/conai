@@ -130,11 +130,11 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="flex items-end justify-between mb-4 md:mb-8">
             <div>
-              <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-1">Esta semana</p>
-              <h2 className="text-lg md:text-3xl font-black text-[var(--text)]">Más vendidos</h2>
+              <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-1">Tendencias</p>
+              <h2 className="text-lg md:text-3xl font-black text-[var(--text)]">Los más vendidos</h2>
             </div>
             <Link href="/productos" className="text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
-              Ver todos →
+              Ver catálogo completo →
             </Link>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
@@ -197,7 +197,7 @@ export default async function HomePage() {
       {/* ── Por qué conAI ── */}
       <section className="py-8 md:py-16 px-4 md:px-6 max-w-6xl mx-auto">
         <div className="text-center mb-5 md:mb-10">
-          <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Nuestra promesa</p>
+          <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Nuestro compromiso</p>
           <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">¿Por qué conAI?</h2>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
@@ -218,7 +218,7 @@ export default async function HomePage() {
       <section className="py-8 md:py-16" style={{ background: "var(--surface)" }}>
         <div className="max-w-6xl mx-auto px-4 md:px-6">
           <div className="text-center mb-5 md:mb-10">
-            <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Tu compra, segura</p>
+            <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-2">Compra con seguridad</p>
             <h2 className="text-xl md:text-3xl font-black text-[var(--text)]">Compra con confianza</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-3 md:hidden -mx-4 px-4" style={{ scrollbarWidth: "none" } as React.CSSProperties}>
