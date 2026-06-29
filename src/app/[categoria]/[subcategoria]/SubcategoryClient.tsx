@@ -113,9 +113,9 @@ export default function SubcategoryClient({
         <nav className="flex items-center gap-1.5 text-[12px] mb-4" style={{ color: "var(--text-muted)" }}>
           <Link href="/" className="hover:text-indigo-500 transition-colors">Inicio</Link>
           <span>›</span>
-          <Link href={`/${categoria}`} className="hover:text-indigo-500 transition-colors capitalize">
-            {catMeta.label}
-          </Link>
+          <Link href="/productos" className="hover:text-indigo-500 transition-colors capitalize">
+  {catMeta.label}
+</Link>
           <span>›</span>
           <span style={{ color: catMeta.color, fontWeight: 700 }}>{subcatLabel}</span>
         </nav>
