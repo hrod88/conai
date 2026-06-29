@@ -39,8 +39,8 @@ export async function GET(req: NextRequest) {
     .select("cj_pid");
 
   const existingPids = new Set([
-    ...(existing ?? []).map((p: { cj_pid: string }) => p.cj_pid),
-    ...(candidates ?? []).map((p: { cj_pid: string }) => p.cj_pid),
+   ...((existing ?? []) as Array<{ cj_pid: string | null }>).map((p) => p.cj_pid).filter((id): id is string => !!id),
+    ...((candidates ?? []) as Array<{ cj_pid: string | null }>).map((p) => p.cj_pid).filter((id): id is string => !!id),
   ]);
 
   for (const [category, queries] of Object.entries(CATEGORY_QUERIES)) {
@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
     try {
       const res = await cjGet("/product/list", {
         productNameEn: query,
-        pageNum: 1,
-        pageSize: 10,
+        pageNum: "1",
+        pageSize: "10",
         sortField: "BESTSELLING",
       });
 
