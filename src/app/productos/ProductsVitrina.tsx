@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type ProductCount = {
   id: string;
@@ -108,7 +109,16 @@ const CAT_META: Record<string, {
 };
 
 export default function ProductsVitrina({ products }: Props) {
-  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [activeCat, setActiveCat] = useState<string | null>(
+    searchParams.get("category") ?? searchParams.get("cat") ?? null
+  );
+
+  // Actualizar cuando cambia la URL
+  useEffect(() => {
+    const cat = searchParams.get("category") ?? searchParams.get("cat") ?? null;
+    setActiveCat(cat);
+  }, [searchParams]);
 
   // Conteos por categoría y subcategoría
   const catCounts = useMemo(() => {

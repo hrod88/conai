@@ -1,24 +1,6 @@
 "use client";
 
-// MegaMenu.tsx — v6 (íconos Lucide en categorías)
-// ──────────────────────────────────────────────────────────────────────────
-// Estructura dividida en 2 componentes que comparten estado via un singleton:
-//   - MegaMenu.Subnav: barra inferior del navbar con el botón "Todas las
-//                      categorías" y los links rápidos. Va DENTRO del header
-//                      sticky.
-//   - MegaMenu.Panel:  el panel desplegable + overlay. Va FUERA del header
-//                      sticky, a nivel raíz, para que su position:fixed
-//                      funcione correctamente contra el viewport.
-//
-// Apertura: por HOVER automático sobre el botón. Cierra al sacar el cursor.
-//
-// Alineación: el panel vive dentro de la MISMA caja del navbar
-// (max-w-6xl + px-4/px-6), así su borde izquierdo cae sobre "conAI", el
-// derecho sobre el avatar "R", y comparte ancho con "Ofertas de hoy".
-//
-// Íconos: cada categoría lleva su componente Lucide en el campo `Icon`,
-// definido DENTRO de su propio objeto de CATS para que nunca se desfase.
-// ──────────────────────────────────────────────────────────────────────────
+// MegaMenu.tsx — v7 (clic en categoría navega a /[categoria])
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
@@ -94,11 +76,6 @@ const CATS: Category[] = [
 function clp(n: number) { return `$${Math.round(n).toLocaleString("es-CL")}`; }
 function disc(p: number, o: number) { return Math.round((1 - p / o) * 100); }
 
-// ── Estado compartido entre Subnav y Panel ────────────────────────────
-// Ambos componentes están en lugares distintos del árbol pero comparten el
-// mismo estado de apertura/categoría activa, conectados con un singleton
-// fuera de React (más simple que Context para este caso).
-
 type Listener = () => void;
 const state = {
   open: false,
@@ -138,23 +115,11 @@ function useMegaMenuState() {
     notify();
   }, []);
 
-  return {
-    open: state.open,
-    activeId: state.activeId,
-    openNow,
-    scheduleClose,
-    closeNow,
-    setActive,
-  };
+  return { open: state.open, activeId: state.activeId, openNow, scheduleClose, closeNow, setActive };
 }
 
-// Alturas: navbar (64) + subnav (40) = 104px exactos, sin gap.
 const TOP_OFFSET_PX = 104;
 
-// ══════════════════════════════════════════════════════════════════════
-// COMPONENTE 1: Subnav (la barra con el botón "Todas las categorías")
-// Va dentro del <header> sticky.
-// ══════════════════════════════════════════════════════════════════════
 function Subnav() {
   const { open, openNow, scheduleClose } = useMegaMenuState();
   const [hovered, setHovered] = useState(false);
@@ -167,9 +132,7 @@ function Subnav() {
           onMouseEnter={() => { setHovered(true); openNow(); }}
           onMouseLeave={() => { setHovered(false); scheduleClose(); }}
           className="flex items-center gap-2 pr-4 font-extrabold text-[12.5px] flex-shrink-0 transition-colors"
-          style={{
-            color: active ? "#6366f1" : "var(--text)",
-          }}
+          style={{ color: active ? "#6366f1" : "var(--text)" }}
         >
           <span className="flex flex-col gap-[3px]">
             <span className="block w-[15px] h-[2px] rounded" style={{ background: active ? "#6366f1" : "var(--text)" }} />
@@ -181,12 +144,12 @@ function Subnav() {
 
         <div className="flex items-center gap-0 pl-8 pr-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {[
-            { label:"⚡ Flash Sale",       href:"/productos?tag=descuento",      hot:true  },
-            { label:"Lo que está volando", href:"/productos?tag=bestseller",     hot:false },
-            { label:"Recién llegados",     href:"/productos?tag=nuevo",          hot:false },
-            { label:"Wearables",           href:"/productos?category=wearables", hot:false },
-            { label:"Salud",               href:"/productos?category=salud",     hot:false },
-            { label:"Gadgets",             href:"/productos?category=gadgets",   hot:false },
+            { label:"⚡ Flash Sale",       href:"/productos?tag=descuento",  hot:true  },
+            { label:"Lo que está volando", href:"/productos?tag=bestseller", hot:false },
+            { label:"Recién llegados",     href:"/productos?tag=nuevo",      hot:false },
+            { label:"Wearables",           href:"/wearables",                hot:false },
+            { label:"Salud",               href:"/salud",                    hot:false },
+            { label:"Gadgets",             href:"/gadgets",                  hot:false },
           ].map(l => (
             <Link
               key={l.href} href={l.href}
@@ -202,23 +165,15 @@ function Subnav() {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════════
-// COMPONENTE 2: Panel (overlay + panel desplegable)
-// Va FUERA del <header> sticky, a nivel raíz, para que su
-// position:fixed funcione contra el viewport correctamente.
-// ══════════════════════════════════════════════════════════════════════
 function Panel() {
   const { open, activeId, openNow, scheduleClose, closeNow, setActive } = useMegaMenuState();
 
-  // Escape para cerrar
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeNow(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [closeNow]);
 
-  // Bloquear scroll del body mientras el mega menú está abierto, así la home
-  // de atrás (hero) no se mueve por detrás al hacer scroll en las categorías.
   useEffect(() => {
     if (open) {
       const prev = document.body.style.overflow;
@@ -233,60 +188,39 @@ function Panel() {
 
   return (
     <>
-      {/* OVERLAY: blanco a todo el viewport, detrás del panel.
-          Arranca 1px más arriba para tapar el borde del header sin dejar gap. */}
       <div
         className="fixed left-0 right-0 bottom-0 hidden md:block"
-        style={{
-          top: `${TOP_OFFSET_PX - 1}px`,
-          background: "#ffffff",
-          zIndex: 40,
-        }}
+        style={{ top: `${TOP_OFFSET_PX - 1}px`, background: "#ffffff", zIndex: 40 }}
         onMouseEnter={scheduleClose}
         onClick={closeNow}
       />
 
-      {/* HOST: ocupa el viewport pero no captura clicks fuera del panel.
-          El panel real vive dentro de la MISMA caja del navbar
-          (max-w-6xl + px-4/px-6), así queda alineado: borde izq con "conAI",
-          borde der con el avatar "R", y mismo ancho que "Ofertas de hoy". */}
       <div
         className="fixed left-0 right-0 hidden md:block"
-        style={{
-          top: `${TOP_OFFSET_PX}px`,
-          height: `calc(100vh - ${TOP_OFFSET_PX}px)`,
-          zIndex: 50,
-          pointerEvents: "none",
-        }}
+        style={{ top: `${TOP_OFFSET_PX}px`, height: `calc(100vh - ${TOP_OFFSET_PX}px)`, zIndex: 50, pointerEvents: "none" }}
       >
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-full">
           <div
             className="flex h-full"
-            style={{
-              pointerEvents: "auto",
-              background: "var(--bg)",
-              boxShadow: "0 2px 8px rgba(0,0,0,.04)",
-              borderTop: "none",
-            }}
+            style={{ pointerEvents: "auto", background: "var(--bg)", boxShadow: "0 2px 8px rgba(0,0,0,.04)", borderTop: "none" }}
             onMouseEnter={openNow}
             onMouseLeave={scheduleClose}
           >
-            {/* Columna izquierda */}
+            {/* ── Columna izquierda: lista de categorías ── */}
             <div
               className="flex-shrink-0 overflow-y-auto"
-              style={{ width: "220px", background: "#ffffff", borderRight: "none", overscrollBehavior: "contain" }}
+              style={{ width: "220px", background: "#ffffff", overscrollBehavior: "contain" }}
             >
               {CATS.map(cat => {
                 const isActive = cat.id === activeId;
                 return (
-                  <button
+                  <Link
                     key={cat.id}
+                    href={`/${cat.id}`}
                     onMouseEnter={() => setActive(cat.id)}
                     onClick={closeNow}
-                    className="w-full flex items-center gap-2.5 pr-4 py-2.5 text-left transition-all"
-                    style={{
-                      background: "transparent",
-                    }}
+                    className="w-full flex items-center gap-2.5 pr-4 py-2.5 transition-all"
+                    style={{ background: "transparent" }}
                   >
                     <span style={{ width: "20px", display: "flex", alignItems: "center", justifyContent: "flex-start", flexShrink: 0 }}>
                       <cat.Icon size={17} strokeWidth={2} color={isActive ? "#6366f1" : "#475569"} />
@@ -299,12 +233,12 @@ function Panel() {
                     </span>
                     <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>{cat.count}</span>
                     <span className="text-[10px]" style={{ color: isActive ? "#6366f1" : "var(--text-muted)" }}>›</span>
-                  </button>
+                  </Link>
                 );
               })}
             </div>
 
-            {/* Columna derecha */}
+            {/* ── Columna derecha: subcategorías + productos ── */}
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4" style={{ overscrollBehavior: "contain" }}>
               <div>
                 <div className="flex items-center justify-between mb-2.5">
@@ -313,7 +247,7 @@ function Panel() {
                     Subcategorías de {activeCat.name}
                   </span>
                   <Link
-                    href={`/productos?category=${activeCat.id}`}
+                    href={`/${activeCat.id}`}
                     onClick={closeNow}
                     className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700"
                   >
@@ -336,7 +270,7 @@ function Panel() {
                     ))
                   ) : (
                     <Link
-                      href={`/productos?category=${activeCat.id}`}
+                      href={`/${activeCat.id}`}
                       onClick={closeNow}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[11px] font-semibold transition-all hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700"
                       style={{ borderColor: "var(--border)", color: "var(--text)", background: "var(--surface)" }}
@@ -399,7 +333,7 @@ function Panel() {
                   <p className="text-[10px] opacity-85 mt-0.5">Hasta −26% · Envío gratis sobre $30.000</p>
                 </div>
                 <Link
-                  href={`/productos?category=${activeCat.id}`}
+                  href={`/${activeCat.id}`}
                   onClick={closeNow}
                   className="flex-shrink-0 bg-white font-extrabold rounded-full px-4 py-2 text-[11px] hover:opacity-90 transition-opacity"
                   style={{ color: activeCat.color }}
@@ -415,18 +349,8 @@ function Panel() {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// Export del namespace: MegaMenu.Subnav y MegaMenu.Panel.
-// El export default es por compatibilidad (renderiza ambos juntos),
-// pero en Navbar.tsx usamos los dos por separado.
-// ──────────────────────────────────────────────────────────────────────
-const MegaMenu = {
-  Subnav,
-  Panel,
-};
+const MegaMenu = { Subnav, Panel };
 
-// Hook exportado para que componentes externos (Navbar) puedan
-// leer si el mega menú está abierto y reaccionar (ej: quitar border).
 export function useMegaMenuOpen() {
   const [isOpen, setIsOpen] = useState(state.open);
   useEffect(() => {
