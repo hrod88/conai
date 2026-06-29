@@ -265,7 +265,10 @@ export default async function HomePage() {
         </div>
       </section>
 {/* ── FAQ ── */}
-<FaqSection />
+{/* ── FAQ ── */}
+<div id="faq">
+  <FaqSection />
+</div>
       {/* ── Newsletter ── */}
       <NewsletterSection />
     </>

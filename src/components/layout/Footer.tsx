@@ -18,6 +18,7 @@ const col2 = [
 const col3 = [
   { label: "Nosotros", href: "/nosotros" },
   { label: "Contacto", href: "/contacto" },
+  { label: "FAQ", href: "/#faq" },
   { label: "Política de envíos", href: "/envios" },
   { label: "Devoluciones", href: "/devoluciones" },
   { label: "Términos de uso", href: "/terminos" },
