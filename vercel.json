@@ -3,6 +3,10 @@
     {
       "path": "/api/admin/sync-cj",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/admin/auto-import",
+      "schedule": "0 7 * * 1,4"
     }
   ]
 }
