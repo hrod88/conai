@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/types";
 import { Truck, RotateCcw, ShieldCheck, Lock, Bot, type LucideIcon } from "lucide-react";
 import CategoriesShowcase from "@/components/home/CategoriesShowcase";
-import FaqSection from "@/components/home/FaqSection";
 export const dynamic = "force-dynamic";
 
 const benefits: { icon: LucideIcon; title: string; desc: string }[] = [
@@ -265,10 +264,6 @@ export default async function HomePage() {
         </div>
       </section>
 {/* ── FAQ ── */}
-{/* ── FAQ ── */}
-<div id="faq">
-  <FaqSection />
-</div>
       {/* ── Newsletter ── */}
       <NewsletterSection />
     </>
