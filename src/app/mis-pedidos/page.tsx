@@ -8,12 +8,13 @@ const statusStyles: Record<string, { label: string; color: string; bg: string; b
   shipped:   { label: "Enviado",    color: "#1e40af", bg: "#dbeafe", border: "#93c5fd" },
   delivered: { label: "Entregado",  color: "#3730a3", bg: "#e0e7ff", border: "#a5b4fc" },
 };
+
 const SHIPPING_STEPS = [
-  { key: "received", label: "Recibido" },
-  { key: "preparing", label: "Preparando" },
-  { key: "shipped", label: "Despachado" },
-  { key: "in_transit", label: "En camino" },
-  { key: "delivered", label: "Entregado" },
+  { key: "received",   label: "Recibido"   },
+  { key: "preparing",  label: "Preparando" },
+  { key: "shipped",    label: "Despachado" },
+  { key: "in_transit", label: "En camino"  },
+  { key: "delivered",  label: "Entregado"  },
 ] as const;
 
 function shippingStepIndex(status: string | null): number {
@@ -26,7 +27,7 @@ function ShippingTimeline({ status }: { status: string | null }) {
   return (
     <div className="flex items-center w-full py-1">
       {SHIPPING_STEPS.map((step, i) => {
-        const done = i < currentIdx;
+        const done    = i < currentIdx;
         const current = i === currentIdx;
         return (
           <div key={step.key} className="flex-1 flex flex-col items-center relative">
@@ -34,8 +35,7 @@ function ShippingTimeline({ status }: { status: string | null }) {
               <div
                 className="absolute h-[3px] top-[13px]"
                 style={{
-                  left: "-50%",
-                  width: "100%",
+                  left: "-50%", width: "100%",
                   background: i <= currentIdx ? "#16a34a" : "var(--border)",
                   zIndex: 0,
                 }}
@@ -44,9 +44,9 @@ function ShippingTimeline({ status }: { status: string | null }) {
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold relative z-10 border-2"
               style={{
-                background: done ? "#16a34a" : current ? "#6366f1" : "var(--surface)",
-                borderColor: done ? "#16a34a" : current ? "#6366f1" : "var(--border)",
-                color: done || current ? "#fff" : "var(--text-muted)",
+                background:   done ? "#16a34a" : current ? "#6366f1" : "var(--surface)",
+                borderColor:  done ? "#16a34a" : current ? "#6366f1" : "var(--border)",
+                color:        done || current ? "#fff" : "var(--text-muted)",
               }}
             >
               {done ? "✓" : i + 1}
@@ -63,6 +63,36 @@ function ShippingTimeline({ status }: { status: string | null }) {
     </div>
   );
 }
+
+function addBusinessDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) added++;
+  }
+  return d;
+}
+
+function courierUrl(courier: string, tracking: string): string {
+  if (courier === "chilexpress")
+    return `https://www.chilexpress.cl/views/buscaestado.aspx?codigo=${tracking}`;
+  if (courier === "starken")
+    return `https://www.starken.cl/seguimiento?codigo=${tracking}`;
+  if (courier === "bluexpress")
+    return `https://www.bluexpress.cl/tracking?numero=${tracking}`;
+  return "#";
+}
+
+function courierLabel(courier: string): string {
+  const map: Record<string, string> = {
+    chilexpress: "Chilexpress",
+    starken:     "Starken",
+    bluexpress:  "Bluexpress",
+  };
+  return map[courier] ?? courier;
+}
+
 type OrderRow = {
   id: string;
   total: number;
@@ -74,6 +104,8 @@ type OrderRow = {
   shipping_city: string | null;
   shipping_region: string | null;
   shipping_cost: number | null;
+  tracking_number: string | null;
+  courier: string | null;
   order_items: {
     quantity: number;
     unit_price: number;
@@ -81,15 +113,27 @@ type OrderRow = {
   }[];
 };
 
+const STATUS_MSG: Record<string, string> = {
+  received:   "✅ Recibimos tu pedido. Lo procesaremos en las próximas 24-48 horas.",
+  preparing:  "📦 Estamos preparando tu pedido para el despacho.",
+  shipped:    "🚚 Tu pedido fue despachado y está en camino.",
+  in_transit: "🛫 Tu pedido está en tránsito. Llegará en los próximos días.",
+  delivered:  "🎉 ¡Tu pedido fue entregado! Esperamos que lo disfrutes.",
+};
+
 export default async function MisPedidosPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/login");
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, total, status, shipping_status, created_at, shipping_name, shipping_address, shipping_city, shipping_region, shipping_cost, order_items(quantity, unit_price, products(name, icon))")
+    .select(`
+      id, total, status, shipping_status, created_at,
+      shipping_name, shipping_address, shipping_city, shipping_region, shipping_cost,
+      tracking_number, courier,
+      order_items(quantity, unit_price, products(name, icon))
+    `)
     .eq("user_id", user.id)
     .order("created_at", { ascending: false }) as { data: OrderRow[] | null };
 
@@ -100,10 +144,7 @@ export default async function MisPedidosPage() {
           <p className="text-xs font-black tracking-widest text-indigo-500 uppercase mb-1">Tu cuenta</p>
           <h1 className="text-2xl font-black text-[var(--text)]">Mis pedidos</h1>
         </div>
-        <Link
-          href="/productos"
-          className="text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors"
-        >
+        <Link href="/productos" className="text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
           Seguir comprando →
         </Link>
       </div>
@@ -123,13 +164,20 @@ export default async function MisPedidosPage() {
         <div className="flex flex-col gap-4">
           {orders.map((order) => {
             const st = statusStyles[order.status] ?? statusStyles.pending;
+            const statusMsg = STATUS_MSG[order.shipping_status ?? "received"];
+            const created   = new Date(order.created_at);
+            const minDate   = addBusinessDays(created, 10);
+            const maxDate   = addBusinessDays(created, 15);
+            const fmt = (d: Date) =>
+              d.toLocaleDateString("es-CL", { day: "numeric", month: "long" });
+
             return (
               <div
                 key={order.id}
                 className="rounded-2xl border p-5 flex flex-col gap-4"
                 style={{ background: "var(--surface)", borderColor: "var(--border)" }}
               >
-                {/* Header del pedido */}
+                {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5">
                     <p className="text-xs font-mono text-[var(--text-muted)]">
@@ -137,7 +185,7 @@ export default async function MisPedidosPage() {
                     </p>
                     <p className="text-[11px] text-[var(--text-muted)]">
                       {new Date(order.created_at).toLocaleDateString("es-CL", {
-                        day: "numeric", month: "long", year: "numeric"
+                        day: "numeric", month: "long", year: "numeric",
                       })}
                     </p>
                   </div>
@@ -166,9 +214,60 @@ export default async function MisPedidosPage() {
                     </div>
                   ))}
                 </div>
-<ShippingTimeline status={order.shipping_status} />
+
+                {/* Timeline */}
+                <ShippingTimeline status={order.shipping_status} />
+
+                {/* Mensaje contextual */}
+                {statusMsg && (
+                  <p className="text-[12px] font-semibold px-1" style={{ color: "var(--text-muted)" }}>
+                    {statusMsg}
+                  </p>
+                )}
+
+                {/* Número de seguimiento */}
+                {order.tracking_number && (
+                  <div
+                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border"
+                    style={{ background: "var(--surface-alt)", borderColor: "var(--border)" }}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[10px] font-black tracking-widest uppercase" style={{ color: "var(--text-muted)" }}>
+                        Número de seguimiento
+                      </p>
+                      <p className="font-black text-[13px] font-mono" style={{ color: "var(--text)" }}>
+                        {order.tracking_number}
+                      </p>
+                      {order.courier && (
+                        <p className="text-[11px] font-semibold" style={{ color: "var(--text-muted)" }}>
+                          {courierLabel(order.courier)}
+                        </p>
+                      )}
+                    </div>
+                    {order.courier && (
+                      <a
+                        href={courierUrl(order.courier, order.tracking_number)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-shrink-0 px-4 py-2 rounded-full text-[12px] font-bold text-white transition-opacity hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg,#6366f1,#38bdf8)" }}
+                      >
+                        Rastrear →
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Fecha estimada */}
+                {order.shipping_status !== "delivered" && (
+                  <p className="text-[11.5px] font-semibold px-1" style={{ color: "var(--text-muted)" }}>
+                    📅 Entrega estimada: entre el <strong>{fmt(minDate)}</strong> y el <strong>{fmt(maxDate)}</strong>
+                  </p>
+                )}
+
                 <hr style={{ borderColor: "var(--border)" }} />
 
+                {/* Dirección */}
                 {order.shipping_address && (
                   <div className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
                     <span className="mt-0.5">🚚</span>
@@ -180,6 +279,7 @@ export default async function MisPedidosPage() {
                   </div>
                 )}
 
+                {/* Total */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--text-muted)] font-semibold">Total pagado</span>
                   <span className="font-black text-lg text-[var(--text)]">
