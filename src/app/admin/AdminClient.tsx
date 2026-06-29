@@ -523,6 +523,41 @@ export default function AdminClient({
 
   const [enriching, setEnriching] = useState(false);
   const [enrichMsg, setEnrichMsg] = useState<string | null>(null);
+  // ── Sync CJ ──
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ updated: number; total: number; errors: number } | null>(null);
+
+  async function syncCJ() {
+    setSyncing(true);
+    setSyncResult(null);
+    const res = await fetch("/api/admin/sync-cj");
+    const json = await res.json();
+    setSyncResult({ updated: json.updated ?? 0, total: json.total ?? 0, errors: json.errors ?? 0 });
+    setSyncing(false);
+  }
+
+  function SyncCJButton() {
+    return (
+      <div className="flex items-center gap-4 px-4 py-3 rounded-xl border" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-sm font-black text-[var(--text)]">🔄 Sincronizar precios y stock con CJ</p>
+          <p className="text-[11px] text-[var(--text-muted)]">
+            {syncResult
+              ? `✅ ${syncResult.updated} de ${syncResult.total} productos actualizados${syncResult.errors > 0 ? ` · ${syncResult.errors} errores` : ""}`
+              : "Actualiza precios y stock de todos tus productos desde CJ Dropshipping"}
+          </p>
+        </div>
+        <button
+          onClick={syncCJ}
+          disabled={syncing}
+          className="flex-shrink-0 px-4 py-2 rounded-xl text-[12px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          style={{ background: "linear-gradient(135deg,#f97316,#fbbf24)" }}
+        >
+          {syncing ? "Sincronizando..." : "Sincronizar ahora →"}
+        </button>
+      </div>
+    );
+  }
 
   async function enrichImages() {
     if (!confirm("¿Enriquecer imágenes de todos los productos con CJ pid? Esto puede tardar ~1 min.")) return;
@@ -657,7 +692,8 @@ export default function AdminClient({
           </div>
         ))}
       </div>
-
+      {/* Sync CJ */}
+      <SyncCJButton />
       {/* Tabs */}
       <div className="flex rounded-xl p-1 w-fit" style={{ background: "var(--surface-alt)" }}>
         {(["productos", "importar", "catalogo", "pedidos", "cupones"] as Tab[]).map((t) => (
