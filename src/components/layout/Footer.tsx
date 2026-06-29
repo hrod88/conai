@@ -16,6 +16,7 @@ const col2 = [
 ];
 
 const col3 = [
+  { label: "Rastrear pedido", href: "/tracking" },
   { label: "Nosotros", href: "/nosotros" },
   { label: "Contacto", href: "/contacto" },
   { label: "FAQ", href: "/faq" },
